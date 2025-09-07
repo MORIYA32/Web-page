@@ -40,12 +40,18 @@
                 </div>
                 <div class="profile-name">Add Profile</div>
             </div>
-
         </div>
-
     </div>
+
 <script>
 document.addEventListener("DOMContentLoaded", () => {
+
+  const isLoggedIn = localStorage.getItem("isLoggedIn");
+  if (!isLoggedIn) {
+    window.location.href = "./login.html";
+    return;
+  }
+  
   const profiles = [
     { id: 1, name: "Tal", avatar: "https://occ-0-8214-784.1.nflxso.net/dnm/api/v6/vN7bi_My87NPKvsBoib006Llxzg/AAAABdgqRu86LNrfFPuQ2Xhlz2NQehmsezXIx7HyVhyQXZ1wK8n97QjoJnDaiuKnWVnXclSIoqmrdlcXykFzFbnQP91p8rM-yxTFwQ.png?r=181" },
     { id: 2, name: "Moriya", avatar: "https://occ-0-8214-784.1.nflxso.net/dnm/api/v6/vN7bi_My87NPKvsBoib006Llxzg/AAAABT8sUMuSqctHteshq7njO_5-LpEDZEJxml-D7fyKkuadlRmsdTGg4rzZEscPdpdHROTubpN_v4E8wlAi94qmetsgUeiZxjmz9A.png?r=5eb" },
@@ -56,16 +62,14 @@ document.addEventListener("DOMContentLoaded", () => {
 
   profileCards.forEach((card, index) => {
     card.addEventListener("click", () => {
-
       if (!card.classList.contains("add-profile-card")) {
         const selectedProfile = profiles[index];
 
         localStorage.setItem("selectedProfileId", selectedProfile.id);
         localStorage.setItem("selectedProfileName", selectedProfile.name);
         localStorage.setItem("selectedProfileAvatar", selectedProfile.avatar); 
-
       
-        window.location.href = "./watch-js.html";
+        window.location.href = "./feed.html";
       } else {
         alert("Add Profile clicked!");
       }
