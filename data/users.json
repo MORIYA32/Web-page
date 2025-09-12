@@ -1,1 +1,16 @@
-[]
+[
+  {
+    "id": 1757625175314,
+    "email": "moriyagavra@gmail.com",
+    "username": "moriyagavra@gmail.com",
+    "password": "1234567",
+    "createdAt": "2025-09-11T21:12:55.314Z"
+  },
+  {
+    "id": 1757657505298,
+    "email": "carmela543@gmail.com",
+    "username": "carmela543@gmail.com",
+    "password": "0527629909",
+    "createdAt": "2025-09-12T06:11:45.298Z"
+  }
+]

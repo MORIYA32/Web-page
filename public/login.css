@@ -151,17 +151,21 @@ a {
 }
 
 .remember {
-  display: inline-flex;
+  display: flex;
   align-items: center;
   cursor: pointer;
   color: white;
   gap: 8px;
+    vertical-align: middle;
 }
 
 input[type="checkbox"] {
+  margin-top: 11px;
+   display: inline-block;
+  padding: 6px;
   appearance: none;
-  width: 14px;
-  height: 14px;
+  width: 8px;        
+  height: 8px;       
   background-color: black;
   border: 0.2px solid rgba(255, 255, 255, 0.479);
   cursor: pointer;
@@ -169,6 +173,7 @@ input[type="checkbox"] {
   border-radius: 0.125rem;
   transition: border 0.3s ease;
 }
+
 
 input[type="checkbox"]:hover {
   border: 1.5px solid white;

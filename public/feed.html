@@ -63,13 +63,18 @@
 
       <!-- Navbar: Right side nav bar icons always visible -->
       <!-- Search icon and search bar-->
-      <div class="navbar-icons d-flex align-items-center ms-auto">
-        <div class="search-container">
-          <input type="text" class="search-input" id="searchInput" placeholder="Titles, genres">
-          <a href="#" class="me-3" id="searchIcon">
-            <i class="fas fa-search"></i>
-          </a>
-        </div>
+<div class="search-container">
+  <div class="input-wrapper">
+    <i class="fas fa-search search-inside-icon"></i>
+    <input type="text" class="search-input" id="searchInput" placeholder="Titles, people, genres">
+  </div>
+
+  <a href="#" class="me-3" id="searchIcon">
+    <i class="fas fa-search"></i>
+  </a>
+</div>
+
+
 
         <!-- Bell icon -->
         <a href="#" class="navbar-icon">
@@ -86,22 +91,50 @@
           <img
             src="https://occ-0-8214-784.1.nflxso.net/dnm/api/v6/vN7bi_My87NPKvsBoib006Llxzg/AAAABT8sUMuSqctHteshq7njO_5-LpEDZEJxml-D7fyKkuadlRmsdTGg4rzZEscPdpdHROTubpN_v4E8wlAi94qmetsgUeiZxjmz9A.png?r=5eb"
             alt="Profile" class="profile-pic">
+            <i class="fa-solid fa-caret-down dropdown-arrow"></i>
           <ul class="dropdown-menu">
             <li>
-              <a href="#"><img
-                  src="https://occ-0-8214-784.1.nflxso.net/dnm/api/v6/vN7bi_My87NPKvsBoib006Llxzg/AAAABfBs_RmrXu6XN02hkLZzUgrqSOMFIx6LUk_-T4dG4Vgr7rwnmYyejpUUebFqmVDbnrwxESqJu6ml0q-G6KQVzRqKA42KmNEPkDmn.png?r=f55"
-                  alt="Kids Profile" class="profile-avatar">
-                Kids
+         <a href="#" class="profile-link">
+  <img src="https://occ-0-8214-784.1.nflxso.net/dnm/api/v6/vN7bi_My87NPKvsBoib006Llxzg/AAAABfBs_RmrXu6XN02hkLZzUgrqSOMFIx6LUk_-T4dG4Vgr7rwnmYyejpUUebFqmVDbnrwxESqJu6ml0q-G6KQVzRqKA42KmNEPkDmn.png?r=f55"
+       alt="Kids Profile" class="profile-avatar">
+  <span class="profile-text">Kids</span>
+</a>
+                 <a href="#" class="profile-link"><img
+                  src="https://occ-0-8214-784.1.nflxso.net/dnm/api/v6/vN7bi_My87NPKvsBoib006Llxzg/AAAABdgqRu86LNrfFPuQ2Xhlz2NQehmsezXIx7HyVhyQXZ1wK8n97QjoJnDaiuKnWVnXclSIoqmrdlcXykFzFbnQP91p8rM-yxTFwQ.png?r=181"
+                  alt="Tal Profile" class="profile-avatar">
+                  <span class="profile-text">Tal</span>
               </a>
             </li>
             <li>
               <hr class="dropdown-divider" />
             </li>
-            <li><a href="#" class="nav-sign-out">Manage Profiles</a></li>
-            <li><a href="#" class="nav-sign-out">Transfer Profile</a></li>
-            <li><a href="#" class="nav-sign-out">Settings</a></li>
-            <li><a href="#" class="nav-sign-out">Help Center</a></li>
-            <li><a href="#" class="nav-sign-out">Sign out of Netflix</a></li>
+           <li>
+<a href="#" class="nav-sign-out-a">
+  <i class="fa-regular fa-pen-to-square"></i>
+  <span class="link-text">Manage Profiles</span>
+</a>
+</li>
+
+            <li>
+ <a href="#" id="transferProfileBtn" class="nav-sign-out">
+  <i class="fa-solid fa-money-bill-transfer"></i>
+  <span class="link-text">Transfer Profile</span>
+</a>
+</li>
+
+<li>
+ <a href="#" class="nav-sign-out">
+  <i class="fa-solid fa-user"></i>
+  <span class="link-text">Account</span>
+</a>
+</li>
+<li>
+<a href="#" class="nav-sign-out">
+  <i class="fa-regular fa-circle-question"></i>
+  <span class="link-text">Help Center</span>
+</a>
+</li>
+            <li><a href="#" id="signOutBtn" class="nav-sign-out-t">Sign out of Netflix</a></li>
           </ul>
         </div>
       </div>

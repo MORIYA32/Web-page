@@ -165,6 +165,26 @@ const moviesData = [
     }
 ]
 
+
+document.getElementById("signOutBtn").addEventListener("click", (e) => {
+    e.preventDefault();
+    signOut();
+});
+document.getElementById("transferProfileBtn").addEventListener("click", (e) => {
+    e.preventDefault();
+    const isLoggedIn = localStorage.getItem("isLoggedIn");
+
+    if (!isLoggedIn) {
+        window.location.href = "./login.html";
+        return;
+    }
+
+    // אם המשתמש מחובר – העבר לפרופילים
+    window.location.href = "./profiles.html";
+});
+
+ 
+
 // Track user's activity (Likes and search)
 let userLikes = {};
 let isSearchActive = false;
@@ -540,3 +560,17 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
 });
+
+const searchIcon = document.getElementById('searchIcon');
+const searchInput = document.getElementById('searchInput');
+const inputWrapper = searchInput.parentElement;
+
+searchIcon.addEventListener('click', () => {
+  searchInput.classList.toggle('active');
+  inputWrapper.classList.toggle('active');
+
+  if(searchInput.classList.contains('active')) {
+    searchInput.focus();
+  }
+});
+
