@@ -45,7 +45,7 @@ body{
 }
 
 .profile-avatar {
-        min-width:84px;
+    min-width:84px;
     width: 10vw;
     height: auto;
     display: block;
@@ -53,6 +53,8 @@ body{
     border: 3px solid transparent;
     box-sizing: border-box;
     cursor: pointer;
+    object-fit: cover;
+    transition: transform 0.3s ease;
 }
 
 .profile-name {
@@ -114,4 +116,26 @@ body{
         .profiles-title{
             font-size: 30px;
         }
+}
+
+.profile-image-wrapper {
+    width: 10vw;
+    min-width: 84px;
+    aspect-ratio: 1 / 1;
+    border-radius: 6px;
+    overflow: hidden;
+    transition: transform 0.3s ease;
+}
+
+.profile-image-wrapper:hover {
+    transform: scale(1.05);
+    cursor: pointer;
+}
+
+.profile-image-wrapper img {
+  transition: transform 0.3s ease;
+}
+
+.profile-image-wrapper:hover img {
+  transform: scale(1.1);
 }
