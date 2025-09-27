@@ -97,6 +97,11 @@ body {
   margin-left: 15px;
 }
 
+.dropdown-arrow {
+  font-size: 8px;
+  color: white;         
+}
+
 .dropdown-menu {
   position: absolute;
   right: 0;
