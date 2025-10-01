@@ -41,6 +41,10 @@ app.get('/feed', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'feed.html'));
 });
 
+app.get('/settings', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'settingsPage.html'));
+});
+
 // Error handling middleware
 app.use((err, req, res, next) => {
     console.error('Error:', err.message);
