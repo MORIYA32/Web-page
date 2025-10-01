@@ -59,13 +59,31 @@ function validateForm() {
   if (!passwordInput.value.trim()) {
     showError(passwordInput, passwordError, "Password is required");
     isValid = false;
-  } else if (passwordInput.value.trim().length < 6) {
-    showError(passwordInput, passwordError, "Password must be at least 6 characters");
+  } else if (passwordInput.value.trim().length < 8) {
+    showError(passwordInput, passwordError, "Password must be at least 8 characters");
     isValid = false;
   }
 
   return isValid;
 }
+
+// Validate on blur
+emailInput.addEventListener('blur', () => {
+  if (emailInput.value.trim() && !validateEmail(emailInput.value.trim())) {
+    showError(emailInput, emailError, "Please enter a valid email");
+  }
+});
+
+passwordInput.addEventListener('blur', () => {
+  if (passwordInput.value.trim() && passwordInput.value.trim().length < 8) {
+    showError(passwordInput, passwordError, "Password must be at least 8 characters");
+  }
+});
+
+// Clear errors on focus
+[emailInput, usernameInput, passwordInput].forEach(input => {
+  input.addEventListener('focus', clearErrors);
+});
 
 async function registerUser(email, username, password) {
   try {

@@ -8,6 +8,22 @@ const updateEmailForm = document.getElementById('updateEmailForm');
 const newEmailInput = document.getElementById('newEmail');
 const emailError = document.getElementById('emailError');
 
+// Clear email field on blur if invalid
+newEmailInput.addEventListener('blur', () => {
+  const email = newEmailInput.value.trim();
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (email && !emailRegex.test(email)) {
+    emailError.textContent = 'Please enter a valid email address';
+    newEmailInput.classList.add('error');
+  }
+});
+
+// Clear error on focus
+newEmailInput.addEventListener('focus', () => {
+  emailError.textContent = '';
+  newEmailInput.classList.remove('error');
+});
+
 updateEmailForm.addEventListener('submit', (e) => {
   e.preventDefault();
   
@@ -38,6 +54,39 @@ const currentPasswordError = document.getElementById('currentPasswordError');
 const newPasswordError = document.getElementById('newPasswordError');
 const confirmPasswordError = document.getElementById('confirmPasswordError');
 
+// Clear error on focus for all password fields
+[currentPasswordInput, newPasswordInput, confirmPasswordInput].forEach(input => {
+  input.addEventListener('focus', () => {
+    currentPasswordError.textContent = '';
+    newPasswordError.textContent = '';
+    confirmPasswordError.textContent = '';
+    currentPasswordInput.classList.remove('error');
+    newPasswordInput.classList.remove('error');
+    confirmPasswordInput.classList.remove('error');
+  });
+});
+
+// Validate on blur
+newPasswordInput.addEventListener('blur', () => {
+  const newPwd = newPasswordInput.value.trim();
+  if (newPwd && newPwd.length < 8) {
+    newPasswordError.textContent = 'Password must be at least 8 characters';
+    newPasswordInput.classList.add('error');
+  } else if (newPwd && currentPasswordInput.value.trim() && newPwd === currentPasswordInput.value.trim()) {
+    newPasswordError.textContent = 'New password must be different from current password';
+    newPasswordInput.classList.add('error');
+  }
+});
+
+confirmPasswordInput.addEventListener('blur', () => {
+  const confirmPwd = confirmPasswordInput.value.trim();
+  const newPwd = newPasswordInput.value.trim();
+  if (confirmPwd && newPwd && confirmPwd !== newPwd) {
+    confirmPasswordError.textContent = 'Passwords do not match';
+    confirmPasswordInput.classList.add('error');
+  }
+});
+
 updatePasswordForm.addEventListener('submit', (e) => {
   e.preventDefault();
   
@@ -52,15 +101,22 @@ updatePasswordForm.addEventListener('submit', (e) => {
   let isValid = true;
   
   // Validate current password
-  if (currentPasswordInput.value.trim().length < 6) {
-    currentPasswordError.textContent = 'Password must be at least 6 characters';
+  if (currentPasswordInput.value.trim().length < 8) {
+    currentPasswordError.textContent = 'Password must be at least 8 characters';
     currentPasswordInput.classList.add('error');
     isValid = false;
   }
   
-  // Validate new password
-  if (newPasswordInput.value.trim().length < 6) {
-    newPasswordError.textContent = 'Password must be at least 6 characters';
+  // Validate new password length
+  if (newPasswordInput.value.trim().length < 8) {
+    newPasswordError.textContent = 'Password must be at least 8 characters';
+    newPasswordInput.classList.add('error');
+    isValid = false;
+  }
+  
+  // Validate new password is different from current
+  if (newPasswordInput.value.trim() === currentPasswordInput.value.trim()) {
+    newPasswordError.textContent = 'New password must be different from current password';
     newPasswordInput.classList.add('error');
     isValid = false;
   }
@@ -134,7 +190,7 @@ avatarOptions.forEach((avatarUrl, index) => {
   avatarGallery.appendChild(img);
 });
 
-createProfileForm.addEventListener('submit', (e) => {
+createProfileForm.addEventListener('submit', async (e) => {
   e.preventDefault();
   
   // Clear errors
@@ -143,25 +199,62 @@ createProfileForm.addEventListener('submit', (e) => {
   profileNameInput.classList.remove('error');
   profileAvatarInput.classList.remove('error');
   
-  let isValid = true;
+  const name = profileNameInput.value.trim();
+  const avatar = profileAvatarInput.value;
+  
+  let hasError = false;
   
   // Validate profile name
-  if (profileNameInput.value.trim().length < 1) {
+  if (!name) {
     profileNameError.textContent = 'Profile name is required';
     profileNameInput.classList.add('error');
-    isValid = false;
+    hasError = true;
   }
   
   // Avatar is now required (selected by default from gallery)
-  if (!profileAvatarInput.value || profileAvatarInput.value.trim() === '') {
+  if (!avatar || avatar.trim() === '') {
     profileAvatarError.textContent = 'Please select a profile picture';
-    isValid = false;
+    hasError = true;
   }
   
-  if (!isValid) return;
+  if (hasError) return;
   
-  // TODO: Add Ajax call to create profile on server
-  alert('Profile created successfully! (Ajax implementation pending)');
-  profileNameInput.value = '';
-  profileAvatarInput.value = '';
+  try {
+    // Call API to create profile
+    const response = await fetch('/api/profiles', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        name: name,
+        avatar: avatar
+      })
+    });
+
+    const data = await response.json();
+
+    if (response.ok) {
+      // Show success message
+      alert('Profile created successfully!');
+
+      // Clear form
+      profileNameInput.value = '';
+      profileAvatarInput.value = '';
+      
+      // Remove selected state from all avatars
+      document.querySelectorAll('.avatar-option').forEach(img => {
+        img.classList.remove('selected');
+      });
+
+      // Redirect to profiles page
+      window.location.href = './profiles.html';
+    } else {
+      // Show error
+      profileNameError.textContent = data.error || 'Failed to create profile';
+    }
+  } catch (error) {
+    console.error('Error creating profile:', error);
+    profileNameError.textContent = 'Failed to create profile. Please try again.';
+  }
 });

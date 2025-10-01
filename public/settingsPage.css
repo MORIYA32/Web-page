@@ -102,15 +102,35 @@ body {
 }
 
 .form-group input.error {
-  border-color: #e87c03;
+  border-color: red;
 }
 
 .error-message {
-  display: block;
-  color: #e87c03;
+  color: red;
   font-size: 13px;
+  display: flex;
+  align-items: center;
   margin-top: 5px;
+  line-height: 1;
   min-height: 18px;
+}
+
+.error-message::before {
+  content: "✖";
+  width: 14px;
+  height: 14px;
+  margin-right: 5px;
+  border: 1.5px solid red;
+  border-radius: 50%;
+  color: red;
+  font-size: 10px;
+  display: none;
+  align-items: center;
+  justify-content: center;
+}
+
+.error-message:not(:empty)::before {
+  display: flex;
 }
 
 .btn-primary {
