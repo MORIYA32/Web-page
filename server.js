@@ -13,7 +13,7 @@ const PORT = process.env.PORT || 3000;
 // Middleware
 app.use(cors());
 app.use(express.json());
-app.use(express.static('public'));
+app.use(express.static('views'));
 
 // Routes
 app.use('/api/auth', authRoutes);
@@ -22,27 +22,27 @@ app.use('/api/content', contentRoutes);
 
 // Serve static HTML files
 app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'login.html'));
+    res.sendFile(path.join(__dirname, 'views', 'login.html'));
 });
 
 app.get('/login', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'login.html'));
+    res.sendFile(path.join(__dirname, 'views', 'login.html'));
 });
 
 app.get('/register', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'register.html'));
+    res.sendFile(path.join(__dirname, 'views', 'register.html'));
 });
 
 app.get('/profiles', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'profiles.html'));
+    res.sendFile(path.join(__dirname, 'views', 'profiles.html'));
 });
 
 app.get('/feed', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'feed.html'));
+    res.sendFile(path.join(__dirname, 'views', 'feed.html'));
 });
 
 app.get('/settings', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'settingsPage.html'));
+    res.sendFile(path.join(__dirname, 'views', 'settingsPage.html'));
 });
 
 // Error handling middleware
@@ -58,5 +58,5 @@ app.use('*', (req, res) => {
 
 app.listen(PORT, () => {
     console.log(`🚀 Server running on http://localhost:${PORT}`);
-    console.log(`📁 Serving static files from public/`);
+    console.log(`📁 Serving static files from views/`);
 });
