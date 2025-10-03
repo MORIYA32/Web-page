@@ -377,7 +377,7 @@ body {
 
 .sort-select {
   background-color: rgba(0, 0, 0, 0.7);
-  border: 1pxsolid rgba(255, 255, 255, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.3);
   color: white;
   padding: 8px 12px;
   border-radius: 4px;

@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Content Details - Netflix</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="details.css">
+    <link rel="icon" href="/favicon.ico">
+</head>
+<body>
+    <div class="details-container">
+        <!-- Back Button -->
+        <button class="back-button" id="backButton">
+            <i class="fas fa-arrow-left"></i> Back to Browse
+        </button>
+
+        <!-- Trailer Section -->
+        <div class="trailer-section" id="trailerSection">
+            <iframe id="trailerPlayer" allowfullscreen></iframe>
+        </div>
+
+        <!-- Content Details -->
+        <div class="content-details">
+            <h1 id="contentTitle"></h1>
+            
+            <div class="content-meta">
+                <span id="contentYear"></span>
+                <span id="contentType"></span>
+            </div>
+
+            <div class="action-buttons">
+                <button class="btn btn-light btn-play" id="playButton">
+                    <i class="fas fa-play"></i> Play
+                </button>
+                <button class="btn btn-outline-light btn-like" id="likeButton">
+                    <i class="far fa-heart"></i> Like
+                </button>
+            </div>
+
+            <div class="content-info">
+                <div class="info-section">
+                    <h3>Genre</h3>
+                    <p id="contentGenre"></p>
+                </div>
+
+                <div class="info-section">
+                    <h3>Cast</h3>
+                    <p id="contentActors"></p>
+                </div>
+            </div>
+
+            <!-- Episodes Section (for series) -->
+            <div class="episodes-section" id="episodesSection" style="display: none;">
+                <h3>Episodes</h3>
+                <div class="season-selector">
+                    <select class="form-select" id="seasonSelect"></select>
+                </div>
+                <div class="episodes-list" id="episodesList"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="details.js"></script>
+</body>
+</html>

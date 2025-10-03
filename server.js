@@ -1,6 +1,8 @@
+require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
+const connectDB = require('./config/database');
 
 // Import routes
 const authRoutes = require('./routes/auth');
@@ -9,6 +11,9 @@ const contentRoutes = require('./routes/content');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+
+// Connect to MongoDB
+connectDB();
 
 // Middleware
 app.use(cors());
@@ -58,5 +63,5 @@ app.use('*', (req, res) => {
 
 app.listen(PORT, () => {
     console.log(`Server running on http://localhost:${PORT}`);
-    console.log(`📁 Serving static files from views/`);
+    console.log(`Serving static files from views`);
 });

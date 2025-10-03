@@ -1,13 +1,9 @@
 const Profile = require('../models/Profile');
 
 class ProfileController {
-    constructor() {
-        this.profileModel = new Profile();
-    }
-
     async getProfiles(req, res) {
         try {
-            const profiles = await this.profileModel.getProfiles();
+            const profiles = await Profile.find();
             res.json(profiles);
         } catch (error) {
             console.error('Get profiles error:', error);
@@ -29,7 +25,10 @@ class ProfileController {
             }
 
             // Create new profile
-            const newProfile = await this.profileModel.create({ name: name.trim(), avatar });
+            const newProfile = await Profile.create({
+                name: name.trim(),
+                avatar
+            });
             
             console.log(`New profile created: ${newProfile.name}`);
             
