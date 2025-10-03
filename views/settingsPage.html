@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Netflix - Settings</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <link rel="stylesheet" href="./settingsPage.css">
+  <link rel="icon" type="image/x-icon" href="https://assets.nflxext.com/ffe/siteui/common/icons/nficon2016.ico">
+</head>
+
+<body>
+  <div class="settings-container">
+    <div class="settings-header">
+      <a href="./feed.html" class="back-link">
+        <i class="fas fa-arrow-left"></i> Back to Feed
+      </a>
+      <h1>Account Settings</h1>
+    </div>
+
+    <div class="settings-content">
+      <!-- Update Email Section -->
+      <div class="settings-section">
+        <h2>Update Email</h2>
+        <form id="updateEmailForm">
+          <div class="form-group">
+            <label for="newEmail">New Email Address</label>
+            <input type="email" id="newEmail" placeholder="Enter new email" required>
+            <span class="error-message" id="emailError"></span>
+          </div>
+          <button type="submit" class="btn-primary">Update Email</button>
+        </form>
+      </div>
+
+      <hr class="section-divider">
+
+      <!-- Update Password Section -->
+      <div class="settings-section">
+        <h2>Update Password</h2>
+        <form id="updatePasswordForm">
+          <div class="form-group">
+            <label for="currentPassword">Current Password</label>
+            <input type="password" id="currentPassword" placeholder="Enter current password" required>
+            <span class="error-message" id="currentPasswordError"></span>
+          </div>
+          <div class="form-group">
+            <label for="newPassword">New Password</label>
+            <input type="password" id="newPassword" placeholder="Enter new password" required>
+            <span class="error-message" id="newPasswordError"></span>
+          </div>
+          <div class="form-group">
+            <label for="confirmPassword">Confirm New Password</label>
+            <input type="password" id="confirmPassword" placeholder="Confirm new password" required>
+            <span class="error-message" id="confirmPasswordError"></span>
+          </div>
+          <button type="submit" class="btn-primary">Update Password</button>
+        </form>
+      </div>
+
+      <hr class="section-divider">
+
+      <!-- Create Profile Section -->
+      <div class="settings-section">
+        <h2>Create New Profile</h2>
+        <form id="createProfileForm">
+          <div class="form-group">
+            <label for="profileName">Profile Name</label>
+            <input type="text" id="profileName" placeholder="Enter profile name" required>
+            <span class="error-message" id="profileNameError"></span>
+          </div>
+          <div class="form-group">
+            <label>Choose Profile Picture</label>
+            <div class="avatar-gallery" id="avatarGallery">
+              <!-- Avatars will be populated by JavaScript -->
+            </div>
+            <input type="hidden" id="profileAvatar">
+            <span class="error-message" id="profileAvatarError"></span>
+          </div>
+          <button type="submit" class="btn-primary">Create Profile</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="./settingsPage.js"></script>
+</body>
+
+</html>

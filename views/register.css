@@ -1,0 +1,371 @@
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html,
+body {
+  width: 100%;
+  min-height: 100vh;
+  overflow-x: hidden;
+  margin: 0;
+  padding: 0;
+  font-family: Netflix Sans, Helvetica Neue, Segoe UI, Roboto, Ubuntu, sans-serif;
+}
+
+body {
+  background-image: url('https://assets.nflxext.com/ffe/siteui/vlv3/3e4bd046-85a3-40e1-842d-fa11cec84349/web/IL-en-20250818-TRIFECTA-perspective_0d6e4742-18f8-4c23-9efd-bc5ffc374989_small.jpg');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-color: black;
+}
+
+.content {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+  z-index: 2;
+  margin-bottom: 0;
+}
+
+.dark-cover {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.4);
+  z-index: 1;
+}
+
+.logo {
+  position: absolute;
+  top: 20px;
+  left: 150px;
+  width: 120px;
+  z-index: 3;
+}
+
+.form-container {
+  margin-top: 60px;
+  margin-bottom: 40px;
+  background-color: rgba(0, 0, 0, 0.75);
+  padding: 30px 50px;
+  width: 360px;
+  height: auto;
+  min-height: 450px;
+  position: relative;
+  border-radius: 5px;
+  display: flex;
+  flex-direction: column;
+  z-index: 2;
+}
+
+.form-container h1 {
+  color: white;
+  font-size: 24px;
+  font-weight: bold;
+  margin-bottom: 20px;
+}
+
+.form-container input {
+  background-color: rgba(255, 255, 255, 0.05);
+  border: 0.6px solid gray;
+  padding: 10px;
+  margin-bottom: 13px;
+  color: white;
+  font-size: 13px;
+  border-radius: 3px;
+  width: 100%;
+}
+
+.form-container input::placeholder {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.signup-btn {
+  background-color: #e50914;
+  color: white;
+  padding: 10px;
+  border: none;
+  margin-bottom: 14px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 500;
+  font-size: 14px;
+}
+
+.signup-btn:hover {
+  background-color: #b20710;
+}
+
+.options {
+  font-size: 13px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  color: white;
+}
+
+.options a {
+  text-align: center;
+}
+
+a {
+  color: white;
+  font-size: 13px;
+  opacity: 1;
+  text-decoration: none;
+}
+
+.signin {
+  color: #aaa;
+  margin: 0;
+  text-align: center;
+}
+
+.signin a {
+  color: white;
+  font-weight: bold;
+  text-decoration: none;
+  margin-left: 4px;
+  font-size: 12px;
+}
+
+.signin a:hover {
+  text-decoration: underline;
+}
+
+.captcha-note {
+  font-size: 10px;
+  color: #777;
+  margin: 4px 0 0 0;
+  text-align: center;
+}
+
+.captcha-note a {
+  display: block;
+  margin-top: 4px;
+  text-align: center;
+  color: rgb(68, 142, 244);
+  font-size: 10px;
+}
+
+.footer {
+  background-color: rgb(22, 22, 22);
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 9px;
+  padding: 9px;
+  z-index: 2;
+  position: relative;
+}
+
+.footer-container {
+  max-width: 1000px;
+  margin: 30px auto 0;
+  padding: 9px;
+}
+
+.footer-container p,
+.footer-container a {
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 13px;
+  display: inline;
+  text-decoration: none;
+}
+
+.footer-links {
+  display: flex;
+  justify-content: flex-start;
+  flex-wrap: wrap;
+  margin: 20px 0;
+  gap: 150px;
+  cursor: pointer;
+}
+
+.footer-links ul {
+  list-style: none;
+  padding: 0;
+}
+
+.footer-links ul li {
+  margin-bottom: 10px;
+}
+
+.footer-links ul li a {
+  font-size: 12px;
+  text-decoration: underline;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.footer-links ul li a:hover {
+  text-decoration: underline;
+}
+
+.language-select {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  margin-top: 12px;
+  padding-bottom: 10px;
+}
+
+.select-lang {
+  min-width: 95px;
+  height: 24px;
+  font-size: 12px;
+  border-radius: 4px;
+  border: 0.4px solid #555;
+  background-color: rgb(22, 22, 22);
+  color: #fff;
+  text-align: center;
+  font-weight: 400;
+  appearance: none;
+  background-image: url("data:image/svg+xml;utf8,<svg fill='white' height='14' viewBox='0 0 24 24' width='14' xmlns='http://www.w3.org/2000/svg'><path d='M7 10l5 5 5-5z'/></svg>");
+  background-repeat: no-repeat;
+  background-position: right 8px center;
+  background-size: 10px;
+  cursor: pointer;
+  outline: none;
+  transition: box-shadow 0.2s ease;
+}
+
+.select-lang:focus {
+  border: 0.4px solid #555;
+  outline: 1.5px solid #fff;
+  outline-offset: 1.5px;
+}
+
+.select-lang option {
+  background-color: #fff;
+  color: black;
+}
+
+.language-select .icon {
+  position: absolute;
+  margin-left: 10px;
+  color: white;
+  pointer-events: none;
+  margin-top: 1px;
+}
+
+input.error {
+  border: 1px solid red;
+}
+
+.error-message {
+  color: red;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  margin: 0 0 8px 0;
+  padding: 0;
+  line-height: 1;
+}
+
+.error-message::before {
+  content: "✖";
+  width: 14px;
+  height: 14px;
+  margin-right: 5px;
+  border: 1.5px solid red;
+  border-radius: 50%;
+  color: red;
+  font-size: 10px;
+  display: none;
+  align-items: center;
+  justify-content: center;
+}
+
+.error-message:not(:empty)::before {
+  display: flex;
+}
+
+.success-message {
+  color: #46d369;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  margin: 0 0 8px 0;
+  padding: 0;
+  line-height: 1;
+}
+
+.success-message::before {
+  content: "✓";
+  width: 14px;
+  height: 14px;
+  margin-right: 5px;
+  border: 1.5px solid #46d369;
+  border-radius: 50%;
+  color: #46d369;
+  font-size: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+@media (max-width: 768px) {
+  .logo {
+    left: 20px;
+    width: 90px;
+  }
+
+  .form-container {
+    width: 90%;
+    max-width: 360px;
+    margin-top: 30px;
+    margin-bottom: 30px;
+  }
+
+  .footer-links {
+    flex-direction: column;
+    gap: 20px;
+  }
+}
+
+@media (max-width: 480px) {
+  .logo {
+    position: static;
+    display: block;
+    margin: 20px auto;
+    width: 80px;
+  }
+
+  .form-container {
+    width: 95%;
+    height: auto;
+    padding: 20px;
+  }
+
+  .form-container h1 {
+    font-size: 20px;
+    text-align: center;
+  }
+
+  .signup-btn {
+    font-size: 12px;
+    padding: 8px;
+  }
+
+  .options {
+    font-size: 12px;
+    text-align: center;
+  }
+
+  .footer-links {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .select-lang {
+    width: 100%;
+    min-width: 90px;
+    font-size: 11px;
+  }
+}
