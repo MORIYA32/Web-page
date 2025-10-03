@@ -26,7 +26,7 @@ class ContentController {
                 return res.status(404).json({ error: 'Content not found' });
             }
 
-            console.log(`✅ Content ${increment ? 'liked' : 'unliked'}: ${updatedContent.title} (${updatedContent.likes} likes)`);
+            console.log(`Content ${increment ? 'liked' : 'unliked'}: ${updatedContent.title} (${updatedContent.likes} likes)`);
 
             res.json({ 
                 message: 'Like updated successfully',

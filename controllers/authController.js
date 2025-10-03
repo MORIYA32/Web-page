@@ -44,7 +44,7 @@ class AuthController {
             // Create new user
             const newUser = await this.userModel.create({ email, username, password });
             
-            console.log(`✅ New user registered: ${email} (${username})`);
+            console.log(`New user registered: ${email} (${username})`);
             
             res.status(201).json({ 
                 message: 'User registered successfully',
@@ -72,7 +72,7 @@ class AuthController {
                 return res.status(401).json({ error: 'Invalid credentials' });
             }
 
-            console.log(`✅ User logged in: ${email}`);
+            console.log(`User logged in: ${email}`);
 
             res.json({ 
                 message: 'Login successful',

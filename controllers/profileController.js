@@ -31,7 +31,7 @@ class ProfileController {
             // Create new profile
             const newProfile = await this.profileModel.create({ name: name.trim(), avatar });
             
-            console.log(`✅ New profile created: ${newProfile.name}`);
+            console.log(`New profile created: ${newProfile.name}`);
             
             res.status(201).json({ 
                 message: 'Profile created successfully',
