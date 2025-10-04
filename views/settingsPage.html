@@ -81,6 +81,27 @@
           <button type="submit" class="btn-primary">Create Profile</button>
         </form>
       </div>
+
+      <hr class="section-divider">
+
+      <!-- Delete User Section -->
+      <div class="settings-section">
+        <h2>Delete Account</h2>
+        <p class="warning-text">Warning: This action cannot be undone. All your profiles and data will be permanently deleted.</p>
+        <form id="deleteUserForm">
+          <div class="form-group">
+            <label for="deleteUsername">Username</label>
+            <input type="text" id="deleteUsername" placeholder="Enter your username" required>
+            <span class="error-message" id="deleteUsernameError"></span>
+          </div>
+          <div class="form-group">
+            <label for="deletePassword">Password</label>
+            <input type="password" id="deletePassword" placeholder="Enter your password" required>
+            <span class="error-message" id="deletePasswordError"></span>
+          </div>
+          <button type="submit" class="btn-danger">Delete Account</button>
+        </form>
+      </div>
     </div>
   </div>
 

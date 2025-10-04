@@ -1,27 +1,23 @@
 const User = require('../models/User');
 
 class AuthController {
-    constructor() {
-        this.userModel = new User();
-    }
-
     async register(req, res) {
         try {
             const { email, username, password } = req.body;
 
             // Validation
             if (!email || !username || !password) {
-                return res.status(400).json({ error: 'Email, username, and password are required' });
+                return res.status(400).json({ error: 'All fields are required' });
             }
 
             // Email format validation
             const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
             if (!emailRegex.test(email)) {
-                return res.status(400).json({ error: 'Please enter a valid email' });
+                return res.status(400).json({ error: 'Invalid email format' });
             }
 
             // Username length validation
-            if (username.length < 3) {
+            if (username.trim().length < 3) {
                 return res.status(400).json({ error: 'Username must be at least 3 characters' });
             }
 
@@ -31,24 +27,35 @@ class AuthController {
             }
 
             // Check if user already exists
-            const existingUserByEmail = await this.userModel.findByEmail(email);
-            if (existingUserByEmail) {
-                return res.status(400).json({ error: 'User already exists with this email' });
-            }
+            const existingUser = await User.findOne({ 
+                $or: [{ email: email.toLowerCase() }, { username }] 
+            });
 
-            const existingUserByUsername = await this.userModel.findByUsername(username);
-            if (existingUserByUsername) {
-                return res.status(400).json({ error: 'Username is already taken' });
+            if (existingUser) {
+                if (existingUser.email === email.toLowerCase()) {
+                    return res.status(400).json({ error: 'Email already registered' });
+                }
+                if (existingUser.username === username) {
+                    return res.status(400).json({ error: 'Username already taken' });
+                }
             }
 
             // Create new user
-            const newUser = await this.userModel.create({ email, username, password });
-            
-            console.log(`New user registered: ${email} (${username})`);
-            
-            res.status(201).json({ 
-                message: 'User registered successfully',
-                user: { id: newUser.id, email: newUser.email, username: newUser.username }
+            const newUser = await User.create({
+                email: email.toLowerCase(),
+                username: username.trim(),
+                password // In production, hash this!
+            });
+
+            console.log(`New user registered: ${newUser.username} (${newUser.email})`);
+
+            res.status(201).json({
+                message: 'Registration successful',
+                user: {
+                    id: newUser._id,
+                    email: newUser.email,
+                    username: newUser.username
+                }
             });
 
         } catch (error) {
@@ -67,21 +74,62 @@ class AuthController {
             }
 
             // Find user
-            const user = await this.userModel.findByEmail(email);
+            const user = await User.findOne({ email: email.toLowerCase() });
+
             if (!user || user.password !== password) {
-                return res.status(401).json({ error: 'Invalid credentials' });
+                return res.status(401).json({ error: 'Invalid email or password' });
             }
 
-            console.log(`User logged in: ${email}`);
+            console.log(`User logged in: ${user.username}`);
 
-            res.json({ 
+            res.json({
                 message: 'Login successful',
-                user: { id: user.id, email: user.email }
+                user: {
+                    id: user._id,
+                    email: user.email,
+                    username: user.username
+                }
             });
 
         } catch (error) {
             console.error('Login error:', error);
             res.status(500).json({ error: 'Login failed' });
+        }
+    }
+
+    async deleteUser(req, res) {
+        try {
+            const { userId, username, password } = req.body;
+
+            // Validation
+            if (!userId || !username || !password) {
+                return res.status(400).json({ error: 'All fields are required' });
+            }
+
+            // Find user
+            const user = await User.findById(userId);
+
+            if (!user) {
+                return res.status(404).json({ error: 'User not found' });
+            }
+
+            // Verify credentials
+            if (user.username !== username || user.password !== password) {
+                return res.status(401).json({ error: 'Invalid credentials' });
+            }
+
+            // Delete user and associated profiles
+            const Profile = require('../models/Profile');
+            await Profile.deleteMany({ userId });
+            await User.findByIdAndDelete(userId);
+
+            console.log(`User deleted: ${user.username}`);
+
+            res.json({ message: 'User account deleted successfully' });
+
+        } catch (error) {
+            console.error('Delete user error:', error);
+            res.status(500).json({ error: 'Failed to delete user account' });
         }
     }
 }

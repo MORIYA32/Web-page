@@ -26,7 +26,7 @@ async function fetchContent() {
 function saveLikesToStorage() {
     const likesData = {};
     moviesData.forEach(movie => {
-        likesData[movie.id] = movie.likes;
+        likesData[movie._id] = movie.likes;
     });
     localStorage.setItem('netflixLikes', JSON.stringify(likesData));
 }
@@ -36,8 +36,8 @@ function loadLikesFromStorage() {
     if (stored) {
         const likesData = JSON.parse(stored);
         moviesData.forEach(movie => {
-            if (likesData[movie.id] !== undefined) {
-                movie.likes = likesData[movie.id];
+            if (likesData[movie._id] !== undefined) {
+                movie.likes = likesData[movie._id];
             }
         });
     }
@@ -63,22 +63,37 @@ function renderMovies() {
         const movieCard = document.createElement('div');
         movieCard.className = 'movie-card';
 
-        const userHasLiked = userLikes[movie.id] || false;
+        const userHasLiked = userLikes[movie._id] || false;
+        const genreDisplay = Array.isArray(movie.genre) ? movie.genre.join(', ') : movie.genre;
 
         movieCard.innerHTML = `
         <div class="movie-poster">
-            <img src="${movie.poster}" alt="${movie.title} poster">
+            <img src="${movie.thumbnail || movie.poster}" alt="${movie.title} poster">
         </div>
         <div class="movie-info">
             <div class="movie-title">${movie.title}</div>
             <div class="movie-details">${movie.year} • ${movie.type}</div>
-            <div class="movie-genre">${movie.genre}</div>
-            <button class="like-btn ${userHasLiked ? 'liked' : ''}" onclick="toggleLike(${movie.id})" data-movie-id="${movie.id}">
+            <div class="movie-genre">${genreDisplay}</div>
+            <button class="like-btn ${userHasLiked ? 'liked' : ''}" data-movie-id="${movie._id}">
               <i class="heart-icon ${userHasLiked ? 'fas' : 'far'} fa-heart"></i>
-              ${movie.likes} ${movie.likes === 1 ? 'like' : 'likes'}
+              ${movie.likes || 0} ${(movie.likes || 0) === 1 ? 'like' : 'likes'}
             </button>
         </div>
         `;
+        
+        // Add click event to card (but not on like button)
+        movieCard.addEventListener('click', (e) => {
+            if (!e.target.closest('.like-btn')) {
+                window.location.href = `details.html?id=${movie.id}`;
+            }
+        });
+        
+        // Add click event to like button
+        const likeBtn = movieCard.querySelector('.like-btn');
+        likeBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            toggleLike(movie._id);
+        });
 
         showsGrid.appendChild(movieCard);
     });
@@ -86,7 +101,7 @@ function renderMovies() {
 
 // Function to toggle like status
 async function toggleLike(movieId) {
-    const movie = moviesData.find(m => m.id === movieId);
+    const movie = moviesData.find(m => m._id === movieId);
     if (movie) {
         const userHasLiked = userLikes[movieId] || false;
         const increment = !userHasLiked;
@@ -181,8 +196,9 @@ function performSearch(query) {
     }
 
     filteredMovies = moviesData.filter(movie => {
+        const genreStr = Array.isArray(movie.genre) ? movie.genre.join(' ') : movie.genre;
         return movie.title.toLowerCase().includes(query.toLowerCase()) ||
-            movie.genre.toLowerCase().includes(query.toLowerCase()) ||
+            genreStr.toLowerCase().includes(query.toLowerCase()) ||
             movie.type.toLowerCase().includes(query.toLowerCase());
     });
 
@@ -216,22 +232,37 @@ function showSearchResults(query, results) {
         const movieCard = document.createElement('div');
         movieCard.className = 'movie-card';
 
-        const userHasLiked = userLikes[movie.id] || false;
+        const userHasLiked = userLikes[movie._id] || false;
+        const genreDisplay = Array.isArray(movie.genre) ? movie.genre.join(', ') : movie.genre;
 
         movieCard.innerHTML = `
         <div class="movie-poster">
-            <img src="${movie.poster}" alt="${movie.title} poster">
+            <img src="${movie.thumbnail || movie.poster}" alt="${movie.title} poster">
         </div>
         <div class="movie-info">
             <div class="movie-title">${movie.title}</div>
             <div class="movie-details">${movie.year} • ${movie.type}</div>
-            <div class="movie-genre">${movie.genre}</div>
-            <button class="like-btn ${userHasLiked ? 'liked' : ''}" onclick="toggleLike(${movie.id})" data-movie-id="${movie.id}">
+            <div class="movie-genre">${genreDisplay}</div>
+            <button class="like-btn ${userHasLiked ? 'liked' : ''}" data-movie-id="${movie._id}">
               <i class="heart-icon ${userHasLiked ? 'fas' : 'far'} fa-heart"></i>
-              ${movie.likes} ${movie.likes === 1 ? 'like' : 'likes'}
+              ${movie.likes || 0} ${(movie.likes || 0) === 1 ? 'like' : 'likes'}
             </button>
         </div>
         `;
+        
+        // Add click event to card
+        movieCard.addEventListener('click', (e) => {
+            if (!e.target.closest('.like-btn')) {
+                window.location.href = `details.html?id=${movie.id}`;
+            }
+        });
+        
+        // Add click event to like button
+        const likeBtn = movieCard.querySelector('.like-btn');
+        likeBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            toggleLike(movie._id);
+        });
 
         searchGrid.appendChild(movieCard);
     });
@@ -277,22 +308,37 @@ function renderSortedMovies(movies) {
         const movieCard = document.createElement('div');
         movieCard.className = 'movie-card';
 
-        const userHasLiked = userLikes[movie.id] || false;
+        const userHasLiked = userLikes[movie._id] || false;
+        const genreDisplay = Array.isArray(movie.genre) ? movie.genre.join(', ') : movie.genre;
 
         movieCard.innerHTML = `
         <div class="movie-poster">
-            <img src="${movie.poster}" alt="${movie.title} poster">
+            <img src="${movie.thumbnail || movie.poster}" alt="${movie.title} poster">
         </div>
         <div class="movie-info">
             <div class="movie-title">${movie.title}</div>
             <div class="movie-details">${movie.year} • ${movie.type}</div>
-            <div class="movie-genre">${movie.genre}</div>
-            <button class="like-btn ${userHasLiked ? 'liked' : ''}" onclick="toggleLike(${movie.id})" data-movie-id="${movie.id}">
+            <div class="movie-genre">${genreDisplay}</div>
+            <button class="like-btn ${userHasLiked ? 'liked' : ''}" data-movie-id="${movie._id}">
                 <i class="heart-icon ${userHasLiked ? 'fas' : 'far'} fa-heart"></i>
-                ${movie.likes} ${movie.likes === 1 ? 'like' : 'likes'}
+                ${movie.likes || 0} ${(movie.likes || 0) === 1 ? 'like' : 'likes'}
             </button>
         </div>
         `;
+        
+        // Add click event to card
+        movieCard.addEventListener('click', (e) => {
+            if (!e.target.closest('.like-btn')) {
+                window.location.href = `details.html?id=${movie.id}`;
+            }
+        });
+        
+        // Add click event to like button
+        const likeBtn = movieCard.querySelector('.like-btn');
+        likeBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            toggleLike(movie._id);
+        });
 
         showsGrid.appendChild(movieCard);
     });
@@ -335,6 +381,8 @@ function updateProfileDropdown() {
 
 function signOut() {
     localStorage.removeItem("isLoggedIn");
+    localStorage.removeItem("userId");
+    localStorage.removeItem("userEmail");
     localStorage.removeItem("selectedProfileId");
     localStorage.removeItem("selectedProfileName"); 
     localStorage.removeItem("selectedProfileAvatar");
@@ -391,8 +439,8 @@ document.addEventListener('DOMContentLoaded', async function () {
     });
     
     // Sign out event listener
-    const signOutBtn = document.querySelector('.nav-sign-out');
-    if (signOutBtn && signOutBtn.textContent.includes('Sign out')) {
+    const signOutBtn = document.getElementById('signOutBtn');
+    if (signOutBtn) {
         signOutBtn.addEventListener('click', function(e) {
             e.preventDefault();
             signOut();

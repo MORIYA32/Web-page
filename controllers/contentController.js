@@ -1,13 +1,9 @@
 const Content = require('../models/Content');
 
 class ContentController {
-    constructor() {
-        this.contentModel = new Content();
-    }
-
     async getContent(req, res) {
         try {
-            const content = await this.contentModel.getContent();
+            const content = await Content.find();
             res.json(content);
         } catch (error) {
             console.error('Get content error:', error);
@@ -20,17 +16,25 @@ class ContentController {
             const { id } = req.params;
             const { increment = true } = req.body;
 
-            const updatedContent = await this.contentModel.updateLikes(id, increment);
+            const content = await Content.findById(id);
             
-            if (!updatedContent) {
+            if (!content) {
                 return res.status(404).json({ error: 'Content not found' });
             }
 
-            console.log(`Content ${increment ? 'liked' : 'unliked'}: ${updatedContent.title} (${updatedContent.likes} likes)`);
+            if (increment) {
+                content.likes++;
+            } else {
+                content.likes = Math.max(0, content.likes - 1);
+            }
+
+            await content.save();
+
+            console.log(`Content ${increment ? 'liked' : 'unliked'}: ${content.title} (${content.likes} likes)`);
 
             res.json({ 
                 message: 'Like updated successfully',
-                content: updatedContent
+                content
             });
 
         } catch (error) {
