@@ -220,6 +220,12 @@ createProfileForm.addEventListener('submit', async (e) => {
   if (hasError) return;
   
   try {
+    const userId = localStorage.getItem("userId");
+    if (!userId) {
+      window.location.href = "./login.html";
+      return;
+    }
+
     // Call API to create profile
     const response = await fetch('/api/profiles', {
       method: 'POST',
@@ -228,27 +234,16 @@ createProfileForm.addEventListener('submit', async (e) => {
       },
       body: JSON.stringify({
         name: name,
-        avatar: avatar
+        avatar: avatar,
+        userId: userId
       })
     });
 
     const data = await response.json();
 
     if (response.ok) {
-      // Show success message
-      alert('Profile created successfully!');
-
-      // Clear form
-      profileNameInput.value = '';
-      profileAvatarInput.value = '';
-      
-      // Remove selected state from all avatars
-      document.querySelectorAll('.avatar-option').forEach(img => {
-        img.classList.remove('selected');
-      });
-
-      // Redirect to profiles page
-      window.location.href = './profiles.html';
+      // Redirect to feed page
+      window.location.href = './feed.html';
     } else {
       // Show error
       profileNameError.textContent = data.error || 'Failed to create profile';
@@ -256,5 +251,88 @@ createProfileForm.addEventListener('submit', async (e) => {
   } catch (error) {
     console.error('Error creating profile:', error);
     profileNameError.textContent = 'Failed to create profile. Please try again.';
+  }
+});
+
+// Delete User Form
+const deleteUserForm = document.getElementById('deleteUserForm');
+const deleteUsernameInput = document.getElementById('deleteUsername');
+const deletePasswordInput = document.getElementById('deletePassword');
+const deleteUsernameError = document.getElementById('deleteUsernameError');
+const deletePasswordError = document.getElementById('deletePasswordError');
+
+// Clear errors on focus
+[deleteUsernameInput, deletePasswordInput].forEach(input => {
+  input.addEventListener('focus', () => {
+    deleteUsernameError.textContent = '';
+    deletePasswordError.textContent = '';
+    deleteUsernameInput.classList.remove('error');
+    deletePasswordInput.classList.remove('error');
+  });
+});
+
+deleteUserForm.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  
+  // Clear errors
+  deleteUsernameError.textContent = '';
+  deletePasswordError.textContent = '';
+  deleteUsernameInput.classList.remove('error');
+  deletePasswordInput.classList.remove('error');
+  
+  const username = deleteUsernameInput.value.trim();
+  const password = deletePasswordInput.value;
+  
+  let hasError = false;
+  
+  // Validate username
+  if (!username) {
+    deleteUsernameError.textContent = 'Username is required';
+    deleteUsernameInput.classList.add('error');
+    hasError = true;
+  }
+  
+  // Validate password
+  if (!password) {
+    deletePasswordError.textContent = 'Password is required';
+    deletePasswordInput.classList.add('error');
+    hasError = true;
+  }
+  
+  if (hasError) return;
+  
+  try {
+    const userId = localStorage.getItem("userId");
+    if (!userId) {
+      window.location.href = "./login.html";
+      return;
+    }
+
+    // Call API to delete user
+    const response = await fetch('/api/auth/user', {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        userId: userId,
+        username: username,
+        password: password
+      })
+    });
+
+    const data = await response.json();
+
+    if (response.ok) {
+      // Clear localStorage and redirect to login
+      localStorage.clear();
+      window.location.href = './login.html';
+    } else {
+      // Show error
+      deletePasswordError.textContent = data.error || 'Failed to delete account';
+    }
+  } catch (error) {
+    console.error('Error deleting account:', error);
+    deletePasswordError.textContent = 'Failed to delete account. Please try again.';
   }
 });

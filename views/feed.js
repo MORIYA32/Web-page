@@ -381,6 +381,8 @@ function updateProfileDropdown() {
 
 function signOut() {
     localStorage.removeItem("isLoggedIn");
+    localStorage.removeItem("userId");
+    localStorage.removeItem("userEmail");
     localStorage.removeItem("selectedProfileId");
     localStorage.removeItem("selectedProfileName"); 
     localStorage.removeItem("selectedProfileAvatar");
@@ -437,8 +439,8 @@ document.addEventListener('DOMContentLoaded', async function () {
     });
     
     // Sign out event listener
-    const signOutBtn = document.querySelector('.nav-sign-out');
-    if (signOutBtn && signOutBtn.textContent.includes('Sign out')) {
+    const signOutBtn = document.getElementById('signOutBtn');
+    if (signOutBtn) {
         signOutBtn.addEventListener('click', function(e) {
             e.preventDefault();
             signOut();
