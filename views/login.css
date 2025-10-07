@@ -152,10 +152,17 @@ a {
 
 .remember {
   display: inline-flex;
-  align-items: center;
+  align-items: baseline; 
   cursor: pointer;
   color: white;
   gap: 8px;
+  
+}
+
+.remember input[type="checkbox"] {
+  transform: scale(0.7);     
+  transform-origin: center;
+    top: 5px;
 }
 
 input[type="checkbox"] {
