@@ -188,17 +188,24 @@ body{
 .profile-name-input {
     color: #808080;
     font-size: 1.3vw;
-    background-color: #333;
-    border: 1px solid #555;
+    background-color: transparent;
+    border: 1px solid transparent;
     border-radius: 3px;
     padding: 0.25rem 0.5rem;
     text-align: center;
     width: 10vw;
     max-width: 10vw;
     min-width: 84px;
+    cursor: default;
 }
 
-.profile-name-input:focus {
+.profile-name-input.editable {
+    background-color: #333;
+    border-color: #555;
+    cursor: text;
+}
+
+.profile-name-input.editable:focus {
     outline: none;
     border-color: #fff;
     color: #fff;

@@ -33,6 +33,7 @@ async function fetchProfiles() {
 let isManageMode = false;
 let profilesData = [];
 let addProfileCardHTML = '';
+let editableProfiles = new Set(); // Track which profiles are being edited
 
 // Render profiles dynamically
 function renderProfiles(profiles, manageMode = false) {
@@ -68,9 +69,10 @@ function renderProfiles(profiles, manageMode = false) {
     profileHTML += `</div>`;
     
     if (manageMode) {
+      const isEditable = editableProfiles.has(profile._id);
       profileHTML += `
         <div class="profile-name-edit">
-          <input type="text" class="profile-name-input" value="${profile.name}" data-profile-id="${profile._id}">
+          <input type="text" class="profile-name-input ${isEditable ? 'editable' : ''}" value="${profile.name}" data-profile-id="${profile._id}" ${isEditable ? '' : 'readonly'}>
           <button class="edit-profile-btn" data-profile-id="${profile._id}">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
@@ -177,24 +179,26 @@ document.addEventListener("DOMContentLoaded", async () => {
     if (isManageMode) {
       manageBtn.textContent = 'Save';
       manageBtn.classList.add('save-mode');
+      editableProfiles.clear();
       renderProfiles(profilesData, true);
       
-      // Add event listeners for edit and delete buttons
+      // Add event listeners for edit buttons (toggle edit mode)
       document.querySelectorAll('.edit-profile-btn').forEach(btn => {
-        btn.addEventListener('click', async (e) => {
+        btn.addEventListener('click', (e) => {
           e.stopPropagation();
           const profileId = btn.dataset.profileId;
           const input = document.querySelector(`.profile-name-input[data-profile-id="${profileId}"]`);
-          const newName = input.value.trim();
           
-          if (newName && newName.length > 0) {
-            await updateProfileName(profileId, newName);
-            // Update local data
-            const profile = profilesData.find(p => p._id === profileId);
-            if (profile) {
-              profile.name = newName;
-            }
+          if (editableProfiles.has(profileId)) {
+            // Already editable, do nothing
+            return;
           }
+          
+          // Make this profile editable
+          editableProfiles.add(profileId);
+          input.removeAttribute('readonly');
+          input.classList.add('editable');
+          input.focus();
         });
       });
       
@@ -206,13 +210,33 @@ document.addEventListener("DOMContentLoaded", async () => {
           if (success) {
             // Remove from local data and re-render
             profilesData = profilesData.filter(p => p._id !== profileId);
+            editableProfiles.delete(profileId);
             renderProfiles(profilesData, true);
           }
         });
       });
     } else {
+      // Save all edited profiles
+      const savePromises = [];
+      editableProfiles.forEach(profileId => {
+        const input = document.querySelector(`.profile-name-input[data-profile-id="${profileId}"]`);
+        const newName = input.value.trim();
+        
+        if (newName && newName.length > 0) {
+          const profile = profilesData.find(p => p._id === profileId);
+          if (profile && profile.name !== newName) {
+            savePromises.push(updateProfileName(profileId, newName));
+            profile.name = newName;
+          }
+        }
+      });
+      
+      await Promise.all(savePromises);
+      
       manageBtn.textContent = 'Manage Profiles';
       manageBtn.classList.remove('save-mode');
+      editableProfiles.clear();
+      
       // Refresh profiles from backend
       const freshProfiles = await fetchProfiles();
       renderProfiles(freshProfiles, false);
