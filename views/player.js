@@ -6,6 +6,8 @@ let currentEpisode = 1;
 const urlParams = new URLSearchParams(window.location.search);
 const contentId = urlParams.get('id');
 const isTrailer = urlParams.get('trailer') === 'true';
+const seasonParam = parseInt(urlParams.get('season'));
+const episodeParam = parseInt(urlParams.get('episode'));
 
 // Check authentication
 function checkAuthentication() {
@@ -156,8 +158,16 @@ async function initializePlayer() {
     } else if (currentContent.type === 'movie') {
         videoUrl = currentContent.videoUrl;
     } else if (currentContent.type === 'series') {
-        const season = currentContent.seasons[0];
-        const episode = season.episodes[0];
+        const targetSeason = seasonParam || 1;
+        const targetEpisode = episodeParam || 1;
+        const season = currentContent.seasons.find(s => s.seasonNumber === targetSeason);
+        const episode = season?.episodes.find(e => e.episodeNumber === targetEpisode);
+
+        if (!season || !episode) {
+            alert('Episode not found.');
+            window.location.href = './feed.html';
+            return;
+        }
         videoUrl = episode.videoUrl;
         currentSeason = season.seasonNumber;
         currentEpisode = episode.episodeNumber;
