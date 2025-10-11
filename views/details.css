@@ -170,6 +170,17 @@ body {
     line-height: 1.6;
 }
 
+.actor-link {
+    color: #0066cc;
+    text-decoration: none;
+    transition: color 0.2s;
+}
+
+.actor-link:hover {
+    color: #0052a3;
+    text-decoration: underline;
+}
+
 .episodes-section {
     margin-top: 40px;
 }
