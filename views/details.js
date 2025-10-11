@@ -85,6 +85,46 @@ function updateContentDetails() {
     }
 }
 
+// Fetch and display ratings
+async function fetchAndDisplayRatings() {
+    if (!currentContent._id) return;
+    
+    try {
+        const response = await fetch(`/api/content/${currentContent._id}/ratings`);
+        if (!response.ok) {
+            throw new Error('Failed to fetch ratings');
+        }
+        
+        const data = await response.json();
+        
+        if (data.ratings) {
+            const ratingsSection = document.getElementById('ratingsSection');
+            const imdbRating = document.getElementById('imdbRating');
+            const rtRating = document.getElementById('rtRating');
+            
+            let hasRatings = false;
+            
+            if (data.ratings.imdb) {
+                imdbRating.querySelector('.rating-value').textContent = data.ratings.imdb;
+                imdbRating.style.display = 'flex';
+                hasRatings = true;
+            }
+            
+            if (data.ratings.rottenTomatoes) {
+                rtRating.querySelector('.rating-value').textContent = data.ratings.rottenTomatoes;
+                rtRating.style.display = 'flex';
+                hasRatings = true;
+            }
+            
+            if (hasRatings) {
+                ratingsSection.style.display = 'flex';
+            }
+        }
+    } catch (error) {
+        console.error('Error fetching ratings:', error);
+    }
+}
+
 // Display episodes for series
 function displayEpisodes() {
     if (currentContent.type !== 'series') {
@@ -198,6 +238,7 @@ async function initializeDetailsPage() {
     
     loadTrailer(currentContent.trailerUrl);
     updateContentDetails();
+    fetchAndDisplayRatings();
     displayEpisodes();
     
     // Event listeners
