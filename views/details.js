@@ -70,7 +70,8 @@ function updateContentDetails() {
     document.getElementById('contentType').textContent = currentContent.type === 'series' ? 'TV Series' : 'Movie';
     document.getElementById('contentGenre').textContent = currentContent.genre.join(', ');
     document.getElementById('contentActors').textContent = currentContent.actors.join(', ');
-    
+    document.getElementById('contentDescription').textContent = currentContent.description || "No description available.";
+
     // Update like button
     const likeButton = document.getElementById('likeButton');
     const userHasLiked = userLikes[currentContent._id] === true;
