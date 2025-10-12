@@ -63,13 +63,53 @@ function loadTrailer(trailerUrl) {
     trailerPlayer.src = embedUrl;
 }
 
+// Fetch Wikipedia URL for an actor
+async function fetchWikipediaUrl(actorName) {
+    try {
+        const response = await fetch(`https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(actorName)}`);
+        if (response.ok) {
+            const data = await response.json();
+            return data.content_urls?.desktop?.page || null;
+        }
+    } catch (error) {
+        console.error(`Error fetching Wikipedia for ${actorName}:`, error);
+    }
+    return null;
+}
+
 // Update content details
-function updateContentDetails() {
+async function updateContentDetails() {
     document.getElementById('contentTitle').textContent = currentContent.title;
     document.getElementById('contentYear').textContent = currentContent.year;
     document.getElementById('contentType').textContent = currentContent.type === 'series' ? 'TV Series' : 'Movie';
     document.getElementById('contentGenre').textContent = currentContent.genre.join(', ');
-    document.getElementById('contentActors').textContent = currentContent.actors.join(', ');
+    
+    // Display actors with Wikipedia links
+    const actorsContainer = document.getElementById('contentActors');
+    actorsContainer.innerHTML = '';
+    
+    for (const actor of currentContent.actors) {
+        const wikipediaUrl = await fetchWikipediaUrl(actor);
+        
+        if (wikipediaUrl) {
+            const link = document.createElement('a');
+            link.href = wikipediaUrl;
+            link.target = '_blank';
+            link.rel = 'noopener noreferrer';
+            link.textContent = actor;
+            link.className = 'actor-link';
+            actorsContainer.appendChild(link);
+        } else {
+            const span = document.createElement('span');
+            span.textContent = actor;
+            actorsContainer.appendChild(span);
+        }
+        
+        if (currentContent.actors.indexOf(actor) < currentContent.actors.length - 1) {
+            actorsContainer.appendChild(document.createTextNode(', '));
+        }
+    }
+    
     document.getElementById('contentDescription').textContent = currentContent.description || "No description available.";
 
     // Update like button
