@@ -6,8 +6,6 @@ let currentEpisode = 1;
 const urlParams = new URLSearchParams(window.location.search);
 const contentId = urlParams.get('id');
 const isTrailer = urlParams.get('trailer') === 'true';
-const seasonParam = parseInt(urlParams.get('season'));
-const episodeParam = parseInt(urlParams.get('episode'));
 
 // Check authentication
 function checkAuthentication() {
@@ -34,25 +32,18 @@ async function fetchContentDetails(id) {
     }
 }
 
-// Convert Google Drive URL to embed URL
-function convertGoogleDriveToEmbed(url) {
-    if (!url) return '';
-    
-    // Extract file ID from Google Drive URL
-    const match = url.match(/\/d\/(.+?)\/|id=(.+?)(&|$)/);
-    if (match) {
-        const fileId = match[1] || match[2];
-        return `https://drive.google.com/file/d/${fileId}/preview`;
-    }
-    
-    return url;
+// Convert backslashes to forward slashes for web URLs
+function normalizeVideoPath(path) {
+    if (!path) return '';
+    return '/' + path.replace(/\\/g, '/');
 }
 
 // Load video
 function loadVideo(videoUrl) {
     const videoPlayer = document.getElementById('videoPlayer');
-    const embedUrl = convertGoogleDriveToEmbed(videoUrl);
-    videoPlayer.src = embedUrl;
+    const normalizedUrl = normalizeVideoPath(videoUrl);
+    videoPlayer.src = normalizedUrl;
+    videoPlayer.load();
 }
 
 // Update episode info
@@ -158,16 +149,8 @@ async function initializePlayer() {
     } else if (currentContent.type === 'movie') {
         videoUrl = currentContent.videoUrl;
     } else if (currentContent.type === 'series') {
-        const targetSeason = seasonParam || 1;
-        const targetEpisode = episodeParam || 1;
-        const season = currentContent.seasons.find(s => s.seasonNumber === targetSeason);
-        const episode = season?.episodes.find(e => e.episodeNumber === targetEpisode);
-
-        if (!season || !episode) {
-            alert('Episode not found.');
-            window.location.href = './feed.html';
-            return;
-        }
+        const season = currentContent.seasons[0];
+        const episode = season.episodes[0];
         videoUrl = episode.videoUrl;
         currentSeason = season.seasonNumber;
         currentEpisode = episode.episodeNumber;
