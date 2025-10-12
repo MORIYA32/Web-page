@@ -43,24 +43,18 @@ async function fetchContentDetails(id) {
     }
 }
 
-// Convert Google Drive URL to embed URL
-function convertGoogleDriveToEmbed(url) {
-    if (!url) return '';
-    
-    const match = url.match(/\/d\/(.+?)\/|id=(.+?)(&|$)/);
-    if (match) {
-        const fileId = match[1] || match[2];
-        return `https://drive.google.com/file/d/${fileId}/preview`;
-    }
-    
-    return url;
+// Convert backslashes to forward slashes for web URLs
+function normalizeVideoPath(path) {
+    if (!path) return '';
+    return '/' + path.replace(/\\/g, '/');
 }
 
 // Load trailer
 function loadTrailer(trailerUrl) {
     const trailerPlayer = document.getElementById('trailerPlayer');
-    const embedUrl = convertGoogleDriveToEmbed(trailerUrl);
-    trailerPlayer.src = embedUrl;
+    const normalizedUrl = normalizeVideoPath(trailerUrl);
+    trailerPlayer.src = normalizedUrl;
+    trailerPlayer.load();
 }
 
 // Fetch Wikipedia URL for an actor
