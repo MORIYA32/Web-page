@@ -12,7 +12,8 @@
     "dotenv": "^17.2.3",
     "express": "^4.21.2",
     "fs-extra": "^11.3.1",
-    "mongoose": "^8.18.3"
+    "mongoose": "^8.18.3",
+    "response-time": "^2.3.4"
   },
   "devDependencies": {
     "nodemon": "^3.1.10"
