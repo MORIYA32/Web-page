@@ -6,10 +6,10 @@ var responseTime = require('response-time')
 
 const connectDB = require('./config/database');
 
-// Import routes
 const authRoutes = require('./routes/auth');
 const profileRoutes = require('./routes/profiles');
 const contentRoutes = require('./routes/content');
+const progressRoutes = require('./routes/progress');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -31,10 +31,10 @@ app.use(express.json());
 
 app.use(express.static('views'));
 
-// Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/profiles', profileRoutes);
 app.use('/api/content', contentRoutes);
+app.use('/api/progress', progressRoutes);
 
 // Serve static HTML files
 app.get('/', (req, res) => {
