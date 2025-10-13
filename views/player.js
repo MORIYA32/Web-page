@@ -1,13 +1,16 @@
-let currentContent = null;
-let currentSeason = 1;
-let currentEpisode = 1;
+const VIDEO_CURRENT_TIME_UPDATE_INTRERVAL = 5000
 
-// Get content ID and type from URL
+const userId = localStorage.getItem("userId");
+
 const urlParams = new URLSearchParams(window.location.search);
-const contentId = urlParams.get('id');
+const initialContentId = urlParams.get('id');
 const isTrailer = urlParams.get('trailer') === 'true';
 
-// Check authentication
+let currentContent = null;
+let currentSeason = parseInt(urlParams.get('season'), 10) || 1;
+let currentEpisode = parseInt(urlParams.get('episode'), 10) || 1;
+let currentTimeInterval = null
+
 function checkAuthentication() {
     const isLoggedIn = localStorage.getItem('isLoggedIn');
     if (!isLoggedIn) {
@@ -17,7 +20,6 @@ function checkAuthentication() {
     return true;
 }
 
-// Fetch content details
 async function fetchContentDetails(id) {
     try {
         const response = await fetch(`/api/content`);
@@ -32,29 +34,31 @@ async function fetchContentDetails(id) {
     }
 }
 
-// Convert backslashes to forward slashes for web URLs
-function normalizeVideoPath(path) {
-    if (!path) return '';
-    return '/' + path.replace(/\\/g, '/');
+function loadVideo(videoUrl, startTime = 0) {
+    document.getElementById('videoPlayer').remove();
+
+    const videoWrapper = document.getElementById('video-wrapper');
+    const videoPlayer = document.createElement('video')
+
+    videoPlayer.id = "videoPlayer"
+    videoPlayer.controls =  true;
+    videoPlayer.src = videoUrl;
+    videoPlayer.currentTime = startTime;
+
+    videoWrapper.appendChild(videoPlayer)
+
+    videoPlayer.oncanplay = (e) => {
+        videoPlayer.play();
+    }
 }
 
-// Load video
-function loadVideo(videoUrl) {
-    const videoPlayer = document.getElementById('videoPlayer');
-    const normalizedUrl = normalizeVideoPath(videoUrl);
-    videoPlayer.src = normalizedUrl;
-    videoPlayer.load();
-}
-
-// Update episode info
 function updateEpisodeInfo() {
     const titleElement = document.getElementById('contentTitle');
     const detailsElement = document.getElementById('episodeDetails');
-    
+
     if (currentContent.type === 'series') {
         const season = currentContent.seasons.find(s => s.seasonNumber === currentSeason);
         const episode = season?.episodes.find(e => e.episodeNumber === currentEpisode);
-        
         titleElement.textContent = currentContent.title;
         detailsElement.textContent = `Season ${currentSeason} Episode ${currentEpisode}${episode?.episodeTitle ? ': ' + episode.episodeTitle : ''}`;
     } else {
@@ -63,17 +67,16 @@ function updateEpisodeInfo() {
     }
 }
 
-// Update navigation buttons
 function updateNavigationButtons() {
     const prevBtn = document.getElementById('prevEpisode');
     const nextBtn = document.getElementById('nextEpisode');
-    
+
     if (currentContent.type === 'series' && !isTrailer) {
         const currentSeasonData = currentContent.seasons.find(s => s.seasonNumber === currentSeason);
         const hasNextEpisode = currentEpisode < currentSeasonData?.episodes.length ||
                                currentSeason < currentContent.seasons.length;
         const hasPrevEpisode = currentEpisode > 1 || currentSeason > 1;
-        
+
         prevBtn.style.display = hasPrevEpisode ? 'block' : 'none';
         nextBtn.style.display = hasNextEpisode ? 'block' : 'none';
     } else {
@@ -82,28 +85,19 @@ function updateNavigationButtons() {
     }
 }
 
-// Play next episode
 function playNextEpisode() {
     const currentSeasonData = currentContent.seasons.find(s => s.seasonNumber === currentSeason);
-    
+
     if (currentEpisode < currentSeasonData.episodes.length) {
         currentEpisode++;
     } else if (currentSeason < currentContent.seasons.length) {
         currentSeason++;
         currentEpisode = 1;
-    } else {
-        return; // No more episodes
     }
-    
-    const season = currentContent.seasons.find(s => s.seasonNumber === currentSeason);
-    const episode = season.episodes.find(e => e.episodeNumber === currentEpisode);
-    
-    loadVideo(episode.videoUrl);
-    updateEpisodeInfo();
-    updateNavigationButtons();
+
+    loadEpisode()
 }
 
-// Play previous episode
 function playPreviousEpisode() {
     if (currentEpisode > 1) {
         currentEpisode--;
@@ -111,63 +105,87 @@ function playPreviousEpisode() {
         currentSeason--;
         const prevSeasonData = currentContent.seasons.find(s => s.seasonNumber === currentSeason);
         currentEpisode = prevSeasonData.episodes.length;
-    } else {
-        return; // No previous episodes
     }
-    
-    const season = currentContent.seasons.find(s => s.seasonNumber === currentSeason);
-    const episode = season.episodes.find(e => e.episodeNumber === currentEpisode);
-    
-    loadVideo(episode.videoUrl);
-    updateEpisodeInfo();
-    updateNavigationButtons();
+
+    loadEpisode()
 }
 
-// Initialize player
-async function initializePlayer() {
-    if (!checkAuthentication()) {
-        return;
+async function saveCurrentTime() {
+    const videoPlayer = document.getElementById('videoPlayer');
+
+    const currentTime = videoPlayer.currentTime;
+
+    await fetch('/api/progress', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            userId,
+            "contentId" : currentContent.id,
+            "season" : currentSeason,
+            "episode" : currentEpisode,
+            currentTime
+        })
+    });
+}
+
+async function getCurrentProgress() {
+    try {
+        const res = await fetch(`/api/progress?userId=${userId}&contentId=${currentContent.id}&season=${currentSeason}&episode=${currentEpisode}`);
+        if (res.ok) {
+            const data = await res.json();
+            return data.currentTime || 0;
+        }
+    } catch (err) {
+        console.error('Error fetching progress:', err);
     }
-    
-    if (!contentId) {
-        window.location.href = './feed.html';
-        return;
-    }
-    
-    currentContent = await fetchContentDetails(contentId);
-    
-    if (!currentContent) {
-        alert('Content not found');
-        window.location.href = './feed.html';
-        return;
-    }
+    return 0;
+}
+
+async function loadEpisode() {
+    clearInterval(currentTimeInterval)
+
+    const startTime = await getCurrentProgress(currentContent.id);
     
     let videoUrl;
-    
     if (isTrailer) {
         videoUrl = currentContent.trailerUrl;
     } else if (currentContent.type === 'movie') {
         videoUrl = currentContent.videoUrl;
     } else if (currentContent.type === 'series') {
-        const season = currentContent.seasons[0];
-        const episode = season.episodes[0];
+        const season = currentContent.seasons.find(s => s.seasonNumber === currentSeason);
+        const episode = season.episodes.find(s => s.episodeNumber === currentEpisode);
         videoUrl = episode.videoUrl;
         currentSeason = season.seasonNumber;
         currentEpisode = episode.episodeNumber;
     }
-    
-    loadVideo(videoUrl);
+
+    loadVideo(videoUrl, startTime);
     updateEpisodeInfo();
     updateNavigationButtons();
-    
-    // Event listeners
-    document.getElementById('backButton').addEventListener('click', () => {
+
+    currentTimeInterval = setInterval(saveCurrentTime, VIDEO_CURRENT_TIME_UPDATE_INTRERVAL);
+}
+
+async function initializePlayer() {
+    if (!checkAuthentication()) return;
+    if (!initialContentId) {
         window.location.href = './feed.html';
-    });
-    
+        return;
+    }
+
+    currentContent = await fetchContentDetails(initialContentId);
+    if (!currentContent) {
+        alert('Content not found');
+        window.location.href = './feed.html';
+        return;
+    }
+
+   loadEpisode()
+
+    // Event listeners
+    document.getElementById('backButton').addEventListener('click', () => window.location.href = './feed.html');
     document.getElementById('nextEpisode').addEventListener('click', playNextEpisode);
     document.getElementById('prevEpisode').addEventListener('click', playPreviousEpisode);
-    
 }
 
 // Initialize on page load
