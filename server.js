@@ -2,6 +2,8 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
+var responseTime = require('response-time')
+
 const connectDB = require('./config/database');
 
 // Import routes
@@ -18,6 +20,15 @@ connectDB();
 // Middleware
 app.use(cors());
 app.use(express.json());
+
+// time metrics
+// app.use(responseTime(function (req, res, time) {
+//   var stat = (req.method + req.url).toLowerCase()
+//     .replace(/[:.]/g, '')
+//     .replace(/\//g, '_')
+//   console.log(stat, time)
+// }))
+
 app.use(express.static('views'));
 
 // Routes
