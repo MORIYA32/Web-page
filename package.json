@@ -4,17 +4,28 @@
   "private": true,
   "main": "server.js",
   "scripts": {
-    "dev": "nodemon server.js",
-    "start": "node server.js"
+    "prestart": "kill-port 3001",
+    "start": "cross-env PORT=3001 node server.js",
+    "dev": "concurrently \"cross-env PORT=3001 nodemon server.js\" \"wait-on http://localhost:3001 && start http://localhost:3001\""
   },
   "dependencies": {
+    "axios": "^1.7.7",
+    "bcryptjs": "^2.4.3",
+    "connect-mongo": "^5.1.0",
     "cors": "^2.8.5",
     "dotenv": "^17.2.3",
     "express": "^4.21.2",
+    "express-session": "^1.17.3",
     "fs-extra": "^11.3.1",
-    "mongoose": "^8.18.3"
+    "mongodb": "^6.9.0",
+    "mongoose": "^8.18.3",
+    "multer": "^1.4.5-lts.1"
   },
   "devDependencies": {
-    "nodemon": "^3.1.10"
+    "concurrently": "^9.0.1",
+    "cross-env": "^7.0.3",
+    "kill-port": "^2.0.1",
+    "nodemon": "^3.1.10",
+    "wait-on": "^8.0.2"
   }
 }

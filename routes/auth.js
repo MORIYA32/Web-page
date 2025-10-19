@@ -1,14 +1,22 @@
 const express = require('express');
 const router = express.Router();
+
 const authController = require('../controllers/authController');
 
-// POST /api/auth/register
+function requireAuth(req, res, next) {
+  if (!req.session?.user) return res.status(401).json({ error: 'Unauthorized' });
+  next();
+}
+
+
 router.post('/register', authController.register.bind(authController));
 
-// POST /api/auth/login  
 router.post('/login', authController.login.bind(authController));
 
-// DELETE /api/auth/user
-router.delete('/user', authController.deleteUser.bind(authController));
+router.post('/logout', authController.logout.bind(authController));
+
+router.get('/whoami', authController.whoami.bind(authController));
+
+router.delete('/user', requireAuth, authController.deleteUser.bind(authController));
 
 module.exports = router;

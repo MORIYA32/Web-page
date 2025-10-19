@@ -1,137 +1,164 @@
+const bcrypt = require('bcryptjs');
 const User = require('../models/User');
+const Profile = require('../models/Profile');
+
+const SALT_ROUNDS = Number(process.env.BCRYPT_ROUNDS || 10);
+const ADMIN_EMAIL = String(process.env.ADMIN_EMAIL || 'admin@admin.com').toLowerCase();
+
+function isValidEmail(email) {
+  const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return re.test(String(email).toLowerCase());
+}
+
+function postLoginRedirect(role) {
+  return role === 'admin'
+    ? '/admin/add-content'
+    : (process.env.POST_LOGIN_PATH_USER || '/profiles');
+}
+
+async function hashPassword(plain) {
+  return bcrypt.hash(String(plain), SALT_ROUNDS);
+}
+
+async function verifyAgainstModel(user, plain) {
+  if (user && typeof user.verifyPassword === 'function') {
+    return user.verifyPassword(plain);
+  }
+  if (user?.passwordHash) {
+    return bcrypt.compare(String(plain), user.passwordHash);
+  }
+  if (typeof user?.password === 'string') {
+    if (user.password.startsWith('$2a$') || user.password.startsWith('$2b$') || user.password.startsWith('$2y$')) {
+      try {
+        return await bcrypt.compare(String(plain), user.password);
+      } catch {
+      }
+    }
+    return String(plain) === user.password;
+  }
+  return false;
+}
 
 class AuthController {
-    async register(req, res) {
-        try {
-            const { email, username, password } = req.body;
+  async register(req, res) {
+    try {
+      const { email, username, password } = req.body || {};
+      const cleanEmail = String(email || '').trim().toLowerCase();
+      const cleanUsername = String(username || '').trim();
 
-            // Validation
-            if (!email || !username || !password) {
-                return res.status(400).json({ error: 'All fields are required' });
-            }
+      if (!cleanEmail || !cleanUsername || !password) {
+        return res.status(400).json({ error: 'email, username, password are required' });
+      }
+      if (!isValidEmail(cleanEmail)) {
+        return res.status(400).json({ error: 'Invalid email format' });
+      }
+      if (cleanUsername.length < 3) {
+        return res.status(400).json({ error: 'Username must be at least 3 characters' });
+      }
+      if (String(password).length < 6) {
+        return res.status(400).json({ error: 'Password must be at least 6 characters' });
+      }
 
-            // Email format validation
-            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-            if (!emailRegex.test(email)) {
-                return res.status(400).json({ error: 'Invalid email format' });
-            }
+      const existing = await User.findOne({ $or: [{ email: cleanEmail }, { username: cleanUsername }] });
+      if (existing) {
+        if (existing.email === cleanEmail) return res.status(400).json({ error: 'Email already registered' });
+        if (existing.username === cleanUsername) return res.status(400).json({ error: 'Username already taken' });
+      }
 
-            // Username length validation
-            if (username.trim().length < 3) {
-                return res.status(400).json({ error: 'Username must be at least 3 characters' });
-            }
+      const role = cleanEmail === ADMIN_EMAIL ? 'admin' : 'user';
 
-            // Password length validation
-            if (password.length < 6) {
-                return res.status(400).json({ error: 'Password must be at least 6 characters' });
-            }
-
-            // Check if user already exists
-            const existingUser = await User.findOne({ 
-                $or: [{ email: email.toLowerCase() }, { username }] 
-            });
-
-            if (existingUser) {
-                if (existingUser.email === email.toLowerCase()) {
-                    return res.status(400).json({ error: 'Email already registered' });
-                }
-                if (existingUser.username === username) {
-                    return res.status(400).json({ error: 'Username already taken' });
-                }
-            }
-
-            // Create new user
-            const newUser = await User.create({
-                email: email.toLowerCase(),
-                username: username.trim(),
-                password // In production, hash this!
-            });
-
-            console.log(`New user registered: ${newUser.username} (${newUser.email})`);
-
-            res.status(201).json({
-                message: 'Registration successful',
-                user: {
-                    id: newUser._id,
-                    email: newUser.email,
-                    username: newUser.username
-                }
-            });
-
-        } catch (error) {
-            console.error('Registration error:', error);
-            res.status(500).json({ error: 'Registration failed' });
+      let user;
+      if (typeof User.createWithPassword === 'function') {
+        user = await User.createWithPassword({ email: cleanEmail, username: cleanUsername, password, role });
+      } else {
+        user = new User({ email: cleanEmail, username: cleanUsername, role });
+        if (User.schema.path('passwordHash')) {
+          user.passwordHash = await hashPassword(password);
+          user.password = undefined;
+        } else {
+          user.password = await hashPassword(password);
         }
+        await user.save();
+      }
+
+      try { await Profile.create({ userId: user._id, name: cleanUsername }); } catch (e) { /* no-op */ }
+
+      const sessionRole = user.role || (cleanEmail === ADMIN_EMAIL ? 'admin' : 'user');
+      req.session.user = { id: user._id.toString(), email: user.email, username: user.username, role: sessionRole };
+
+      return res.status(201).json({ ok: true, user: req.session.user, redirect: postLoginRedirect(sessionRole) });
+    } catch (error) {
+      console.error('Registration error:', error);
+      return res.status(500).json({ error: 'Registration failed' });
     }
+  }
 
-    async login(req, res) {
-        try {
-            const { email, password } = req.body;
+  async login(req, res) {
+    try {
+      const { email, password } = req.body || {};
+      const cleanEmail = String(email || '').trim().toLowerCase();
 
-            // Validation
-            if (!email || !password) {
-                return res.status(400).json({ error: 'Email and password are required' });
-            }
+      if (!cleanEmail || !password) {
+        return res.status(400).json({ error: 'Email and password are required' });
+      }
 
-            // Find user
-            const user = await User.findOne({ email: email.toLowerCase() });
+      const user = await User.findOne({ email: cleanEmail });
+      if (!user) return res.status(401).json({ error: 'Invalid email or password' });
 
-            if (!user || user.password !== password) {
-                return res.status(401).json({ error: 'Invalid email or password' });
-            }
+      const ok = await verifyAgainstModel(user, password);
+      if (!ok) return res.status(401).json({ error: 'Invalid email or password' });
 
-            console.log(`User logged in: ${user.username}`);
+      const role = user.role || (cleanEmail === ADMIN_EMAIL ? 'admin' : 'user');
+      req.session.user = { id: user._id.toString(), email: user.email, username: user.username, role };
 
-            res.json({
-                message: 'Login successful',
-                user: {
-                    id: user._id,
-                    email: user.email,
-                    username: user.username
-                }
-            });
-
-        } catch (error) {
-            console.error('Login error:', error);
-            res.status(500).json({ error: 'Login failed' });
-        }
+      return res.json({ ok: true, user: req.session.user, redirect: postLoginRedirect(role) });
+    } catch (error) {
+      console.error('Login error:', error);
+      return res.status(500).json({ error: 'Login failed' });
     }
+  }
 
-    async deleteUser(req, res) {
-        try {
-            const { userId, username, password } = req.body;
-
-            // Validation
-            if (!userId || !username || !password) {
-                return res.status(400).json({ error: 'All fields are required' });
-            }
-
-            // Find user
-            const user = await User.findById(userId);
-
-            if (!user) {
-                return res.status(404).json({ error: 'User not found' });
-            }
-
-            // Verify credentials
-            if (user.username !== username || user.password !== password) {
-                return res.status(401).json({ error: 'Invalid credentials' });
-            }
-
-            // Delete user and associated profiles
-            const Profile = require('../models/Profile');
-            await Profile.deleteMany({ userId });
-            await User.findByIdAndDelete(userId);
-
-            console.log(`User deleted: ${user.username}`);
-
-            res.json({ message: 'User account deleted successfully' });
-
-        } catch (error) {
-            console.error('Delete user error:', error);
-            res.status(500).json({ error: 'Failed to delete user account' });
-        }
+  async logout(req, res) {
+    try {
+      if (req.session) {
+        req.session.destroy(() => res.json({ ok: true }));
+      } else {
+        res.json({ ok: true });
+      }
+    } catch (error) {
+      console.error('Logout error:', error);
+      res.status(500).json({ error: 'Logout failed' });
     }
+  }
+
+  async whoami(req, res) {
+    return res.json({ user: req.session?.user || null });
+  }
+
+
+  async deleteUser(req, res) {
+    try {
+      const sessionUser = req.session?.user;
+      if (!sessionUser) return res.status(401).json({ error: 'Unauthorized' });
+
+      const targetId = (sessionUser.role === 'admin' && req.query?.id) ? req.query.id : sessionUser.id;
+
+      const toDelete = await User.findById(targetId);
+      if (!toDelete) return res.status(404).json({ error: 'User not found' });
+
+      await Profile.deleteMany({ userId: toDelete._id });
+      await User.deleteOne({ _id: toDelete._id });
+
+      if (targetId === sessionUser.id) {
+        req.session?.destroy(() => res.json({ ok: true, deleted: targetId }));
+      } else {
+        res.json({ ok: true, deleted: targetId });
+      }
+    } catch (error) {
+      console.error('Delete user error:', error);
+      res.status(500).json({ error: 'Delete failed' });
+    }
+  }
 }
 
 module.exports = new AuthController();
