@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Add New Content – Admin</title>
+
   <style>
     :root{
       --nf-red: #e50914;
@@ -22,7 +23,8 @@
       box-sizing: border-box;
     }
 
-    html, body{
+    html,
+    body{
       height: 100%;
     }
 
@@ -378,7 +380,6 @@
       border-color: rgba(255,255,255,.22) !important;
     }
 
-
     @media (max-width: 720px){
       header{
         padding: 14px 20px;
@@ -452,8 +453,31 @@
         font-size: 13px;
       }
     }
+
+    .field-compact label{
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .imdb-input{
+      width: 160px;
+      max-width: 100%;
+      padding: 8px 10px;
+      border-radius: 10px;
+    }
+
+    .align-end{
+      align-self: end;
+    }
+
+    @media (max-width: 900px){
+      .imdb-input{
+        width: 100%;
+      }
+    }
   </style>
 </head>
+
 <body>
   <header>
     <div class="brand">NETFLIX Admin</div>
@@ -466,6 +490,7 @@
 
       <form id="addContentForm" enctype="multipart/form-data">
         <div class="grid">
+
           <div class="field">
             <label for="title">Title</label>
             <input id="title" name="title" type="text" placeholder="Enter movie or series title" required />
@@ -493,6 +518,19 @@
               <option value="series">Series</option>
             </select>
           </div>
+
+          <div class="field field-compact align-end">
+            <label for="imdbId">IMDb ID(optional)</label>
+            <input
+              id="imdbId"
+              name="imdbId"
+              type="text"
+              placeholder="tt0119217"
+              pattern="tt[0-9]{7,}"
+              class="imdb-input"
+            />
+          </div>
+
           <div class="field full">
             <label for="cast">Actors</label>
             <textarea id="cast" name="cast" placeholder="List of main actors (comma-separated)"></textarea>
@@ -502,6 +540,7 @@
             <label for="description">Description (optional)</label>
             <textarea id="description" name="description" placeholder="Short synopsis or notes"></textarea>
           </div>
+
         </div>
 
         <div class="row">
@@ -537,9 +576,13 @@
         </div>
 
         <div class="actions">
-          <button class="btn ghost" type="button" onclick="document.getElementById('addContentForm').reset(); resetPreviews();">
+          <button
+            class="btn ghost"
+            type="button"
+            onclick="document.getElementById('addContentForm').reset(); resetPreviews();">
             Clear
           </button>
+
           <button class="btn primary" id="submitBtn" type="submit">
             Save Content
           </button>
@@ -572,6 +615,7 @@
     const videoDrop   = document.getElementById('videoDrop');
 
     const MAX_VIDEO_MB = 200;
+
     function human(size){
       if (!size) return '0 B';
       const i = Math.floor(Math.log(size) / Math.log(1024));
@@ -620,13 +664,13 @@
     });
 
     ['dragenter', 'dragover'].forEach(ev => {
-      posterDrop.addEventListener(ev, () => posterDrop.style.borderColor = 'var(--nf-red)');
-      videoDrop .addEventListener(ev, () => videoDrop .style.borderColor = 'var(--nf-red)');
+      posterDrop.addEventListener(ev, () => { posterDrop.style.borderColor = 'var(--nf-red)'; });
+      videoDrop .addEventListener(ev, () => { videoDrop .style.borderColor = 'var(--nf-red)'; });
     });
 
     ['dragleave', 'drop'].forEach(ev => {
-      posterDrop.addEventListener(ev, () => posterDrop.style.borderColor = 'rgba(255,255,255,.22)');
-      videoDrop .addEventListener(ev, () => videoDrop .style.borderColor = 'rgba(255,255,255,.22)');
+      posterDrop.addEventListener(ev, () => { posterDrop.style.borderColor = 'rgba(255,255,255,.22)'; });
+      videoDrop .addEventListener(ev, () => { videoDrop .style.borderColor = 'rgba(255,255,255,.22)'; });
     });
 
     posterDrop.addEventListener('drop', e => {
@@ -658,32 +702,48 @@
       btn.textContent = 'Saving...';
 
       const isMovie = (typeSelect.value || 'movie') === 'movie';
+
       if (isMovie) {
         if (!videoInput.files.length) {
           msg.textContent = '❌ Please choose a local MP4 file for a movie';
           msg.classList.add('error');
-          btn.disabled = false; btn.textContent = 'Save Content';
+          btn.disabled = false;
+          btn.textContent = 'Save Content';
           return;
         }
         const vf = videoInput.files[0];
         if (vf.type && vf.type !== 'video/mp4') {
           msg.textContent = '❌ Video must be an MP4 file';
           msg.classList.add('error');
-          btn.disabled = false; btn.textContent = 'Save Content';
+          btn.disabled = false;
+          btn.textContent = 'Save Content';
           return;
         }
         if (vf.size > MAX_VIDEO_MB * 1024 * 1024) {
           msg.textContent = `❌ Video too large (> ${MAX_VIDEO_MB}MB)`;
           msg.classList.add('error');
-          btn.disabled = false; btn.textContent = 'Save Content';
+          btn.disabled = false;
+          btn.textContent = 'Save Content';
           return;
         }
       }
 
       const fd = new FormData(form);
 
-      const genres = (fd.get('genres') || '').toString().split(',').map(s=>s.trim()).filter(Boolean).join(', ');
-      const cast   = (fd.get('cast')   || '').toString().split(',').map(s=>s.trim()).filter(Boolean).join(', ');
+      const genres = (fd.get('genres') || '')
+        .toString()
+        .split(',')
+        .map(s => s.trim())
+        .filter(Boolean)
+        .join(', ');
+
+      const cast = (fd.get('cast') || '')
+        .toString()
+        .split(',')
+        .map(s => s.trim())
+        .filter(Boolean)
+        .join(', ');
+
       fd.set('genres', genres);
       fd.set('cast', cast);
 
