@@ -8,6 +8,9 @@ router.get('/', contentController.getContent.bind(contentController));
 // POST /api/content/:id/like
 router.post('/:id/like', contentController.likeContent.bind(contentController));
 
+// GET /api/content/user-likes
+router.get('/user-likes', contentController.getUserLikes.bind(contentController));
+
 // GET /api/content/:id/ratings
 router.get('/:id/ratings', contentController.getRatings.bind(contentController));
 

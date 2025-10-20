@@ -47,6 +47,25 @@ function saveUserLikesToStorage() {
     localStorage.setItem('netflixUserLikes', JSON.stringify(userLikes));
 }
 
+// Fetch user's likes from server
+async function loadUserLikesFromServer() {
+    const userId = localStorage.getItem('userId');
+    if (!userId) return;
+    
+    try {
+        const response = await fetch(`/api/content/user-likes?userId=${userId}`);
+        if (response.ok) {
+            const data = await response.json();
+            userLikes = {};
+            data.likedIds.forEach(id => {
+                userLikes[id] = true;
+            });
+        }
+    } catch (error) {
+        console.error('Error loading user likes:', error);
+    }
+}
+
 function loadUserLikesFromStorage() {
     const stored = localStorage.getItem('netflixUserLikes');
     if (stored) {
@@ -101,10 +120,15 @@ function renderMovies() {
 
 // Function to toggle like status
 async function toggleLike(movieId) {
+    const userId = localStorage.getItem('userId');
+    if (!userId) {
+        console.error('User ID not found');
+        return;
+    }
+    
     const movie = moviesData.find(m => m._id === movieId);
     if (movie) {
         const userHasLiked = userLikes[movieId] || false;
-        const increment = !userHasLiked;
 
         try {
             // Call API to update like
@@ -113,7 +137,7 @@ async function toggleLike(movieId) {
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ increment })
+                body: JSON.stringify({ userId })
             });
 
             if (!response.ok) {
@@ -123,14 +147,14 @@ async function toggleLike(movieId) {
             const data = await response.json();
 
             // Update local data with response
-            movie.likes = data.content.likes;
-            userLikes[movieId] = increment;
+            movie.likes = data.likes;
+            userLikes[movieId] = data.userHasLiked;
 
-            //Save to localStorage
+            // Save to localStorage (for backup)
             saveLikesToStorage();
             saveUserLikesToStorage();
 
-            //Update the button immediately
+            // Update the button immediately
             updateLikeButton(movieId, movie.likes, userLikes[movieId]);
         } catch (error) {
             console.error('Error updating like:', error);
@@ -401,11 +425,13 @@ document.addEventListener('DOMContentLoaded', async function () {
     // Initialize page content
     updateWelcomeMessage();
     updateProfileDropdown();
-    loadLikesFromStorage();
-    loadUserLikesFromStorage();
     
     // Fetch content from backend and render
     await fetchContent();
+    
+    // Load user likes from server
+    await loadUserLikesFromServer();
+    
     renderMovies();
 
     // Search event listeners

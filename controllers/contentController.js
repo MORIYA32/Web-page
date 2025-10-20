@@ -14,32 +14,68 @@ class ContentController {
     async likeContent(req, res) {
         try {
             const { id } = req.params;
-            const { increment = true } = req.body;
-
+            const { userId } = req.body;
+            
+            if (!userId) {
+                return res.status(400).json({ error: 'userId is required' });
+            }
+            
             const content = await Content.findById(id);
             
             if (!content) {
                 return res.status(404).json({ error: 'Content not found' });
             }
-
-            if (increment) {
-                content.likes++;
-            } else {
-                content.likes = Math.max(0, content.likes - 1);
+            
+            // Initialize likedBy array if it doesn't exist
+            if (!content.likedBy) {
+                content.likedBy = [];
             }
-
+            
+            const hasLiked = content.likedBy.includes(userId);
+            
+            if (hasLiked) {
+                // Unlike: remove user from likedBy array
+                content.likedBy = content.likedBy.filter(uid => uid !== userId);
+                content.likes = Math.max(0, content.likes - 1);
+            } else {
+                // Like: add user to likedBy array
+                content.likedBy.push(userId);
+                content.likes += 1;
+            }
+            
             await content.save();
-
-            console.log(`Content ${increment ? 'liked' : 'unliked'}: ${content.title} (${content.likes} likes)`);
-
+            
+            console.log(`Content ${!hasLiked ? 'liked' : 'unliked'}: ${content.title} (${content.likes} likes)`);
+            
             res.json({ 
                 message: 'Like updated successfully',
-                content
+                likes: content.likes,
+                userHasLiked: !hasLiked
             });
-
         } catch (error) {
-            console.error('Like content error:', error);
+            console.error('Error updating like:', error);
             res.status(500).json({ error: 'Failed to update like' });
+        }
+    }
+
+    async getUserLikes(req, res) {
+        try {
+            const { userId } = req.query;
+            
+            if (!userId) {
+                return res.status(400).json({ error: 'userId is required' });
+            }
+            
+            const likedContent = await Content.find({ 
+                likedBy: userId 
+            }).select('_id');
+            
+            const likedIds = likedContent.map(content => content._id.toString());
+            
+            res.json({ likedIds });
+        } catch (error) {
+            console.error('Error fetching user likes:', error);
+            res.status(500).json({ error: 'Server error' });
         }
     }
 
