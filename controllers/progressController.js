@@ -17,7 +17,7 @@ class ProgressController {
         }
     }
 
-    async s(req, res) {
+    async getCurrentProgress(req, res) {
         const { userId, contentId, season, episode } = req.query;
         if (!userId || !contentId || !season || !episode) return res.status(400).json({ error: 'Missing fields' });
 
