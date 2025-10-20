@@ -22,6 +22,51 @@ async function fetchContent() {
     }
 }
 
+// Fetch unique genres for dropdown
+function fetchGenres() {
+    const genresSet = new Set();
+    moviesData.forEach(item => {
+        const genres = Array.isArray(item.genre) ? item.genre : [item.genre];
+        genres.forEach(g => genresSet.add(g));
+    });
+    return Array.from(genresSet).sort();
+}
+
+// Populate genres dropdown
+function populateGenresDropdown() {
+    const genres = fetchGenres();
+    const genresMenu = document.getElementById('genresMenu');
+    const genresMenuMobile = document.getElementById('genresMenuMobile');
+    
+    if (!genresMenu || !genresMenuMobile) return;
+    
+    genresMenu.innerHTML = '';
+    genresMenuMobile.innerHTML = '';
+    
+    genres.forEach(genre => {
+        const li = document.createElement('li');
+        li.innerHTML = `<a class="dropdown-item" href="genre.html?genre=${encodeURIComponent(genre)}">${genre}</a>`;
+        genresMenu.appendChild(li);
+        
+        const liMobile = li.cloneNode(true);
+        genresMenuMobile.appendChild(liMobile);
+    });
+}
+
+// GroupBy utility function
+function groupBy(array, key) {
+    return array.reduce((result, item) => {
+        const values = Array.isArray(item[key]) ? item[key] : [item[key]];
+        values.forEach(value => {
+            if (!result[value]) {
+                result[value] = [];
+            }
+            result[value].push(item);
+        });
+        return result;
+    }, {});
+}
+
 //LocalStorage for likes count
 function saveLikesToStorage() {
     const likesData = {};
@@ -488,6 +533,9 @@ document.addEventListener('DOMContentLoaded', async function () {
     
     // Load user likes from server
     await loadUserLikesFromServer();
+    
+    // Populate genres dropdown
+    populateGenresDropdown();
     
     renderMovies();
 

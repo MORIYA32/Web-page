@@ -4,10 +4,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Netflix</title>
+  <title>Movies - Netflix</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
-  <link rel="stylesheet" href="./feed.css">
+  <link rel="stylesheet" href="./movies.css">
   <link rel="icon" type="image/x-icon" href="https://assets.nflxext.com/ffe/siteui/common/icons/nficon2016.ico">
 </head>
 
@@ -26,8 +26,8 @@
           </button>
 
           <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="browseDropdown">
-            <li class="nav-item"><a class="nav-link active" href="./feed.html">Home</a></li>
-            <li class="nav-item"><a class="nav-link" href="./movies.html">Movies</a></li>
+            <li class="nav-item"><a class="nav-link" href="./feed.html">Home</a></li>
+            <li class="nav-item"><a class="nav-link active" href="./movies.html">Movies</a></li>
             <li class="nav-item">
               <a class="nav-link dropdown-toggle" href="#" id="genresDropdownMobile" data-bs-toggle="dropdown">
                 Genres
@@ -46,10 +46,10 @@
       <div class="collapse navbar-collapse d-none d-lg-block" id="navbarNav">
         <ul class="navbar-nav me-auto">
           <li class="nav-item">
-            <a class="nav-link active" href="./feed.html">Home</a>
+            <a class="nav-link" href="./feed.html">Home</a>
           </li>
           <li class="nav-item">
-            <a class="nav-link" href="./movies.html">Movies</a>
+            <a class="nav-link active" href="./movies.html">Movies</a>
           </li>
           <li class="nav-item dropdown">
             <a class="nav-link dropdown-toggle" href="#" id="genresDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
@@ -69,7 +69,6 @@
       </div>
 
       <!-- Navbar: Right side nav bar icons always visible -->
-      <!-- Search icon and search bar-->
       <div class="navbar-icons d-flex align-items-center ms-auto">
         <div class="search-container">
           <input type="text" class="search-input" id="searchInput" placeholder="Titles, genres">
@@ -109,17 +108,9 @@
               <i class="fa-regular fa-pen-to-square"></i>
               <span class="link-text">Manage Profiles</span>
             </a></li>
-            <li><a href="#" class="nav-sign-out">
-              <i class="fa-solid fa-money-bill-transfer"></i>
-              <span class="link-text">Transfer Profile</span>
-            </a></li>
             <li><a href="./settingsPage.html" class="nav-sign-out">
               <i class="fa-solid fa-user"></i>
               <span class="link-text">Settings</span>
-            </a></li>
-            <li><a href="#" class="nav-sign-out">
-              <i class="fa-regular fa-circle-question"></i>
-              <span class="link-text">Help Center</span>
             </a></li>
             <li><a href="#" class="nav-sign-out" id="signOutBtn">Sign out of Netflix</a></li>
           </ul>
@@ -127,43 +118,6 @@
       </div>
     </div>
   </nav>
-
-  <!-- Trailer section -->
-
-  <div class="trailer-section">
-    <div class="container-fluid">
-      <div class="row">
-        <div class="col-lg-6 col-md-8">
-          <div class="trailer-content">
-            <img
-              src="https://occ-0-8214-784.1.nflxso.net/dnm/api/v6/LmEnxtiAuzezXBjYXPuDgfZ4zZQ/AAAABTzuStxiXBZnoi1DEs8NseRfXlfFG15Ui1WIw2fIzIKi8PPClRYwHq8MUz0JjIc0UYRi9eYTcEwWEMbaOk_WTGnkLzfbctT-YmtYAG8Guif_KN8acBfUT6zleUnaUijfgL9dj9FUzda5vf7ge1WOKPyZ-Mi4hpKsyA4JNjkh45QSs97vEXtamg.webp?r=2ce"
-              alt="The Recruit" class="show-title">
-
-            <p class="plot-summary">
-              A thrill-seeking CIA newbie (Noah Centineo) gets more than he bargained for in this explosive action
-              series from the creator of "The Rookie."
-            </p>
-
-            <div class="trailer-buttons">
-              <button class="btn play-btn">
-                <i class="fas fa-play"></i>
-                Play
-              </button>
-              <button class="btn info-btn">
-                <i class="fas fa-info-circle"></i>
-                More Info
-              </button>
-            </div>
-          </div>
-        </div>
-        <div class="col-lg-6 col-md-4">
-          <div class="age-rating">
-            16+
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
 
   <!-- Search results section -->
 
@@ -176,12 +130,12 @@
     </div>
   </div>
 
-  <!-- Feed section -->
+  <!-- Movies section -->
 
   <div class="feed" id="mainFeed">
     <div class="container-fluid">
       <div class="feed-header">
-        <h2 class="section-title" id="welcome-message"></h2>
+        <h2 class="section-title">Movies</h2>
       </div>
       <div id="categoriesContainer">
         <!-- Categories with horizontal scrolling load dynamically here -->
@@ -190,7 +144,7 @@
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
-  <script src="feed.js"></script>
+  <script src="movies.js"></script>
 </body>
 
 </html>
