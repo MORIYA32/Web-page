@@ -4,7 +4,7 @@ const ProgressController  = require("../controllers/progressController");
 const progressController = new ProgressController();
 const router = express.Router();
 
-router.post("/", progressController.updateProgress);
-router.get("/", progressController.getCurrentProgress);
+router.post("/", (req, res) => progressController.updateProgress(req, res));
+router.get("/", (req, res) => progressController.getCurrentProgress(req, res));
 
 module.exports = router;
