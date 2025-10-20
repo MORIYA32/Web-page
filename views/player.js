@@ -11,6 +11,7 @@ let currentSeason = parseInt(urlParams.get('season'), 10) || 1;
 let currentEpisode = parseInt(urlParams.get('episode'), 10) || 1;
 let currentTimeInterval = null
 
+// Check authentication
 function checkAuthentication() {
     const isLoggedIn = localStorage.getItem('isLoggedIn');
     if (!isLoggedIn) {
@@ -20,6 +21,7 @@ function checkAuthentication() {
     return true;
 }
 
+// Fetch content details
 async function fetchContentDetails(id) {
     try {
         const response = await fetch(`/api/content`);
@@ -35,30 +37,30 @@ async function fetchContentDetails(id) {
 }
 
 function loadVideo(videoUrl, startTime = 0) {
-    document.getElementById('videoPlayer').remove();
+    const videoPlayer = document.getElementById('videoPlayer');
+    
+    if (!videoPlayer) {
+        console.error('Video player element not found');
+        return;
+    }
 
-    const videoWrapper = document.getElementById('video-wrapper');
-    const videoPlayer = document.createElement('video')
-
-    videoPlayer.id = "videoPlayer"
-    videoPlayer.controls =  true;
     videoPlayer.src = videoUrl;
     videoPlayer.currentTime = startTime;
 
-    videoWrapper.appendChild(videoPlayer)
-
-    videoPlayer.oncanplay = (e) => {
+    videoPlayer.oncanplay = () => {
         videoPlayer.play();
     }
 }
 
+// Update episode info
 function updateEpisodeInfo() {
     const titleElement = document.getElementById('contentTitle');
     const detailsElement = document.getElementById('episodeDetails');
-
+    
     if (currentContent.type === 'series') {
         const season = currentContent.seasons.find(s => s.seasonNumber === currentSeason);
         const episode = season?.episodes.find(e => e.episodeNumber === currentEpisode);
+        
         titleElement.textContent = currentContent.title;
         detailsElement.textContent = `Season ${currentSeason} Episode ${currentEpisode}${episode?.episodeTitle ? ': ' + episode.episodeTitle : ''}`;
     } else {
@@ -67,16 +69,17 @@ function updateEpisodeInfo() {
     }
 }
 
+// Update navigation buttons
 function updateNavigationButtons() {
     const prevBtn = document.getElementById('prevEpisode');
     const nextBtn = document.getElementById('nextEpisode');
-
+    
     if (currentContent.type === 'series' && !isTrailer) {
         const currentSeasonData = currentContent.seasons.find(s => s.seasonNumber === currentSeason);
         const hasNextEpisode = currentEpisode < currentSeasonData?.episodes.length ||
                                currentSeason < currentContent.seasons.length;
         const hasPrevEpisode = currentEpisode > 1 || currentSeason > 1;
-
+        
         prevBtn.style.display = hasPrevEpisode ? 'block' : 'none';
         nextBtn.style.display = hasNextEpisode ? 'block' : 'none';
     } else {

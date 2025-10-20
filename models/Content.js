@@ -36,6 +36,9 @@ const contentSchema = new mongoose.Schema({
         type: Number,
         default: 0
     },
+    likedBy: [{
+        type: String  // userId
+    }],
     imdbId: String
 }, {
     timestamps: true

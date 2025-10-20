@@ -23,6 +23,25 @@ function loadUserLikesFromStorage() {
     }
 }
 
+// Load user likes from server
+async function loadUserLikesFromServer() {
+    const userId = localStorage.getItem('userId');
+    if (!userId) return;
+    
+    try {
+        const response = await fetch(`/api/content/user-likes?userId=${userId}`);
+        if (response.ok) {
+            const data = await response.json();
+            userLikes = {};
+            data.likedIds.forEach(id => {
+                userLikes[id] = true;
+            });
+        }
+    } catch (error) {
+        console.error('Error loading user likes:', error);
+    }
+}
+
 // Save user likes to storage
 function saveUserLikesToStorage() {
     localStorage.setItem('userLikes', JSON.stringify(userLikes));
@@ -211,6 +230,12 @@ function displayEpisodes() {
 
 // Toggle like
 async function toggleLike() {
+    const userId = localStorage.getItem('userId');
+    if (!userId) {
+        console.error('User ID not found');
+        return;
+    }
+    
     const likeButton = document.getElementById('likeButton');
     const userHasLiked = userLikes[currentContent._id] === true;
     
@@ -220,9 +245,7 @@ async function toggleLike() {
             headers: {
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({
-                increment: !userHasLiked
-            })
+            body: JSON.stringify({ userId })
         });
         
         if (!response.ok) {
@@ -231,8 +254,8 @@ async function toggleLike() {
         
         const data = await response.json();
         
-        // Update local state
-        userLikes[currentContent._id] = !userHasLiked;
+        // Update local state with server response
+        userLikes[currentContent._id] = data.userHasLiked;
         saveUserLikesToStorage();
         
         // Update UI
@@ -260,7 +283,8 @@ async function initializeDetailsPage() {
         return;
     }
     
-    loadUserLikesFromStorage();
+    // Load user likes from server
+    await loadUserLikesFromServer();
     
     currentContent = await fetchContentDetails(contentId);
     
