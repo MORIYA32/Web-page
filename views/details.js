@@ -65,10 +65,11 @@ async function fetchContentDetails(id) {
 // Convert backslashes to forward slashes for web URLs
 function normalizeVideoPath(path) {
     if (!path) return '';
-    return '/' + path.replace(/\\/g, '/');
+    const cleaned = path.replace(/\\/g, '/');
+    return cleaned.startsWith('/') ? cleaned : '/' + cleaned;
 }
 
-// Load trailer
+// Load trailer (or full video source)
 function loadTrailer(trailerUrl) {
     const trailerPlayer = document.getElementById('trailerPlayer');
     const normalizedUrl = normalizeVideoPath(trailerUrl);
@@ -123,7 +124,10 @@ async function updateContentDetails() {
         }
     }
     
-    document.getElementById('contentDescription').textContent = currentContent.description || "No description available.";
+    //  trim description before fallback ----
+    const desc = (currentContent.description || '').trim();
+    document.getElementById('contentDescription').textContent = desc || "No description available.";
+    // ---------------------------------------------------
 
     // Update like button
     const likeButton = document.getElementById('likeButton');
@@ -254,11 +258,11 @@ async function toggleLike() {
         
         const data = await response.json();
         
-        // Update local state with server response
+        //  local state with server response
         userLikes[currentContent._id] = data.userHasLiked;
         saveUserLikesToStorage();
         
-        // Update UI
+        //  UI
         if (userLikes[currentContent._id]) {
             likeButton.classList.add('liked');
             likeButton.innerHTML = '<i class="fas fa-heart"></i> Liked';
@@ -294,7 +298,8 @@ async function initializeDetailsPage() {
         return;
     }
     
-    loadTrailer(currentContent.trailerUrl);
+    //  prefer full movie if exists, otherwise trailer
+    loadTrailer(currentContent.videoUrl || currentContent.trailerUrl);
     updateContentDetails();
     fetchAndDisplayRatings();
     displayEpisodes();
@@ -304,8 +309,20 @@ async function initializeDetailsPage() {
         window.location.href = './feed.html';
     });
     
+    //  Play button now plays in-place instead of navigating
     document.getElementById('playButton').addEventListener('click', () => {
-        window.location.href = `player.html?id=${currentContent.id}`;
+        const videoEl = document.getElementById('trailerPlayer');
+        const wantedUrl = currentContent.videoUrl || currentContent.trailerUrl;
+        if (!wantedUrl) return;
+
+        const normalized = normalizeVideoPath(wantedUrl);
+        const currentSrc = videoEl.currentSrc || videoEl.src || '';
+        if (!currentSrc.endsWith(normalized)) {
+            videoEl.src = normalized;
+            videoEl.load();
+        }
+        videoEl.play().catch(() => videoEl.focus());
+        videoEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
     });
     
     document.getElementById('likeButton').addEventListener('click', toggleLike);
