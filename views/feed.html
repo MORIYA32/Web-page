@@ -99,12 +99,16 @@
               <hr class="dropdown-divider" />
             </li>
             <li><a href="./profiles.html" class="nav-sign-out">
+              <i class="fa-regular fa-pen-to-square"></i>
+              <span class="link-text">Manage Profiles</span>
+            </a></li>
+            <li><a href="#" class="nav-sign-out">
               <i class="fa-solid fa-money-bill-transfer"></i>
               <span class="link-text">Transfer Profile</span>
             </a></li>
             <li><a href="./settingsPage.html" class="nav-sign-out">
               <i class="fa-solid fa-user"></i>
-              <span class="link-text">Account</span>
+              <span class="link-text">Settings</span>
             </a></li>
             <li><a href="#" class="nav-sign-out">
               <i class="fa-regular fa-circle-question"></i>
@@ -171,18 +175,9 @@
     <div class="container-fluid">
       <div class="feed-header">
         <h2 class="section-title" id="welcome-message"></h2>
-        <div class="sort-container">
-          <label class="sort-label" for="sortSelect">Sort by:</label>
-          <select class="sort-select" id="sortSelect">
-            <option value="choose">-- Choose --</option>
-            <option value="year">Year of release</option>
-            <option value="az">A-Z</option>
-            <option value="za">Z-A</option>
-          </select>
-        </div>
       </div>
-      <div class="shows-grid" id="showsGrid">
-        <!-- Shows load dynamically here -->
+      <div id="categoriesContainer">
+        <!-- Categories with horizontal scrolling load dynamically here -->
       </div>
     </div>
   </div>
