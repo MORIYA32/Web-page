@@ -225,6 +225,13 @@ function setupCarousel(categoryIndex, originalLength) {
     // Set initial position
     track.style.transform = `translateX(-${currentIndex * cardWidth}px)`;
 
+    // Hide arrows for small categories
+    if (originalLength < 4) {
+        leftBtn.style.display = 'none';
+        rightBtn.style.display = 'none';
+        return; // Don't set up carousel navigation
+    }
+
     rightBtn.addEventListener('click', () => {
         currentIndex += 4;
         track.style.transform = `translateX(-${currentIndex * cardWidth}px)`;
@@ -309,10 +316,10 @@ async function toggleLike(movieId) {
 
 // Update a specific like button
 function updateLikeButton(movieId, likeCount, userHasLiked) {
-    // Find the button using the data attribute
-    const button = document.querySelector(`[data-movie-id="${movieId}"]`);
+    // Find ALL buttons with this movie ID (there may be duplicates in different carousels)
+    const buttons = document.querySelectorAll(`[data-movie-id="${movieId}"]`);
 
-    if (button) {
+    buttons.forEach(button => {
         const heartIcon = button.querySelector('.heart-icon');
 
         // Update button appearance based on user's like status
@@ -337,7 +344,7 @@ function updateLikeButton(movieId, likeCount, userHasLiked) {
         setTimeout(() => {
             newHeartIcon.classList.remove('heart-animation');
         }, 600);
-    }
+    });
 }
 
 //Search functionality
