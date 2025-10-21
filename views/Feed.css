@@ -229,6 +229,33 @@ body {
   background-color: rgba(255, 255, 255, 0.1);
 }
 
+/* Multi-column genres dropdown */
+#genresMenu,
+#genresMenuMobile {
+  column-count: 3;
+  column-gap: 0;
+  padding: 10px 0;
+  min-width: 500px;
+  max-width: 500px;
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+#genresMenu li,
+#genresMenuMobile li {
+  list-style: none;
+  break-inside: avoid;
+  page-break-inside: avoid;
+}
+
+#genresMenu .dropdown-item,
+#genresMenuMobile .dropdown-item {
+  white-space: nowrap;
+  padding: 8px 20px;
+  font-size: 14px;
+  display: block;
+}
+
 /* Navbar responsiveness */
 
 @media (max-width: 991px) {

@@ -261,7 +261,7 @@ function setupCarousel(categoryIndex, originalLength) {
 function createMovieCard(item) {
     const card = document.createElement('div');
     card.className = 'movie-card';
-    card.onclick = () => window.location.href = `details.html?id=${item.id}`;
+    card.onclick = () => window.location.href = `details.html?id=${item._id}`;
 
     const storedLikes = loadLikesFromStorage();
     const currentLikes = storedLikes[item._id] !== undefined ? storedLikes[item._id] : item.likes;
@@ -281,16 +281,16 @@ function createMovieCard(item) {
                 <span>${item.type}</span>
             </div>
             <div class="movie-genre">${genres}</div>
-            <button class="like-button ${userHasLiked ? 'liked' : ''}" 
+            <button class="like-btn ${userHasLiked ? 'liked' : ''}" 
                     data-movie-id="${item._id}">
-                <i class="fas fa-heart heart-icon"></i>
-                <span class="like-count">${currentLikes}</span>
+                <i class="heart-icon ${userHasLiked ? 'fas' : 'far'} fa-heart"></i>
+                ${currentLikes} ${currentLikes === 1 ? 'like' : 'likes'}
             </button>
         </div>
     `;
 
     // Add click event to like button
-    const likeBtn = card.querySelector('.like-button');
+    const likeBtn = card.querySelector('.like-btn');
     likeBtn.addEventListener('click', (e) => {
         e.stopPropagation();
         toggleLike(item._id);
@@ -308,6 +308,7 @@ async function toggleLike(movieId) {
     }
 
     const wasLiked = userLikes.has(movieId);
+    console.log('toggleLike called - movieId:', movieId, 'wasLiked:', wasLiked);
 
     try {
         const response = await fetch(`/api/content/${movieId}/like`, {
@@ -319,8 +320,9 @@ async function toggleLike(movieId) {
         if (!response.ok) throw new Error('Failed to update like');
 
         const data = await response.json();
+        console.log('API response:', data);
         
-        if (data.liked) {
+        if (data.userHasLiked) {
             userLikes.add(movieId);
         } else {
             userLikes.delete(movieId);
@@ -328,7 +330,8 @@ async function toggleLike(movieId) {
 
         saveLikesToStorage(movieId, data.likes);
         saveUserLikesToStorage(userId, Array.from(userLikes));
-        updateLikeButton(movieId, data.likes, data.liked);
+        console.log('Calling updateLikeButton with:', movieId, data.likes, data.userHasLiked);
+        updateLikeButton(movieId, data.likes, data.userHasLiked);
 
     } catch (error) {
         console.error('Error toggling like:', error);
@@ -337,6 +340,7 @@ async function toggleLike(movieId) {
 }
 
 function updateLikeButton(movieId, likeCount, userHasLiked) {
+    // Find ALL buttons with this movie ID (there may be duplicates in different carousels)
     const buttons = document.querySelectorAll(`[data-movie-id="${movieId}"]`);
 
     buttons.forEach(button => {
@@ -345,32 +349,25 @@ function updateLikeButton(movieId, likeCount, userHasLiked) {
         // Update button appearance based on user's like status
         if (userHasLiked) {
             button.classList.add('liked');
-            if (heartIcon) {
-                heartIcon.classList.remove('far');
-                heartIcon.classList.add('fas');
-            }
+            heartIcon.classList.remove('far');
+            heartIcon.classList.add('fas');
         } else {
             button.classList.remove('liked');
-            if (heartIcon) {
-                heartIcon.classList.remove('fas');
-                heartIcon.classList.add('far');
-            }
+            heartIcon.classList.remove('fas');
+            heartIcon.classList.add('far');
         }
 
-        // Update the button content to match feed.js style
-        button.innerHTML = `<i class="heart-icon ${userHasLiked ? 'fas' : 'far'} fa-heart"></i> <span class="like-count">${likeCount}</span>`;
+        // Update the text content
+        button.innerHTML = `<i class="heart-icon ${userHasLiked ? 'fas' : 'far'} fa-heart"></i> ${likeCount} ${likeCount === 1 ? 'like' : 'likes'}`;
 
         // Add heart animation
         const newHeartIcon = button.querySelector('.heart-icon');
-        if (newHeartIcon) {
-            newHeartIcon.classList.add('heart-animation');
+        newHeartIcon.classList.add('heart-animation');
 
-            setTimeout(() => {
-                newHeartIcon.classList.remove('heart-animation');
-            }, 600);
-        }
-    });
-}
+        // Remove animation class after animation completes
+        setTimeout(() => {
+            newHeartIcon.classList.remove('heart-animation');
+        }, 600);
     });
 }
 
