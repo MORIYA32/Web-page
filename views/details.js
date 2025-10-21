@@ -77,18 +77,22 @@ function loadTrailer(trailerUrl) {
 }
 
 // Fetch Wikipedia URL for an actor
-async function fetchWikipediaUrl(actorName) {
+async function fetchWikipediaActorInfo(actorName) {
     try {
         const response = await fetch(`https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(actorName)}`);
         if (response.ok) {
             const data = await response.json();
-            return data.content_urls?.desktop?.page || null;
+            return {
+                url: data.content_urls?.desktop?.page || null,
+                image: data.thumbnail?.source || null
+            };
         }
     } catch (error) {
         console.error(`Error fetching Wikipedia for ${actorName}:`, error);
     }
-    return null;
+    return { url: null, image: null };
 }
+
 
 // Update content details
 async function updateContentDetails() {
@@ -102,26 +106,41 @@ async function updateContentDetails() {
     actorsContainer.innerHTML = '';
     
     for (const actor of currentContent.actors) {
-        const wikipediaUrl = await fetchWikipediaUrl(actor);
-        
-        if (wikipediaUrl) {
+        const actorInfo = await fetchWikipediaActorInfo(actor);
+
+        const actorDiv = document.createElement('div');
+        actorDiv.className = 'actor-card';
+
+        if (actorInfo.image) {
+            const img = document.createElement('img');
+            img.src = actorInfo.image;
+            img.alt = actor;
+            actorDiv.appendChild(img);
+        } else {
+            // No image - create a gray circle placeholder
+            const placeholder = document.createElement('div');
+            placeholder.className = 'actor-placeholder';
+            actorDiv.appendChild(placeholder);
+        }
+
+        if (actorInfo.url) {
             const link = document.createElement('a');
-            link.href = wikipediaUrl;
+            link.href = actorInfo.url;
             link.target = '_blank';
             link.rel = 'noopener noreferrer';
             link.textContent = actor;
-            link.className = 'actor-link';
-            actorsContainer.appendChild(link);
+            actorDiv.appendChild(link);
         } else {
             const span = document.createElement('span');
             span.textContent = actor;
-            actorsContainer.appendChild(span);
+            actorDiv.appendChild(span);
         }
-        
-        if (currentContent.actors.indexOf(actor) < currentContent.actors.length - 1) {
-            actorsContainer.appendChild(document.createTextNode(', '));
-        }
+
+        actorsContainer.appendChild(actorDiv);
     }
+
+
+
     
     document.getElementById('contentDescription').textContent = currentContent.description || "No description available.";
 
