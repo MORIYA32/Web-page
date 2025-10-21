@@ -74,12 +74,17 @@ function loadUserLikesFromStorage() {
 }
 
 // Render movies in Netflix-style horizontal categories
-function renderMovies() {
+function renderMovies(filterType = null) {
     const categoriesContainer = document.getElementById('categoriesContainer');
     categoriesContainer.innerHTML = '';
 
+    let filteredData = [...moviesData];
+    if (filterType === 'movie') {
+        filteredData = filteredData.filter(movie => movie.type.toLowerCase() === 'movie');
+    }
+
     // Get user's liked content genres for recommendations
-    const userLikedContent = moviesData.filter(movie => userLikes[movie._id]);
+    const userLikedContent = filteredData.filter(movie => userLikes[movie._id]);
     const userGenres = new Set();
     userLikedContent.forEach(movie => {
         const genres = Array.isArray(movie.genre) ? movie.genre : [movie.genre];
@@ -89,7 +94,7 @@ function renderMovies() {
     // Define categories
     const categories = [
         { 
-            title: 'Popular on Netflix', 
+            title: filterType === 'movie' ? 'Movies' : 'Popular on Netflix', 
             filter: () => true,
             sort: (movies) => movies.sort((a, b) => (b.likes || 0) - (a.likes || 0))
         },
@@ -111,21 +116,20 @@ function renderMovies() {
 
     categories.forEach((category, categoryIndex) => {
         // Filter movies for this category
-        let categoryMovies = moviesData.filter(category.filter);
+        let categoryMovies = filteredData.filter(category.filter);
         
         // Apply sorting if defined
         if (category.sort) {
             categoryMovies = category.sort([...categoryMovies]);
         }
-        
-        // Skip category if empty and shouldn't use fallback
-        if (category.skipFallback && categoryMovies.length === 0) {
-            return;
+        // If no movies in this category, skip rendering the entire category
+        if (categoryMovies.length === 0) {
+            return;  // skip this category
         }
         
-        // If category is empty or has few items, use all movies (unless skipFallback is true)
+        // Skip category if empty and shouldn't use fallback
         if (!category.skipFallback && categoryMovies.length < 3) {
-            categoryMovies = [...moviesData];
+            categoryMovies = [...filteredData];
         }
 
         // Only triple content for infinite scroll if there are 4+ items
@@ -209,6 +213,16 @@ function createMovieCard(movie) {
 
     return movieCard;
 }
+
+document.getElementById('moviesLink').addEventListener('click', function (e) {
+    e.preventDefault();
+    renderMovies('movie');
+});
+
+document.getElementById('homeLink').addEventListener('click', function(e) {
+    e.preventDefault();
+    renderMovies();  // No filter => show all
+});
 
 // Set up carousel navigation
 function setupCarousel(categoryIndex, originalLength) {
