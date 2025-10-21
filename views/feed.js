@@ -81,6 +81,8 @@ function renderMovies(filterType = null) {
     let filteredData = [...moviesData];
     if (filterType === 'movie') {
         filteredData = filteredData.filter(movie => movie.type.toLowerCase() === 'movie');
+    } else if (filterType === 'show') {
+        filteredData = filteredData.filter(movie => movie.type.toLowerCase() === 'series');
     }
 
     // Get user's liked content genres for recommendations
@@ -94,7 +96,7 @@ function renderMovies(filterType = null) {
     // Define categories
     const categories = [
         { 
-            title: filterType === 'movie' ? 'Movies' : 'Popular on Netflix', 
+            title: filterType === 'movie' ? 'Movies' : filterType === 'show' ? 'TV Shows' : 'Popular on Netflix', 
             filter: () => true,
             sort: (movies) => movies.sort((a, b) => (b.likes || 0) - (a.likes || 0))
         },
@@ -214,14 +216,27 @@ function createMovieCard(movie) {
     return movieCard;
 }
 
+
+//filter by movies
 document.getElementById('moviesLink').addEventListener('click', function (e) {
     e.preventDefault();
+    setActiveNavLink('moviesLink');
     renderMovies('movie');
 });
 
+//filter by tv shows
+document.getElementById('tvShowsLink').addEventListener('click', function (e) {
+    e.preventDefault();
+    setActiveNavLink('tvShowsLink');
+    renderMovies('show');
+});
+
+
+//no filter, all content
 document.getElementById('homeLink').addEventListener('click', function(e) {
     e.preventDefault();
-    renderMovies();  // No filter => show all
+    setActiveNavLink('homeLink');
+    renderMovies();
 });
 
 // Set up carousel navigation
@@ -472,6 +487,16 @@ function updateProfileDropdown() {
     if (profilePic && selectedAvatar) {
         profilePic.src = selectedAvatar;
     }
+}
+
+function setActiveNavLink(activeId) {
+    document.querySelectorAll('.nav-link').forEach(link => {
+        if (link.id === activeId) {
+            link.classList.add('active');
+        } else {
+            link.classList.remove('active');
+        }
+    });
 }
 
 function signOut() {
