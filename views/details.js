@@ -66,7 +66,25 @@ async function fetchContentDetails(id) {
 function normalizeVideoPath(path) {
     if (!path) return '';
     const cleaned = path.replace(/\\/g, '/');
+    // FIX: keep http(s) as-is
+    if (/^https?:\/\//i.test(cleaned) || cleaned.startsWith('blob:') || cleaned.startsWith('data:') || cleaned.startsWith('//')) {
+        return cleaned;
+    }
     return cleaned.startsWith('/') ? cleaned : '/' + cleaned;
+}
+
+// ADD: series first-episode fallback
+function firstEpisodeUrlIfAny(content) {
+    if (!content || content.type !== 'series') return '';
+    const seasons = Array.isArray(content.seasons) ? [...content.seasons] : [];
+    seasons.sort((a, b) => (a.seasonNumber ?? 0) - (b.seasonNumber ?? 0));
+    for (const s of seasons) {
+        const eps = Array.isArray(s.episodes) ? [...s.episodes] : [];
+        eps.sort((a, b) => (a.episodeNumber ?? 0) - (b.episodeNumber ?? 0));
+        const url = eps[0]?.videoUrl;
+        if (url) return url;
+    }
+    return '';
 }
 
 // Load trailer (or full video source)
@@ -298,8 +316,11 @@ async function initializeDetailsPage() {
         return;
     }
     
-    //  prefer full movie if exists, otherwise trailer
-    loadTrailer(currentContent.videoUrl || currentContent.trailerUrl);
+    // prefer full movie if exists, otherwise trailer
+    //  use first-episode fallback for series
+    const previewUrl = currentContent.videoUrl || currentContent.trailerUrl || firstEpisodeUrlIfAny(currentContent);
+    if (previewUrl) loadTrailer(previewUrl);
+
     updateContentDetails();
     fetchAndDisplayRatings();
     displayEpisodes();
@@ -309,10 +330,13 @@ async function initializeDetailsPage() {
         window.location.href = './feed.html';
     });
     
-    //  Play button now plays in-place instead of navigating
+    // Play button now plays in-place instead of navigating
     document.getElementById('playButton').addEventListener('click', () => {
         const videoEl = document.getElementById('trailerPlayer');
-        const wantedUrl = currentContent.videoUrl || currentContent.trailerUrl;
+        //  play first episode if series
+        const wantedUrl = (currentContent.type === 'series')
+            ? (firstEpisodeUrlIfAny(currentContent) || currentContent.trailerUrl)
+            : (currentContent.videoUrl || currentContent.trailerUrl);
         if (!wantedUrl) return;
 
         const normalized = normalizeVideoPath(wantedUrl);

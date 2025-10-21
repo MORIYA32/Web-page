@@ -2,8 +2,18 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Add New Content – Admin</title>
+
+  <script>
+    (function () {
+      var isFile = location.protocol === 'file:';
+      var isWrongPort = location.hostname === 'localhost' && location.port && location.port !== '3000';
+      if (isFile || isWrongPort) {
+        location.href = 'http://localhost:3000/admin/add';
+      }
+    })();
+  </script>
 
   <style>
     :root{
@@ -23,7 +33,10 @@
       box-sizing: border-box;
     }
 
-    html,
+    html{
+      height: 100%;
+    }
+
     body{
       height: 100%;
     }
@@ -144,10 +157,18 @@
       letter-spacing: .2px;
     }
 
-    input[type="text"],
-    input[type="number"],
-    textarea,
-    select{
+    input[type="text"]{
+      background: #262626;
+      color: #fff;
+      border: 1px solid rgba(255, 255, 255, .14);
+      border-radius: 12px;
+      padding: 12px 14px;
+      font-size: 15px;
+      outline: none;
+      transition: .15s border-color, .15s box-shadow, .15s background;
+    }
+
+    input[type="number"]{
       background: #262626;
       color: #fff;
       border: 1px solid rgba(255, 255, 255, .14);
@@ -159,12 +180,41 @@
     }
 
     textarea{
+      background: #262626;
+      color: #fff;
+      border: 1px solid rgba(255, 255, 255, .14);
+      border-radius: 12px;
+      padding: 12px 14px;
+      font-size: 15px;
+      outline: none;
+      transition: .15s border-color, .15s box-shadow, .15s background;
       resize: vertical;
       min-height: 90px;
     }
 
-    input:focus,
-    textarea:focus,
+    select{
+      background: #262626;
+      color: #fff;
+      border: 1px solid rgba(255, 255, 255, .14);
+      border-radius: 12px;
+      padding: 12px 14px;
+      font-size: 15px;
+      outline: none;
+      transition: .15s border-color, .15s box-shadow, .15s background;
+    }
+
+    input:focus{
+      border-color: var(--nf-red);
+      box-shadow: var(--ring);
+      background: #2c2c2c;
+    }
+
+    textarea:focus{
+      border-color: var(--nf-red);
+      box-shadow: var(--ring);
+      background: #2c2c2c;
+    }
+
     select:focus{
       border-color: var(--nf-red);
       box-shadow: var(--ring);
@@ -225,6 +275,7 @@
       gap: 10px;
       color: var(--muted);
       font-size: 14px;
+      flex-wrap: wrap;
     }
 
     .preview img{
@@ -311,9 +362,24 @@
       }
     }
 
-    input[type="text"],
-    input[type="number"],
-    textarea,
+    input[type="text"]{
+      padding: 10px 12px;
+      border-radius: 10px;
+      font-size: 14px;
+    }
+
+    input[type="number"]{
+      padding: 10px 12px;
+      border-radius: 10px;
+      font-size: 14px;
+    }
+
+    textarea{
+      padding: 10px 12px;
+      border-radius: 10px;
+      font-size: 14px;
+    }
+
     select{
       padding: 10px 12px;
       border-radius: 10px;
@@ -323,29 +389,6 @@
     .filebox{
       padding: 12px;
       min-height: 64px;
-    }
-
-    .preview img{
-      width: 46px;
-      height: 46px;
-    }
-
-    .name{
-      max-width: 260px;
-    }
-
-    .actions{
-      justify-content: center;
-      gap: 10px;
-    }
-
-    .btn{
-      padding: 10px 16px;
-      border-radius: 10px;
-      font-size: 14px;
-    }
-
-    .filebox{
       display: grid;
       grid-template-columns: auto 1fr;
       align-items: center;
@@ -373,11 +416,11 @@
 
     .filebox.has-file .choose{
       background: #2a2a2a;
-      border-color: rgba(255,255,255,.10);
+      border-color: rgba(255, 255, 255, .10);
     }
 
     .filebox.clean-border{
-      border-color: rgba(255,255,255,.22) !important;
+      border-color: rgba(255, 255, 255, .22) !important;
     }
 
     @media (max-width: 720px){
@@ -398,9 +441,18 @@
         font-size: 22px;
         margin-bottom: 14px;
       }
-      input[type="text"],
-      input[type="number"],
-      textarea,
+      input[type="text"]{
+        font-size: 14px;
+        padding: 10px 12px;
+      }
+      input[type="number"]{
+        font-size: 14px;
+        padding: 10px 12px;
+      }
+      textarea{
+        font-size: 14px;
+        padding: 10px 12px;
+      }
       select{
         font-size: 14px;
         padding: 10px 12px;
@@ -456,7 +508,7 @@
 
     .field-compact label{
       font-size: 12px;
-      color: var(--muted);
+      color: var(--txt);
     }
 
     .imdb-input{
@@ -474,6 +526,40 @@
       .imdb-input{
         width: 100%;
       }
+    }
+
+    .hint{
+      color: #bbb;
+      font-size: 12px;
+    }
+
+    .hidden{
+      display: none;
+    }
+
+    .message{
+      margin-top: 6px;
+      font-size: 14px;
+    }
+
+    .message.error{
+      color: #ff9b9b;
+    }
+
+    .message.success{
+      color: #7dffb1;
+    }
+
+    .badge{
+      display: inline-block;
+      padding: 4px 8px;
+      font-size: 12px;
+      border-radius: 8px;
+      background: #2b2b2b;
+      border: 1px solid rgba(255,255,255,.12);
+      margin-right: 6px;
+      margin-bottom: 6px;
+      color: #ddd;
     }
   </style>
 </head>
@@ -519,16 +605,10 @@
             </select>
           </div>
 
+
           <div class="field field-compact align-end">
-            <label for="imdbId">IMDb ID(optional)</label>
-            <input
-              id="imdbId"
-              name="imdbId"
-              type="text"
-              placeholder="tt0119217"
-              pattern="tt[0-9]{7,}"
-              class="imdb-input"
-            />
+            <label for="imdbId">IMDb ID (optional)</label>
+            <input id="imdbId" name="imdbId" type="text" placeholder="tt0119217" pattern="tt[0-9]{7,}" class="imdb-input" />
           </div>
 
           <div class="field full">
@@ -540,6 +620,18 @@
             <label for="description">Description (optional)</label>
             <textarea id="description" name="description" placeholder="Short synopsis or notes"></textarea>
           </div>
+
+          <!-- SERIES-ONLY FIELDS -->
+          <div class="field series-only hidden">
+            <label for="seasonNumber">Season Number</label>
+            <input id="seasonNumber" name="seasonNumber" type="number" min="1" value="1" />
+          </div>
+
+          <div class="field series-only hidden">
+            <label for="episodeTitles">Episode Titles (CSV or JSON)</label>
+            <input id="episodeTitles" name="episodeTitles" type="text" placeholder="Title 1, Title 2, Title 3" />
+          </div>
+          <!-- /SERIES-ONLY FIELDS -->
 
         </div>
 
@@ -559,7 +651,8 @@
             </div>
           </div>
 
-          <div class="field">
+          <!-- MOVIE VIDEO -->
+          <div class="field movie-only">
             <label>Video (MP4)</label>
             <div class="filebox" id="videoDrop">
               <div>
@@ -573,6 +666,24 @@
               </div>
             </div>
           </div>
+          <!-- /MOVIE VIDEO -->
+
+          <!-- SERIES EPISODES -->
+          <div class="field series-only hidden">
+            <label>Episodes (MP4, up to 3 files)</label>
+            <div class="filebox" id="episodesDrop">
+              <div>
+                <label class="choose">
+                  Choose files
+                  <input type="file" id="episodes" name="episodes" accept="video/mp4" multiple />
+                </label>
+              </div>
+              <div class="preview" id="episodesPreview">
+                <span>No files selected</span>
+              </div>
+            </div>
+          </div>
+          <!-- /SERIES EPISODES -->
         </div>
 
         <div class="actions">
@@ -594,6 +705,7 @@
   </main>
 
   <script>
+    // must be admin
     fetch('/api/auth/whoami', { credentials: 'include' })
       .then(r => r.json())
       .then(d => {
@@ -606,15 +718,23 @@
     const msg  = document.getElementById('msg');
     const btn  = document.getElementById('submitBtn');
 
-    const posterInput = document.getElementById('poster');
-    const videoInput  = document.getElementById('video');
-    const typeSelect  = document.getElementById('type');
-    const posterPrev  = document.getElementById('posterPreview');
-    const videoPrev   = document.getElementById('videoPreview');
-    const posterDrop  = document.getElementById('posterDrop');
-    const videoDrop   = document.getElementById('videoDrop');
+    const posterInput   = document.getElementById('poster');
+    const videoInput    = document.getElementById('video');
+    const episodesInput = document.getElementById('episodes');
 
-    const MAX_VIDEO_MB = 20;
+    const typeSelect   = document.getElementById('type');
+    const posterPrev   = document.getElementById('posterPreview');
+    const videoPrev    = document.getElementById('videoPreview');
+    const episodesPrev = document.getElementById('episodesPreview');
+
+    const posterDrop   = document.getElementById('posterDrop');
+    const videoDrop    = document.getElementById('videoDrop');
+    const episodesDrop = document.getElementById('episodesDrop');
+
+    const seriesOnlyEls = Array.from(document.querySelectorAll('.series-only'));
+    const movieOnlyEls  = Array.from(document.querySelectorAll('.movie-only'));
+
+    const MAX_MB = 20;
 
     function human(size){
       if (!size) return '0 B';
@@ -655,28 +775,49 @@
       videoPrev.appendChild(name);
     }
 
+    function setEpisodesPreview(files){
+      if (!files || !files.length){
+        episodesPrev.innerHTML = '<span>No files selected</span>';
+        return;
+      }
+      episodesPrev.innerHTML = '';
+      Array.from(files).forEach((f, idx) => {
+        const badge = document.createElement('span');
+        badge.className = 'badge';
+        badge.textContent = 'E' + (idx + 1) + ': ' + f.name + ' (' + human(f.size) + ')';
+        episodesPrev.appendChild(badge);
+      });
+    }
+
     posterInput.addEventListener('change', e => setPosterPreview(e.target.files[0]));
     videoInput .addEventListener('change', e => setVideoPreview(e.target.files[0]));
+    episodesInput.addEventListener('change', e => setEpisodesPreview(e.target.files));
 
+    // drag & drop helpers
     ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(ev => {
       posterDrop.addEventListener(ev, e => { e.preventDefault(); e.stopPropagation(); });
       videoDrop .addEventListener(ev, e => { e.preventDefault(); e.stopPropagation(); });
+      episodesDrop.addEventListener(ev, e => { e.preventDefault(); e.stopPropagation(); });
     });
 
     ['dragenter', 'dragover'].forEach(ev => {
       posterDrop.addEventListener(ev, () => { posterDrop.style.borderColor = 'var(--nf-red)'; });
       videoDrop .addEventListener(ev, () => { videoDrop .style.borderColor = 'var(--nf-red)'; });
+      episodesDrop.addEventListener(ev, () => { episodesDrop.style.borderColor = 'var(--nf-red)'; });
     });
 
     ['dragleave', 'drop'].forEach(ev => {
       posterDrop.addEventListener(ev, () => { posterDrop.style.borderColor = 'rgba(255,255,255,.22)'; });
       videoDrop .addEventListener(ev, () => { videoDrop .style.borderColor = 'rgba(255,255,255,.22)'; });
+      episodesDrop.addEventListener(ev, () => { episodesDrop.style.borderColor = 'rgba(255,255,255,.22)'; });
     });
 
     posterDrop.addEventListener('drop', e => {
       const f = e.dataTransfer.files[0];
       if (f && f.type.startsWith('image/')){
-        posterInput.files = e.dataTransfer.files;
+        const dt = new DataTransfer();
+        dt.items.add(f);
+        posterInput.files = dt.files;
         setPosterPreview(f);
       }
     });
@@ -684,27 +825,106 @@
     videoDrop.addEventListener('drop', e => {
       const f = e.dataTransfer.files[0];
       if (f && f.type === 'video/mp4'){
-        videoInput.files = e.dataTransfer.files;
+        const dt = new DataTransfer();
+        dt.items.add(f);
+        videoInput.files = dt.files;
         setVideoPreview(f);
+      }
+    });
+
+    episodesDrop.addEventListener('drop', e => {
+      const files = Array.from(e.dataTransfer.files).filter(f => f.type === 'video/mp4');
+      if (files.length){
+        const dt = new DataTransfer();
+        files.forEach(f => dt.items.add(f));
+        episodesInput.files = dt.files;
+        setEpisodesPreview(dt.files);
       }
     });
 
     function resetPreviews(){
       setPosterPreview(null);
       setVideoPreview(null);
+      setEpisodesPreview(null);
     }
+
+    function toggleTypeUI(){
+      const isSeries = typeSelect.value === 'series';
+
+      // show/hide blocks
+      seriesOnlyEls.forEach(el => el.classList.toggle('hidden', !isSeries));
+      movieOnlyEls .forEach(el => el.classList.toggle('hidden',  isSeries));
+
+      // required switching
+      videoInput.required    = !isSeries;
+      episodesInput.required =  isSeries;
+
+      // clear previews on switch
+      if (isSeries){
+        setVideoPreview(null);
+        videoInput.value = '';
+      } else {
+        setEpisodesPreview(null);
+        episodesInput.value = '';
+      }
+    }
+
+    typeSelect.addEventListener('change', toggleTypeUI);
+    toggleTypeUI();
 
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
+
       msg.className = 'message';
       msg.textContent = '';
       btn.disabled = true;
       btn.textContent = 'Saving...';
 
-      const isMovie = (typeSelect.value || 'movie') === 'movie';
+      const isSeries = (typeSelect.value || 'movie') === 'series';
 
-      if (isMovie) {
-        if (!videoInput.files.length) {
+      // validations
+      if (!posterInput.files.length){
+        msg.textContent = '❌ Please choose a poster image';
+        msg.classList.add('error');
+        btn.disabled = false;
+        btn.textContent = 'Save Content';
+        return;
+      }
+
+      if (isSeries){
+        const files = Array.from(episodesInput.files || []);
+        if (files.length === 0){
+          msg.textContent = '❌ Please choose at least one episode (MP4)';
+          msg.classList.add('error');
+          btn.disabled = false;
+          btn.textContent = 'Save Content';
+          return;
+        }
+        if (files.length > 3){
+          msg.textContent = '❌ Up to 3 episodes are allowed per upload';
+          msg.classList.add('error');
+          btn.disabled = false;
+          btn.textContent = 'Save Content';
+          return;
+        }
+        for (const f of files){
+          if (f.type !== 'video/mp4'){
+            msg.textContent = '❌ Episodes must be MP4 files';
+            msg.classList.add('error');
+            btn.disabled = false;
+            btn.textContent = 'Save Content';
+            return;
+          }
+          if (f.size > MAX_MB * 1024 * 1024){
+            msg.textContent = '❌ Episode "' + f.name + '" is larger than ' + MAX_MB + 'MB';
+            msg.classList.add('error');
+            btn.disabled = false;
+            btn.textContent = 'Save Content';
+            return;
+          }
+        }
+      } else {
+        if (!videoInput.files.length){
           msg.textContent = '❌ Please choose a local MP4 file for a movie';
           msg.classList.add('error');
           btn.disabled = false;
@@ -712,15 +932,15 @@
           return;
         }
         const vf = videoInput.files[0];
-        if (vf.type && vf.type !== 'video/mp4') {
+        if (vf.type && vf.type !== 'video/mp4'){
           msg.textContent = '❌ Video must be an MP4 file';
           msg.classList.add('error');
           btn.disabled = false;
           btn.textContent = 'Save Content';
           return;
         }
-        if (vf.size > MAX_VIDEO_MB * 1024 * 1024) {
-          msg.textContent = `❌ Video too large (> ${MAX_VIDEO_MB}MB)`;
+        if (vf.size > MAX_MB * 1024 * 1024){
+          msg.textContent = '❌ Video too large (> ' + MAX_MB + 'MB)';
           msg.classList.add('error');
           btn.disabled = false;
           btn.textContent = 'Save Content';
@@ -728,39 +948,46 @@
         }
       }
 
+      // build FormData
       const fd = new FormData(form);
 
       const genres = (fd.get('genres') || '')
         .toString()
         .split(',')
-        .map(s => s.trim())
+        .map(function (s) { return s.trim(); })
         .filter(Boolean)
         .join(', ');
 
       const cast = (fd.get('cast') || '')
         .toString()
         .split(',')
-        .map(s => s.trim())
+        .map(function (s) { return s.trim(); })
         .filter(Boolean)
         .join(', ');
 
       fd.set('genres', genres);
       fd.set('cast', cast);
 
+      // choose endpoint
+      const endpoint = isSeries ? '/api/admin/series' : '/api/content';
+
       try{
-        const resp = await fetch('/api/content', {
+        const resp = await fetch(endpoint, {
           method: 'POST',
           body: fd,
           credentials: 'include'
         });
         const data = await resp.json();
+
         if (!resp.ok){
           throw new Error(data.error || 'Failed to save content');
         }
+
         msg.textContent = '✅ Content added successfully!';
         msg.classList.add('success');
         form.reset();
         resetPreviews();
+        toggleTypeUI();
       }catch(err){
         msg.textContent = '❌ ' + err.message;
         msg.classList.add('error');
@@ -774,7 +1001,7 @@
       fetch('/api/auth/logout', {
         method: 'POST',
         credentials: 'include'
-      }).then(() => {
+      }).then(function () {
         localStorage.clear();
         location.href = '/login';
       });
