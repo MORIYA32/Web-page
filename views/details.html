@@ -11,17 +11,14 @@
 </head>
 <body>
     <div class="details-container">
-        <!-- Back Button -->
         <button class="back-button" id="backButton">
             <i class="fas fa-arrow-left"></i> Back to Browse
         </button>
 
-        <!-- Trailer Section -->
         <div class="trailer-section" id="trailerSection">
             <video id="trailerPlayer" controls></video>
         </div>
 
-        <!-- Content Details -->
         <div class="content-details">
             <h1 id="contentTitle"></h1>
             
@@ -36,7 +33,10 @@
                     <span class="rating-value"></span>
                 </div>
                 <div class="rating-item" id="rtRating" style="display: none;">
-                    <img src="https://www.rottentomatoes.com/assets/pizza-pie/images/icons/tomatometer/tomatometer-fresh.svg" alt="RT" class="rt-icon">
+                    <svg class="rt-icon" viewBox="0 0 24 24" width="18" height="18" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Rotten Tomatoes">
+                      <path d="M12 4c1.2-1.5 3-2.5 5-2 0 2-1 3-2 3 3 0 7 3 7 7 0 4.4-3.6 8-8 8H10C5.6 20 2 16.4 2 12c0-4 3-7 7-7 .5 0 1 .1 1.5.2.4-.5.9-1 1.5-1.2z" fill="#d32f2f"/>
+                      <path d="M14 5c.8-.1 1.7-.7 2.1-1.6.2-.4.3-.9.4-1.4.7.2 1.3.5 1.8.9.9.7 1.4 1.6 1.7 2.6-.8-.3-1.7-.5-2.6-.5-1 0-2 .2-2.9.6-.2-.3-.4-.5-.5-.6z" fill="#2e7d32"/>
+                    </svg>
                     <span class="rating-value"></span>
                 </div>
             </div>
@@ -66,7 +66,6 @@
                 </div>
             </div>
 
-            <!-- Episodes Section (for series) -->
             <div class="episodes-section" id="episodesSection" style="display: none;">
                 <h3>Episodes</h3>
                 <div class="season-selector">

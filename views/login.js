@@ -68,6 +68,7 @@ async function loginUser(email, password) {
       headers: {
         'Content-Type': 'application/json',
       },
+      credentials: 'include', // ← NEW: allow Set-Cookie / send cookie
       body: JSON.stringify({
         email: email.trim(),
         password: password.trim()
@@ -81,9 +82,16 @@ async function loginUser(email, password) {
       localStorage.setItem("isLoggedIn", "true");
       localStorage.setItem("userId", data.user.id);
       localStorage.setItem("userEmail", data.user.email);
-      
-      // Redirect to profiles page
-      window.location.href = "./profiles.html";
+      if (data.user && data.user.role) {
+        localStorage.setItem("userRole", data.user.role); 
+      }
+
+      // Redirect using server's redirectUrl (admin -> /admin/add)
+      if (data.redirectUrl) {                         
+        window.location.href = data.redirectUrl;      
+      } else {
+        window.location.href = "./profiles.html";      // fallback 
+      }
     } else {
       // Show error message
       showError(emailInput, emailError, data.error || "Login failed");

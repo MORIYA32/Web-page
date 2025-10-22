@@ -1,0 +1,1011 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Add New Content – Admin</title>
+
+  <script>
+    (function () {
+      var isFile = location.protocol === 'file:';
+      var isWrongPort = location.hostname === 'localhost' && location.port && location.port !== '3000';
+      if (isFile || isWrongPort) {
+        location.href = 'http://localhost:3000/admin/add';
+      }
+    })();
+  </script>
+
+  <style>
+    :root{
+      --nf-red: #e50914;
+      --nf-red-2: #f40612;
+      --bg: #0e0e0e;
+      --panel: #1a1a1a;
+      --panel-2: #171717;
+      --muted: #b3b3b3;
+      --txt: #ffffff;
+      --ring: 0 0 0 3px rgba(229, 9, 20, .15);
+      --radius: 16px;
+      --shadow: 0 20px 50px rgba(0, 0, 0, .45);
+    }
+
+    *{
+      box-sizing: border-box;
+    }
+
+    html{
+      height: 100%;
+    }
+
+    body{
+      height: 100%;
+    }
+
+    body{
+      margin: 0;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+      color: var(--txt);
+      background:
+        radial-gradient(60rem 60rem at -10% -20%, rgba(229, 9, 20, .12), transparent 55%),
+        radial-gradient(50rem 50rem at 110% -10%, rgba(255, 255, 255, .06), transparent 50%),
+        linear-gradient(#0b0b0b, #0e0e0e);
+      display: flex;
+      flex-direction: column;
+    }
+
+    header{
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 18px 42px;
+      background: rgba(0, 0, 0, .72);
+      backdrop-filter: saturate(140%) blur(10px);
+      border-bottom: 1px solid rgba(255, 255, 255, .06);
+    }
+
+    .brand{
+      color: var(--nf-red);
+      font-weight: 900;
+      letter-spacing: .6px;
+      font-size: 30px;
+    }
+
+    .logout{
+      background: var(--nf-red);
+      border: none;
+      color: #fff;
+      padding: 10px 16px;
+      border-radius: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: .2s background, .2s transform;
+    }
+
+    .logout:hover{
+      background: var(--nf-red-2);
+      transform: translateY(-1px);
+    }
+
+    .wrap{
+      flex: 1;
+      display: grid;
+      place-items: center;
+      padding: 48px 20px;
+    }
+
+    .card{
+      width: min(1120px, 92vw);
+      background: linear-gradient(180deg, var(--panel), var(--panel-2));
+      border: 1px solid rgba(255, 255, 255, .08);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 34px 34px 28px;
+      animation: fade .3s ease both;
+    }
+
+    @keyframes fade{
+      from{
+        opacity: 0;
+        transform: translateY(8px);
+      }
+      to{
+        opacity: 1;
+        transform: none;
+      }
+    }
+
+    .title{
+      margin: 4px 0 24px;
+      text-align: center;
+      font-size: 30px;
+      font-weight: 900;
+      color: var(--nf-red);
+    }
+
+    form{
+      display: grid;
+      gap: 22px;
+    }
+
+    .grid{
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 20px 24px;
+    }
+
+    @media (max-width: 900px){
+      .grid{
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .field{
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .full{
+      grid-column: 1 / -1;
+    }
+
+    label{
+      font-weight: 800;
+      letter-spacing: .2px;
+    }
+
+    input[type="text"]{
+      background: #262626;
+      color: #fff;
+      border: 1px solid rgba(255, 255, 255, .14);
+      border-radius: 12px;
+      padding: 12px 14px;
+      font-size: 15px;
+      outline: none;
+      transition: .15s border-color, .15s box-shadow, .15s background;
+    }
+
+    input[type="number"]{
+      background: #262626;
+      color: #fff;
+      border: 1px solid rgba(255, 255, 255, .14);
+      border-radius: 12px;
+      padding: 12px 14px;
+      font-size: 15px;
+      outline: none;
+      transition: .15s border-color, .15s box-shadow, .15s background;
+    }
+
+    textarea{
+      background: #262626;
+      color: #fff;
+      border: 1px solid rgba(255, 255, 255, .14);
+      border-radius: 12px;
+      padding: 12px 14px;
+      font-size: 15px;
+      outline: none;
+      transition: .15s border-color, .15s box-shadow, .15s background;
+      resize: vertical;
+      min-height: 90px;
+    }
+
+    select{
+      background: #262626;
+      color: #fff;
+      border: 1px solid rgba(255, 255, 255, .14);
+      border-radius: 12px;
+      padding: 12px 14px;
+      font-size: 15px;
+      outline: none;
+      transition: .15s border-color, .15s box-shadow, .15s background;
+    }
+
+    input:focus{
+      border-color: var(--nf-red);
+      box-shadow: var(--ring);
+      background: #2c2c2c;
+    }
+
+    textarea:focus{
+      border-color: var(--nf-red);
+      box-shadow: var(--ring);
+      background: #2c2c2c;
+    }
+
+    select:focus{
+      border-color: var(--nf-red);
+      box-shadow: var(--ring);
+      background: #2c2c2c;
+    }
+
+    .row{
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+    }
+
+    @media (max-width: 900px){
+      .row{
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .filebox{
+      border: 1.5px dashed rgba(255, 255, 255, .22);
+      background: #1f1f1f;
+      border-radius: 14px;
+      padding: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      min-height: 76px;
+      transition: .15s border-color, .15s background;
+    }
+
+    .filebox:hover{
+      border-color: var(--nf-red);
+    }
+
+    .filebox input[type="file"]{
+      display: none;
+    }
+
+    .choose{
+      background: #303030;
+      padding: 10px 14px;
+      border-radius: 10px;
+      border: 1px solid rgba(255, 255, 255, .12);
+      font-weight: 700;
+      cursor: pointer;
+      margin-bottom: 15px;
+    }
+
+    .choose-text{
+      display: inline-block;
+      transform: translateY(-2px);
+    }
+
+    .preview{
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: var(--muted);
+      font-size: 14px;
+      flex-wrap: wrap;
+    }
+
+    .preview img{
+      width: 56px;
+      height: 56px;
+      object-fit: cover;
+      border-radius: 10px;
+      border: 1px solid rgba(255, 255, 255, .1);
+    }
+
+    .name{
+      max-width: 320px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .actions{
+      display: flex;
+      justify-content: flex-end;
+      gap: 12px;
+    }
+
+    .btn{
+      appearance: none;
+      border: none;
+      cursor: pointer;
+      padding: 12px 18px;
+      border-radius: 12px;
+      font-weight: 900;
+    }
+
+    .btn.primary{
+      background: var(--nf-red);
+      color: #fff;
+    }
+
+    .btn.primary:hover{
+      background: var(--nf-red-2);
+    }
+
+    .btn.ghost{
+      background: #2b2b2b;
+      color: #fff;
+    }
+
+    .btn[disabled]{
+      opacity: .6;
+      cursor: not-allowed;
+    }
+
+    .card{
+      width: min(860px, 92vw);
+      padding: 26px 24px 22px;
+    }
+
+    .title{
+      font-size: 26px;
+      margin-bottom: 18px;
+    }
+
+    .grid{
+      grid-template-columns: repeat(2, minmax(0, 340px));
+      justify-content: center;
+      column-gap: 22px;
+      row-gap: 14px;
+    }
+
+    @media (max-width: 900px){
+      .grid{
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .row{
+      grid-template-columns: repeat(2, minmax(0, 340px));
+      justify-content: center;
+      gap: 16px 22px;
+    }
+
+    @media (max-width: 900px){
+      .row{
+        grid-template-columns: 1fr;
+      }
+    }
+
+    input[type="text"]{
+      padding: 10px 12px;
+      border-radius: 10px;
+      font-size: 14px;
+    }
+
+    input[type="number"]{
+      padding: 10px 12px;
+      border-radius: 10px;
+      font-size: 14px;
+    }
+
+    textarea{
+      padding: 10px 12px;
+      border-radius: 10px;
+      font-size: 14px;
+    }
+
+    select{
+      padding: 10px 12px;
+      border-radius: 10px;
+      font-size: 14px;
+    }
+
+    .filebox{
+      padding: 12px;
+      min-height: 64px;
+      display: grid;
+      grid-template-columns: auto 1fr;
+      align-items: center;
+    }
+
+    .choose{
+      white-space: nowrap;
+      margin: 0;
+    }
+
+    .preview{
+      min-width: 0;
+    }
+
+    .preview .name{
+      max-width: 100%;
+    }
+
+    @media (max-width: 560px){
+      .filebox{
+        grid-template-columns: 1fr;
+        row-gap: 8px;
+      }
+    }
+
+    .filebox.has-file .choose{
+      background: #2a2a2a;
+      border-color: rgba(255, 255, 255, .10);
+    }
+
+    .filebox.clean-border{
+      border-color: rgba(255, 255, 255, .22) !important;
+    }
+
+    @media (max-width: 720px){
+      header{
+        padding: 14px 20px;
+      }
+      .brand{
+        font-size: 24px;
+      }
+      .wrap{
+        padding: 32px 14px;
+      }
+      .card{
+        width: min(680px, 94vw);
+        padding: 22px 18px 18px;
+      }
+      .title{
+        font-size: 22px;
+        margin-bottom: 14px;
+      }
+      input[type="text"]{
+        font-size: 14px;
+        padding: 10px 12px;
+      }
+      input[type="number"]{
+        font-size: 14px;
+        padding: 10px 12px;
+      }
+      textarea{
+        font-size: 14px;
+        padding: 10px 12px;
+      }
+      select{
+        font-size: 14px;
+        padding: 10px 12px;
+      }
+      .row{
+        gap: 14px 16px;
+      }
+      .grid{
+        column-gap: 16px;
+        row-gap: 12px;
+      }
+    }
+
+    @media (max-width: 480px){
+      header{
+        padding: 12px 14px;
+      }
+      .brand{
+        font-size: 20px;
+        letter-spacing: .4px;
+      }
+      .logout{
+        padding: 8px 12px;
+        border-radius: 10px;
+        font-weight: 700;
+      }
+      .wrap{
+        padding: 24px 10px;
+      }
+      .card{
+        width: 96vw;
+        padding: 18px 14px 14px;
+        border-radius: 12px;
+      }
+      .title{
+        font-size: 20px;
+        margin-bottom: 12px;
+      }
+      .filebox{
+        padding: 10px;
+        min-height: 56px;
+      }
+      .preview img{
+        width: 40px;
+        height: 40px;
+      }
+      .btn{
+        padding: 9px 14px;
+        border-radius: 10px;
+        font-size: 13px;
+      }
+    }
+
+    .field-compact label{
+      font-size: 12px;
+      color: var(--txt);
+    }
+
+    .imdb-input{
+      width: 160px;
+      max-width: 100%;
+      padding: 8px 10px;
+      border-radius: 10px;
+    }
+
+    .align-end{
+      align-self: end;
+    }
+
+    @media (max-width: 900px){
+      .imdb-input{
+        width: 100%;
+      }
+    }
+
+    .hint{
+      color: #bbb;
+      font-size: 12px;
+    }
+
+    .hidden{
+      display: none;
+    }
+
+    .message{
+      margin-top: 6px;
+      font-size: 14px;
+    }
+
+    .message.error{
+      color: #ff9b9b;
+    }
+
+    .message.success{
+      color: #7dffb1;
+    }
+
+    .badge{
+      display: inline-block;
+      padding: 4px 8px;
+      font-size: 12px;
+      border-radius: 8px;
+      background: #2b2b2b;
+      border: 1px solid rgba(255,255,255,.12);
+      margin-right: 6px;
+      margin-bottom: 6px;
+      color: #ddd;
+    }
+  </style>
+</head>
+
+<body>
+  <header>
+    <div class="brand">NETFLIX Admin</div>
+    <button class="logout" onclick="logout()">Logout</button>
+  </header>
+
+  <main class="wrap">
+    <section class="card">
+      <h2 class="title">Add New Content</h2>
+
+      <form id="addContentForm" enctype="multipart/form-data">
+        <div class="grid">
+
+          <div class="field">
+            <label for="title">Title</label>
+            <input id="title" name="title" type="text" placeholder="Enter movie or series title" required />
+          </div>
+
+          <div class="field">
+            <label for="year">Release Year</label>
+            <input id="year" name="year" type="number" placeholder="e.g. 2024" min="1900" max="2100" required />
+          </div>
+
+          <div class="field">
+            <label for="genres">Genre</label>
+            <input id="genres" name="genres" type="text" placeholder="e.g. Drama, Action" required />
+          </div>
+
+          <div class="field">
+            <label for="director">Director</label>
+            <input id="director" name="director" type="text" placeholder="Director name" />
+          </div>
+
+          <div class="field">
+            <label for="type">Type</label>
+            <select id="type" name="type" required>
+              <option value="movie" selected>Movie</option>
+              <option value="series">Series</option>
+            </select>
+          </div>
+
+
+          <div class="field field-compact align-end">
+            <label for="imdbId">IMDb ID (optional)</label>
+            <input id="imdbId" name="imdbId" type="text" placeholder="tt0119217" pattern="tt[0-9]{7,}" class="imdb-input" />
+          </div>
+
+          <div class="field full">
+            <label for="cast">Actors</label>
+            <textarea id="cast" name="cast" placeholder="List of main actors (comma-separated)"></textarea>
+          </div>
+
+          <div class="field full">
+            <label for="description">Description (optional)</label>
+            <textarea id="description" name="description" placeholder="Short synopsis or notes"></textarea>
+          </div>
+
+          <!-- SERIES-ONLY FIELDS -->
+          <div class="field series-only hidden">
+            <label for="seasonNumber">Season Number</label>
+            <input id="seasonNumber" name="seasonNumber" type="number" min="1" value="1" />
+          </div>
+
+          <div class="field series-only hidden">
+            <label for="episodeTitles">Episode Titles (CSV or JSON)</label>
+            <input id="episodeTitles" name="episodeTitles" type="text" placeholder="Title 1, Title 2, Title 3" />
+          </div>
+          <!-- /SERIES-ONLY FIELDS -->
+
+        </div>
+
+        <div class="row">
+          <div class="field">
+            <label>Poster Image</label>
+            <div class="filebox" id="posterDrop">
+              <div>
+                <label class="choose">
+                  Choose file
+                  <input type="file" id="poster" name="poster" accept="image/*" required />
+                </label>
+              </div>
+              <div class="preview" id="posterPreview">
+                <span>No file selected</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- MOVIE VIDEO -->
+          <div class="field movie-only">
+            <label>Video (MP4)</label>
+            <div class="filebox" id="videoDrop">
+              <div>
+                <label class="choose">
+                  Choose file
+                  <input type="file" id="video" name="video" accept="video/mp4" />
+                </label>
+              </div>
+              <div class="preview" id="videoPreview">
+                <span>No file selected</span>
+              </div>
+            </div>
+          </div>
+          <!-- /MOVIE VIDEO -->
+
+          <!-- SERIES EPISODES -->
+          <div class="field series-only hidden">
+            <label>Episodes (MP4, up to 3 files)</label>
+            <div class="filebox" id="episodesDrop">
+              <div>
+                <label class="choose">
+                  Choose files
+                  <input type="file" id="episodes" name="episodes" accept="video/mp4" multiple />
+                </label>
+              </div>
+              <div class="preview" id="episodesPreview">
+                <span>No files selected</span>
+              </div>
+            </div>
+          </div>
+          <!-- /SERIES EPISODES -->
+        </div>
+
+        <div class="actions">
+          <button
+            class="btn ghost"
+            type="button"
+            onclick="document.getElementById('addContentForm').reset(); resetPreviews();">
+            Clear
+          </button>
+
+          <button class="btn primary" id="submitBtn" type="submit">
+            Save Content
+          </button>
+        </div>
+
+        <div class="message" id="msg"></div>
+      </form>
+    </section>
+  </main>
+
+  <script>
+    // must be admin
+    fetch('/api/auth/whoami', { credentials: 'include' })
+      .then(r => r.json())
+      .then(d => {
+        if (!d.user || d.user.role !== 'admin') {
+          location.href = '/login';
+        }
+      });
+
+    const form = document.getElementById('addContentForm');
+    const msg  = document.getElementById('msg');
+    const btn  = document.getElementById('submitBtn');
+
+    const posterInput   = document.getElementById('poster');
+    const videoInput    = document.getElementById('video');
+    const episodesInput = document.getElementById('episodes');
+
+    const typeSelect   = document.getElementById('type');
+    const posterPrev   = document.getElementById('posterPreview');
+    const videoPrev    = document.getElementById('videoPreview');
+    const episodesPrev = document.getElementById('episodesPreview');
+
+    const posterDrop   = document.getElementById('posterDrop');
+    const videoDrop    = document.getElementById('videoDrop');
+    const episodesDrop = document.getElementById('episodesDrop');
+
+    const seriesOnlyEls = Array.from(document.querySelectorAll('.series-only'));
+    const movieOnlyEls  = Array.from(document.querySelectorAll('.movie-only'));
+
+    const MAX_MB = 20;
+
+    function human(size){
+      if (!size) return '0 B';
+      const i = Math.floor(Math.log(size) / Math.log(1024));
+      return (size / Math.pow(1024, i)).toFixed(1) + ' ' + 'BKMGTPEZY'[i];
+    }
+
+    function setPosterPreview(file){
+      if (!file){
+        posterPrev.innerHTML = '<span>No file selected</span>';
+        posterDrop.classList.remove('has-file');
+        posterDrop.classList.add('clean-border');
+        return;
+      }
+      const img = new Image();
+      const r = new FileReader();
+      r.onload = e => img.src = e.target.result;
+      r.readAsDataURL(file);
+      posterPrev.innerHTML = '';
+      posterPrev.appendChild(img);
+      const name = document.createElement('div');
+      name.className = 'name';
+      name.textContent = file.name + ' (' + human(file.size) + ')';
+      posterPrev.appendChild(name);
+      posterDrop.classList.add('has-file');
+      posterDrop.classList.add('clean-border');
+    }
+
+    function setVideoPreview(file){
+      if (!file){
+        videoPrev.innerHTML = '<span>No file selected</span>';
+        return;
+      }
+      videoPrev.innerHTML = '';
+      const name = document.createElement('div');
+      name.className = 'name';
+      name.textContent = file.name + ' (' + human(file.size) + ')';
+      videoPrev.appendChild(name);
+    }
+
+    function setEpisodesPreview(files){
+      if (!files || !files.length){
+        episodesPrev.innerHTML = '<span>No files selected</span>';
+        return;
+      }
+      episodesPrev.innerHTML = '';
+      Array.from(files).forEach((f, idx) => {
+        const badge = document.createElement('span');
+        badge.className = 'badge';
+        badge.textContent = 'E' + (idx + 1) + ': ' + f.name + ' (' + human(f.size) + ')';
+        episodesPrev.appendChild(badge);
+      });
+    }
+
+    posterInput.addEventListener('change', e => setPosterPreview(e.target.files[0]));
+    videoInput .addEventListener('change', e => setVideoPreview(e.target.files[0]));
+    episodesInput.addEventListener('change', e => setEpisodesPreview(e.target.files));
+
+    // drag & drop helpers
+    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(ev => {
+      posterDrop.addEventListener(ev, e => { e.preventDefault(); e.stopPropagation(); });
+      videoDrop .addEventListener(ev, e => { e.preventDefault(); e.stopPropagation(); });
+      episodesDrop.addEventListener(ev, e => { e.preventDefault(); e.stopPropagation(); });
+    });
+
+    ['dragenter', 'dragover'].forEach(ev => {
+      posterDrop.addEventListener(ev, () => { posterDrop.style.borderColor = 'var(--nf-red)'; });
+      videoDrop .addEventListener(ev, () => { videoDrop .style.borderColor = 'var(--nf-red)'; });
+      episodesDrop.addEventListener(ev, () => { episodesDrop.style.borderColor = 'var(--nf-red)'; });
+    });
+
+    ['dragleave', 'drop'].forEach(ev => {
+      posterDrop.addEventListener(ev, () => { posterDrop.style.borderColor = 'rgba(255,255,255,.22)'; });
+      videoDrop .addEventListener(ev, () => { videoDrop .style.borderColor = 'rgba(255,255,255,.22)'; });
+      episodesDrop.addEventListener(ev, () => { episodesDrop.style.borderColor = 'rgba(255,255,255,.22)'; });
+    });
+
+    posterDrop.addEventListener('drop', e => {
+      const f = e.dataTransfer.files[0];
+      if (f && f.type.startsWith('image/')){
+        const dt = new DataTransfer();
+        dt.items.add(f);
+        posterInput.files = dt.files;
+        setPosterPreview(f);
+      }
+    });
+
+    videoDrop.addEventListener('drop', e => {
+      const f = e.dataTransfer.files[0];
+      if (f && f.type === 'video/mp4'){
+        const dt = new DataTransfer();
+        dt.items.add(f);
+        videoInput.files = dt.files;
+        setVideoPreview(f);
+      }
+    });
+
+    episodesDrop.addEventListener('drop', e => {
+      const files = Array.from(e.dataTransfer.files).filter(f => f.type === 'video/mp4');
+      if (files.length){
+        const dt = new DataTransfer();
+        files.forEach(f => dt.items.add(f));
+        episodesInput.files = dt.files;
+        setEpisodesPreview(dt.files);
+      }
+    });
+
+    function resetPreviews(){
+      setPosterPreview(null);
+      setVideoPreview(null);
+      setEpisodesPreview(null);
+    }
+
+    function toggleTypeUI(){
+      const isSeries = typeSelect.value === 'series';
+
+      // show/hide blocks
+      seriesOnlyEls.forEach(el => el.classList.toggle('hidden', !isSeries));
+      movieOnlyEls .forEach(el => el.classList.toggle('hidden',  isSeries));
+
+      // required switching
+      videoInput.required    = !isSeries;
+      episodesInput.required =  isSeries;
+
+      // clear previews on switch
+      if (isSeries){
+        setVideoPreview(null);
+        videoInput.value = '';
+      } else {
+        setEpisodesPreview(null);
+        episodesInput.value = '';
+      }
+    }
+
+    typeSelect.addEventListener('change', toggleTypeUI);
+    toggleTypeUI();
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      msg.className = 'message';
+      msg.textContent = '';
+      btn.disabled = true;
+      btn.textContent = 'Saving...';
+
+      const isSeries = (typeSelect.value || 'movie') === 'series';
+
+      // validations
+      if (!posterInput.files.length){
+        msg.textContent = '❌ Please choose a poster image';
+        msg.classList.add('error');
+        btn.disabled = false;
+        btn.textContent = 'Save Content';
+        return;
+      }
+
+      if (isSeries){
+        const files = Array.from(episodesInput.files || []);
+        if (files.length === 0){
+          msg.textContent = '❌ Please choose at least one episode (MP4)';
+          msg.classList.add('error');
+          btn.disabled = false;
+          btn.textContent = 'Save Content';
+          return;
+        }
+        if (files.length > 3){
+          msg.textContent = '❌ Up to 3 episodes are allowed per upload';
+          msg.classList.add('error');
+          btn.disabled = false;
+          btn.textContent = 'Save Content';
+          return;
+        }
+        for (const f of files){
+          if (f.type !== 'video/mp4'){
+            msg.textContent = '❌ Episodes must be MP4 files';
+            msg.classList.add('error');
+            btn.disabled = false;
+            btn.textContent = 'Save Content';
+            return;
+          }
+          if (f.size > MAX_MB * 1024 * 1024){
+            msg.textContent = '❌ Episode "' + f.name + '" is larger than ' + MAX_MB + 'MB';
+            msg.classList.add('error');
+            btn.disabled = false;
+            btn.textContent = 'Save Content';
+            return;
+          }
+        }
+      } else {
+        if (!videoInput.files.length){
+          msg.textContent = '❌ Please choose a local MP4 file for a movie';
+          msg.classList.add('error');
+          btn.disabled = false;
+          btn.textContent = 'Save Content';
+          return;
+        }
+        const vf = videoInput.files[0];
+        if (vf.type && vf.type !== 'video/mp4'){
+          msg.textContent = '❌ Video must be an MP4 file';
+          msg.classList.add('error');
+          btn.disabled = false;
+          btn.textContent = 'Save Content';
+          return;
+        }
+        if (vf.size > MAX_MB * 1024 * 1024){
+          msg.textContent = '❌ Video too large (> ' + MAX_MB + 'MB)';
+          msg.classList.add('error');
+          btn.disabled = false;
+          btn.textContent = 'Save Content';
+          return;
+        }
+      }
+
+      // build FormData
+      const fd = new FormData(form);
+
+      const genres = (fd.get('genres') || '')
+        .toString()
+        .split(',')
+        .map(function (s) { return s.trim(); })
+        .filter(Boolean)
+        .join(', ');
+
+      const cast = (fd.get('cast') || '')
+        .toString()
+        .split(',')
+        .map(function (s) { return s.trim(); })
+        .filter(Boolean)
+        .join(', ');
+
+      fd.set('genres', genres);
+      fd.set('cast', cast);
+
+      // choose endpoint
+      const endpoint = isSeries ? '/api/admin/series' : '/api/content';
+
+      try{
+        const resp = await fetch(endpoint, {
+          method: 'POST',
+          body: fd,
+          credentials: 'include'
+        });
+        const data = await resp.json();
+
+        if (!resp.ok){
+          throw new Error(data.error || 'Failed to save content');
+        }
+
+        msg.textContent = '✅ Content added successfully!';
+        msg.classList.add('success');
+        form.reset();
+        resetPreviews();
+        toggleTypeUI();
+      }catch(err){
+        msg.textContent = '❌ ' + err.message;
+        msg.classList.add('error');
+      }finally{
+        btn.disabled = false;
+        btn.textContent = 'Save Content';
+      }
+    });
+
+    function logout(){
+      fetch('/api/auth/logout', {
+        method: 'POST',
+        credentials: 'include'
+      }).then(function () {
+        localStorage.clear();
+        location.href = '/login';
+      });
+    }
+  </script>
+</body>
+</html>

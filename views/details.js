@@ -65,10 +65,29 @@ async function fetchContentDetails(id) {
 // Convert backslashes to forward slashes for web URLs
 function normalizeVideoPath(path) {
     if (!path) return '';
-    return '/' + path.replace(/\\/g, '/');
+    const cleaned = path.replace(/\\/g, '/');
+    // FIX: keep http(s) as-is
+    if (/^https?:\/\//i.test(cleaned) || cleaned.startsWith('blob:') || cleaned.startsWith('data:') || cleaned.startsWith('//')) {
+        return cleaned;
+    }
+    return cleaned.startsWith('/') ? cleaned : '/' + cleaned;
 }
 
-// Load trailer
+// ADD: series first-episode fallback
+function firstEpisodeUrlIfAny(content) {
+    if (!content || content.type !== 'series') return '';
+    const seasons = Array.isArray(content.seasons) ? [...content.seasons] : [];
+    seasons.sort((a, b) => (a.seasonNumber ?? 0) - (b.seasonNumber ?? 0));
+    for (const s of seasons) {
+        const eps = Array.isArray(s.episodes) ? [...s.episodes] : [];
+        eps.sort((a, b) => (a.episodeNumber ?? 0) - (b.episodeNumber ?? 0));
+        const url = eps[0]?.videoUrl;
+        if (url) return url;
+    }
+    return '';
+}
+
+// Load trailer (or full video source)
 function loadTrailer(trailerUrl) {
     const trailerPlayer = document.getElementById('trailerPlayer');
     const normalizedUrl = normalizeVideoPath(trailerUrl);
@@ -123,7 +142,10 @@ async function updateContentDetails() {
         }
     }
     
-    document.getElementById('contentDescription').textContent = currentContent.description || "No description available.";
+    //  trim description before fallback ----
+    const desc = (currentContent.description || '').trim();
+    document.getElementById('contentDescription').textContent = desc || "No description available.";
+    // ---------------------------------------------------
 
     // Update like button
     const likeButton = document.getElementById('likeButton');
@@ -254,11 +276,11 @@ async function toggleLike() {
         
         const data = await response.json();
         
-        // Update local state with server response
+        //  local state with server response
         userLikes[currentContent._id] = data.userHasLiked;
         saveUserLikesToStorage();
         
-        // Update UI
+        //  UI
         if (userLikes[currentContent._id]) {
             likeButton.classList.add('liked');
             likeButton.innerHTML = '<i class="fas fa-heart"></i> Liked';
@@ -294,7 +316,11 @@ async function initializeDetailsPage() {
         return;
     }
     
-    loadTrailer(currentContent.trailerUrl);
+    // prefer full movie if exists, otherwise trailer
+    //  use first-episode fallback for series
+    const previewUrl = currentContent.videoUrl || currentContent.trailerUrl || firstEpisodeUrlIfAny(currentContent);
+    if (previewUrl) loadTrailer(previewUrl);
+
     updateContentDetails();
     fetchAndDisplayRatings();
     displayEpisodes();
@@ -304,8 +330,23 @@ async function initializeDetailsPage() {
         window.location.href = './feed.html';
     });
     
+    // Play button now plays in-place instead of navigating
     document.getElementById('playButton').addEventListener('click', () => {
-        window.location.href = `player.html?id=${currentContent.id}`;
+        const videoEl = document.getElementById('trailerPlayer');
+        //  play first episode if series
+        const wantedUrl = (currentContent.type === 'series')
+            ? (firstEpisodeUrlIfAny(currentContent) || currentContent.trailerUrl)
+            : (currentContent.videoUrl || currentContent.trailerUrl);
+        if (!wantedUrl) return;
+
+        const normalized = normalizeVideoPath(wantedUrl);
+        const currentSrc = videoEl.currentSrc || videoEl.src || '';
+        if (!currentSrc.endsWith(normalized)) {
+            videoEl.src = normalized;
+            videoEl.load();
+        }
+        videoEl.play().catch(() => videoEl.focus());
+        videoEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
     });
     
     document.getElementById('likeButton').addEventListener('click', toggleLike);
