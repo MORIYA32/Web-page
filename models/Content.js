@@ -30,16 +30,19 @@ const contentSchema = new mongoose.Schema({
     actors: [String],
     thumbnail: String,
     trailerUrl: String,
-    videoUrl: String, // For movies
-    seasons: [seasonSchema], // For series
+    videoUrl: String, 
+    seasons: [seasonSchema], 
     likes: {
         type: Number,
         default: 0
     },
     likedBy: [{
-        type: String  // userId
+        type: String  
     }],
-    imdbId: String
+    imdbId: String,
+
+    
+    description: { type: String, default: '' }
 }, {
     timestamps: true
 });

@@ -1,4 +1,5 @@
 const User = require('../models/User');
+const jwt = require('jsonwebtoken'); // for JWT signing
 
 class AuthController {
     async register(req, res) {
@@ -82,18 +83,59 @@ class AuthController {
 
             console.log(`User logged in: ${user.username}`);
 
+            //  Sign JWT and set as httpOnly cookie (7 days)
+            const token = jwt.sign(
+                { id: user._id.toString(), email: user.email, role: user.role || 'user' },
+                process.env.JWT_SECRET,
+                { expiresIn: '7d' }
+            );
+
+            res.cookie('auth', token, {
+                httpOnly: true,
+                sameSite: 'lax',
+                secure: false, // set true in production behind HTTPS
+                maxAge: 7 * 24 * 60 * 60 * 1000,
+                path: '/'
+            });
+
+            const redirectUrl = (user.role === 'admin') ? '/admin/add' : '/profiles';
+
             res.json({
                 message: 'Login successful',
                 user: {
                     id: user._id,
                     email: user.email,
-                    username: user.username
-                }
+                    username: user.username,
+                    role: user.role 
+                },
+                redirectUrl 
             });
 
         } catch (error) {
             console.error('Login error:', error);
             res.status(500).json({ error: 'Login failed' });
+        }
+    }
+
+    //  Return the current user (from JWT cookie)
+    async whoami(req, res) {
+        try {
+            const token = req.cookies?.auth;
+            if (!token) return res.json({ user: null });
+            const payload = jwt.verify(token, process.env.JWT_SECRET);
+            return res.json({ user: { id: payload.id, email: payload.email, role: payload.role } });
+        } catch {
+            return res.json({ user: null });
+        }
+    }
+
+    // NEW: Clear the auth cookie
+    async logout(req, res) {
+        try {
+            res.clearCookie('auth', { path: '/' });
+            return res.json({ message: 'Logged out' });
+        } catch {
+            return res.json({ message: 'Logged out' });
         }
     }
 

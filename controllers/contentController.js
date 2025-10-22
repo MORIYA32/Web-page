@@ -1,5 +1,15 @@
 const Content = require('../models/Content');
 
+const path = require('path');
+const fs = require('fs');
+const fsp = fs.promises;
+
+function sanitizeFilename(str) {
+    return String(str || '')
+        .replace(/[^a-z0-9_\-\.]+/gi, '_')
+        .toLowerCase();
+}
+
 class ContentController {
     async getContent(req, res) {
         try {
@@ -26,19 +36,15 @@ class ContentController {
                 return res.status(404).json({ error: 'Content not found' });
             }
             
-            // Initialize likedBy array if it doesn't exist
-            if (!content.likedBy) {
-                content.likedBy = [];
-            }
-            
+            if (typeof content.likes !== 'number') content.likes = 0;
+            if (!Array.isArray(content.likedBy)) content.likedBy = [];
+
             const hasLiked = content.likedBy.includes(userId);
             
             if (hasLiked) {
-                // Unlike: remove user from likedBy array
                 content.likedBy = content.likedBy.filter(uid => uid !== userId);
                 content.likes = Math.max(0, content.likes - 1);
             } else {
-                // Like: add user to likedBy array
                 content.likedBy.push(userId);
                 content.likes += 1;
             }
@@ -80,43 +86,148 @@ class ContentController {
     }
 
     async getRatings(req, res) {
+      try {
+        const { id } = req.params;
+        const content = await Content.findById(id);
+        if (!content) {
+          return res.status(404).json({ error: 'Content not found' });
+        }
+
+        const omdbApiKey = process.env.OMDB_API_KEY;
+        if (!omdbApiKey) {
+          return res.json({ ratings: null });
+        }
+
+        let data;
+
+        if (content.imdbId) {
+          const resp = await fetch(`http://www.omdbapi.com/?i=${content.imdbId}&apikey=${omdbApiKey}`);
+          data = await resp.json();
+        } else {
+          const params = new URLSearchParams({
+            t: String(content.title || ''),
+            y: String(content.year || ''),
+            type: String(content.type || ''), 
+            apikey: omdbApiKey
+          });
+          const resp = await fetch(`http://www.omdbapi.com/?${params.toString()}`);
+          data = await resp.json();
+
+          if (data && data.Response === 'True' && data.imdbID) {
+            content.imdbId = data.imdbID;
+            await content.save().catch(() => {}); 
+          }
+        }
+
+        if (!data || data.Response === 'False') {
+          return res.json({ ratings: null });
+        }
+
+        const ratings = {
+          imdb: data.imdbRating && data.imdbRating !== 'N/A' ? data.imdbRating : null,
+          rottenTomatoes: null
+        };
+
+        if (Array.isArray(data.Ratings)) {
+          const rt = data.Ratings.find(r => r.Source === 'Rotten Tomatoes');
+          if (rt) ratings.rottenTomatoes = rt.Value;
+        }
+
+        return res.json({ ratings });
+      } catch (error) {
+        console.error('Get ratings error:', error);
+        return res.status(500).json({ error: 'Failed to fetch ratings' });
+      }
+    }
+
+    async createContent(req, res) {
         try {
-            const { id } = req.params;
-            const content = await Content.findById(id);
-            
-            if (!content) {
-                return res.status(404).json({ error: 'Content not found' });
+            const {
+                title = '',
+                year = '',
+                type = 'movie',          
+                genres = '',            
+                director = '',
+                cast = '',              
+                description = '',
+                imdbId = ''              
+            } = req.body || {};
+
+            if (!title || !year || !type) {
+                return res.status(400).json({ error: 'title, year and type are required' });
             }
 
-            if (!content.imdbId) {
-                return res.json({ ratings: null });
+            const posterFile = req.files?.poster?.[0] || null;
+            const videoFile  = req.files?.video?.[0]  || null;
+
+            if (!posterFile) {
+                return res.status(400).json({ error: 'Poster image is required' });
+            }
+            if (type === 'movie' && !videoFile) {
+                return res.status(400).json({ error: 'MP4 video is required for movies' });
+            }
+            if (videoFile && videoFile.mimetype !== 'video/mp4') {
+                return res.status(400).json({ error: 'Video must be an MP4 file' });
             }
 
-            const omdbApiKey = process.env.OMDB_API_KEY;
-            const response = await fetch(`http://www.omdbapi.com/?i=${content.imdbId}&apikey=${omdbApiKey}`);
-            const data = await response.json();
+            const picturesDir = path.resolve(__dirname, '..', 'views', 'pictures');
+            const videosDir  = path.resolve(__dirname, '..', 'views', 'videos');
+            await fsp.mkdir(picturesDir, { recursive: true });
+            await fsp.mkdir(videosDir,  { recursive: true });
 
-            if (data.Response === 'False') {
-                return res.json({ ratings: null });
+            const base = sanitizeFilename(`${title}-${Date.now()}`);
+
+            const posterExt = path.extname(posterFile.originalname || '.jpg') || '.jpg';
+            const posterName = `${base}${posterExt}`;
+            const posterAbs = path.join(picturesDir, posterName);
+            await fsp.writeFile(posterAbs, posterFile.buffer);
+            const thumbnail = `/${path.join('pictures', posterName).replace(/\\/g, '/')}`;
+
+            let videoUrl = null;
+            if (videoFile) {
+                const videoExt = path.extname(videoFile.originalname || '.mp4') || '.mp4';
+                const videoName = `${base}${videoExt}`;
+                const videoAbs = path.join(videosDir, videoName);
+                await fsp.writeFile(videoAbs, videoFile.buffer);
+                videoUrl = `/${path.join('videos', videoName).replace(/\\/g, '/')}`;
             }
 
-            const ratings = {
-                imdb: data.imdbRating !== 'N/A' ? data.imdbRating : null,
-                rottenTomatoes: null
-            };
+            const genre = String(genres || '')
+                .split(',')
+                .map(s => s.trim())
+                .filter(Boolean);
+            const actors = String(cast || '')
+                .split(',')
+                .map(s => s.trim())
+                .filter(Boolean);
 
-            if (data.Ratings && Array.isArray(data.Ratings)) {
-                const rtRating = data.Ratings.find(r => r.Source === 'Rotten Tomatoes');
-                if (rtRating) {
-                    ratings.rottenTomatoes = rtRating.Value;
-                }
-            }
+            const last = await Content.findOne().sort({ id: -1 }).select('id').lean();
+            const nextId = (last?.id || 0) + 1;
 
-            res.json({ ratings });
+            const doc = await Content.create({
+                id: nextId,                    
+                type: String(type).trim(),    
+                title: String(title).trim(),
+                year: Number(year),
+                genre,
+                actors,
+                thumbnail,
+                videoUrl,
+                seasons: [],
+                imdbId: imdbId ? String(imdbId).trim() : undefined,
+                likes: 0,
+                likedBy: [],
 
+                description: String(description || '').trim()
+            });
+
+            return res.status(201).json({ content: doc });
         } catch (error) {
-            console.error('Get ratings error:', error);
-            res.status(500).json({ error: 'Failed to fetch ratings' });
+            console.error('createContent error:', error);
+            if (error && error.code === 'LIMIT_FILE_SIZE') {
+                return res.status(413).json({ error: 'File too large (max 20MB per file)' });
+            }
+            return res.status(500).json({ error: 'Failed to create content' });
         }
     }
 }
