@@ -22,6 +22,39 @@ async function fetchContent() {
     }
 }
 
+function populateGenresDropdown() {
+    const genreMenu = document.getElementById('genreFilterMenu');
+    genreMenu.innerHTML = '';
+    genreMenu.classList.add('three-columns');
+    genreMenu.classList.add('three-columns'); 
+    const genreSet = new Set();
+
+    moviesData.forEach(movie => {
+        const genres = Array.isArray(movie.genre) ? movie.genre : [movie.genre];
+        genres.forEach(g => genreSet.add(g.trim()));
+    });
+
+    // Sort genres alphabetically
+    const sortedGenres = Array.from(genreSet).sort();
+
+    // Create dropdown items
+    sortedGenres.forEach(genre => {
+        const li = document.createElement('li');
+        li.innerHTML = `<a class="dropdown-item genre-filter-item" href="#" data-genre="${genre}">${genre}</a>`;
+        genreMenu.appendChild(li);
+    });
+
+    document.querySelectorAll('#genreFilterMenu .dropdown-item').forEach(item => {
+        item.addEventListener('click', (e) => {
+            e.preventDefault();
+            const genre = e.target.dataset.genre;
+
+            setActiveNavLink('genreDropdown');
+            renderMoviesByGenre(genre);
+        });
+    });
+}
+
 //LocalStorage for likes count
 function saveLikesToStorage() {
     const likesData = {};
@@ -175,6 +208,54 @@ function renderMovies(filterType = null) {
     });
 }
 
+function renderMoviesByGenre(selectedGenre) {
+    const categoriesContainer = document.getElementById('categoriesContainer');
+    categoriesContainer.innerHTML = '';
+
+    const genreFiltered = moviesData.filter(movie => {
+        const genres = Array.isArray(movie.genre) ? movie.genre : [movie.genre];
+        return genres.some(g => g.toLowerCase() === selectedGenre.toLowerCase());
+    });
+
+    if (genreFiltered.length === 0) {
+        categoriesContainer.innerHTML = `<div style="color: white; padding: 20px;">No titles found in "${selectedGenre}"</div>`;
+        return;
+    }
+
+    const categoryRow = document.createElement('div');
+    categoryRow.className = 'category-row';
+    categoryRow.innerHTML = `
+        <h3 class="category-title">${selectedGenre} Titles</h3>
+        <div class="carousel-container">
+            <button class="carousel-arrow left" data-category="genre">
+                <i class="fas fa-chevron-left"></i>
+            </button>
+            <div class="carousel-wrapper">
+                <div class="carousel-track" data-category="genre"></div>
+            </div>
+            <button class="carousel-arrow right" data-category="genre">
+                <i class="fas fa-chevron-right"></i>
+            </button>
+        </div>
+    `;
+
+    categoriesContainer.appendChild(categoryRow);
+
+    const track = categoryRow.querySelector('.carousel-track');
+
+    const infiniteMovies = genreFiltered.length >= 4
+        ? [...genreFiltered, ...genreFiltered, ...genreFiltered]
+        : genreFiltered;
+
+    infiniteMovies.forEach(movie => {
+        const card = createMovieCard(movie);
+        track.appendChild(card);
+    });
+
+    setupCarousel("genre", genreFiltered.length);
+}
+
+
 // Create a movie card element
 function createMovieCard(movie) {
     const movieCard = document.createElement('div');
@@ -238,6 +319,12 @@ document.getElementById('homeLink').addEventListener('click', function(e) {
     setActiveNavLink('homeLink');
     renderMovies();
 });
+
+document.getElementById('genreDropdown').addEventListener('click', () => {
+  console.log('Genre dropdown clicked');
+  setActiveNavLink('genreDropdown');
+});
+
 
 // Set up carousel navigation
 function setupCarousel(categoryIndex, originalLength) {
@@ -490,7 +577,7 @@ function updateProfileDropdown() {
 }
 
 function setActiveNavLink(activeId) {
-    document.querySelectorAll('.nav-link').forEach(link => {
+    document.querySelectorAll('.nav-link, #genreDropdown').forEach(link => {
         if (link.id === activeId) {
             link.classList.add('active');
         } else {
@@ -498,6 +585,21 @@ function setActiveNavLink(activeId) {
         }
     });
 }
+
+
+// Genre filter click handler
+document.querySelectorAll('#genreFilterMenu .dropdown-item').forEach(item => {
+    item.addEventListener('click', (e) => {
+        e.preventDefault();
+        const genre = e.target.dataset.genre;
+
+        setActiveNavLink('genreDropdown');  // <--- activate genre dropdown button
+
+        renderMoviesByGenre(genre);
+    });
+});
+
+
 
 function signOut() {
     localStorage.removeItem("isLoggedIn");
@@ -527,7 +629,7 @@ document.addEventListener('DOMContentLoaded', async function () {
     
     // Load user likes from server
     await loadUserLikesFromServer();
-    
+    populateGenresDropdown();
     renderMovies();
 
     // Search event listeners

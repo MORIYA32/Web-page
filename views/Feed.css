@@ -41,8 +41,30 @@ body {
 
 .nav-link.active {
   color: #e50914;
-  font-weight: bold;
   border-bottom: 2px solid #e50914;
+}
+
+#genreDropdown.active {
+  border-bottom: 2px solid #e50914;
+  color: #e50914;
+}
+
+#genreFilterMenu.three-columns {
+  column-count: 3;
+  column-gap: 40px;
+  list-style: none;
+  padding-left: 0;
+  width: 460px;
+}
+
+#genreFilterMenu.three-columns li {
+  break-inside: avoid;
+  margin-bottom: 10px;
+}
+
+#genreFilterMenu.three-columns .dropdown-item {
+  padding: 4px 10px;
+  margin-bottom: 4px;
 }
 
 .search-container {
@@ -218,6 +240,23 @@ body {
   background-color: black;
   border: 1px solid #333;
 }
+
+.dropdown-menu-dark .dropdown-item {
+    color: #fff !important;
+}
+
+#genreDropdown {
+  color: #fff !important;
+}
+
+/* Default style for nav links */
+.nav-link {
+  color: #fff;
+  font-weight: normal;
+  border-bottom: none;
+  transition: all 0.2s ease;
+}
+
 
 /* Navbar responsiveness */
 
