@@ -1,43 +1,96 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Watch - Netflix</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="player.css">
-    <link rel="icon" type="image/x-icon" href="https://assets.nflxext.com/ffe/siteui/common/icons/nficon2016.ico">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Watch - Netflix</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <link rel="stylesheet" href="player.css" />
+  <link rel="icon" type="image/x-icon" href="https://assets.nflxext.com/ffe/siteui/common/icons/nficon2016.ico" />
 </head>
 <body>
-    <div class="player-container">
-        <!-- Back Button -->
-        <button class="back-button" id="backButton">
-            <i class="fas fa-arrow-left"></i> Back to Browse
-        </button>
+  <div class="player-container">
+    <button class="back-button" id="backButton">
+      <i class="fas fa-arrow-left"></i> Back to Browse
+    </button>
 
-        <div id=video-wrapper class="video-wrapper">
-            <video id="videoPlayer" controls autoplay></video>
+    <div id="video-wrapper" class="video-wrapper">
+      <video
+        id="videoPlayer"
+        autoplay
+        playsinline
+        controls="false"
+        controlslist="nodownload noplaybackrate nofullscreen noremoteplayback"
+        disablepictureinpicture
+        oncontextmenu="return false"
+      ></video>
+
+      <div class="control-bar" id="controlBar" role="group" aria-label="Player controls">
+        <div class="controls-left">
+          <button class="ctrl-icon" id="btnPlayPause" title="Play/Pause" aria-label="Play">
+            <i class="fas fa-play"></i>
+          </button>
+          <button class="skip10-btn" id="btnBack10" title="Back 10s" aria-label="Back 10 seconds">
+            <i class="fas fa-rotate-left"></i><span class="skip10-badge">10</span>
+          </button>
+          <button class="skip10-btn" id="btnForward10" title="Forward 10s" aria-label="Forward 10 seconds">
+            <i class="fas fa-rotate-right"></i><span class="skip10-badge">10</span>
+          </button>
         </div>
 
-        <!-- Episode Info -->
-        <div class="episode-info" id="episodeInfo">
-            <h2 id="contentTitle"></h2>
-            <p id="episodeDetails"></p>
+        <div class="controls-center">
+          <span class="time-text" id="timeCurrent">00:00</span>
+          <input type="range" id="seek" min="0" max="100" step="0.1" value="0" aria-label="Seek timeline" />
+          <span class="time-text" id="timeTotal">00:00</span>
         </div>
 
-        <!-- Controls -->
-        <div class="player-controls" id="playerControls">
-            <button class="btn btn-light" id="prevEpisode" style="display: none;">
-                <i class="fas fa-backward"></i> Previous Episode
-            </button>
-            <button class="btn btn-light" id="nextEpisode" style="display: none;">
-                <i class="fas fa-forward"></i> Next Episode
-            </button>
+        <div class="controls-right">
+          <button class="ctrl-chip" id="btnPrevEpisode" title="Previous Episode" aria-label="Previous episode">
+            <i class="fas fa-backward"></i>
+          </button>
+
+          <button class="ctrl-chip" id="btnNextEpisode" title="Next Episode" aria-label="Next episode">
+            <i class="fas fa-forward"></i>
+          </button>
+
+          <button class="ctrl-chip" id="btnEpisodes" title="Episodes" aria-label="Episodes">
+            <i class="fas fa-list"></i>
+          </button>
+
+          <button class="fs-btn" id="btnFullscreen" title="Fullscreen" aria-label="Fullscreen">
+            <i class="fas fa-up-right-and-down-left-from-center"></i>
+          </button>
         </div>
+      </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="player.js"></script>
+    <div class="episode-info" id="episodeInfo">
+      <h2 id="contentTitle"></h2>
+      <p id="episodeDetails"></p>
+    </div>
+
+    <div class="episodes-drawer" id="episodesDrawer" aria-hidden="true">
+      <div class="drawer-header">
+        <h3 id="drawerTitle">Episodes</h3>
+        <button class="btn btn-light btn-sm" id="closeEpisodes" aria-label="Close">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      <div class="drawer-body">
+        <div class="mb-3" id="seriesSeasonRow" style="display:none;">
+          <label class="form-label">Season</label>
+          <select class="form-select" id="drawerSeasonSelect"></select>
+        </div>
+        <div class="drawer-episodes" id="drawerEpisodesList"></div>
+        <div class="drawer-episodes" id="drawerChaptersList" style="display:none;"></div>
+      </div>
+    </div>
+
+    <div class="episodes-drawer-backdrop" id="episodesBackdrop" aria-hidden="true"></div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="player.js"></script>
 </body>
 </html>
