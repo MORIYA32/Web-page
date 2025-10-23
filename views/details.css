@@ -182,6 +182,49 @@ body {
     text-decoration: underline;
 }
 
+.actor-card {
+    display: inline-block;
+    text-align: center;
+    margin: 0 10px;
+    width: 80px;
+    vertical-align: top;
+}
+
+.actor-card img {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.actor-card a,
+.actor-card span {
+    text-decoration: none;
+    display: block;
+    max-width: 80px;
+    white-space: normal;
+    word-break: break-word;
+    text-align: center;
+    margin-top: 8px;
+    font-size: 14px;
+    color: #ccc;
+}
+
+
+.actor-card a:hover {
+    text-decoration: underline;
+}
+
+.actor-placeholder {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background-color: #555; /* nice gray */
+    display: inline-block;
+    vertical-align: middle;
+}
+
+
 .episodes-section {
     margin-top: 40px;
 }
