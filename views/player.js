@@ -166,7 +166,7 @@ function playNextEpisode() {
   } else {
     return;
   }
-  loadEpisode(0); 
+  loadEpisode(0); // CHG: always start next episode from beginning
 }
 
 function playPreviousEpisode() {
@@ -180,7 +180,7 @@ function playPreviousEpisode() {
   } else {
     return;
   }
-  loadEpisode(); 
+  loadEpisode(0); // CHG: always start previous episode from beginning
 }
 
 async function saveCurrentTime() {
@@ -219,7 +219,7 @@ async function getCurrentProgress() {
 }
 
 async function loadEpisode(startTimeOverride) {
-  clearInterval(currentTimeInterval);
+  clearInterval(currentTimeInterval); // ok to keep (no interval will be set further)
 
   const startTime =
     (startTimeOverride !== undefined)
@@ -253,7 +253,8 @@ async function loadEpisode(startTimeOverride) {
     }
   }
 
-  currentTimeInterval = setInterval(saveCurrentTime, VIDEO_CURRENT_TIME_UPDATE_INTERVAL);
+  // CHG: אין יותר שמירה אוטומטית כל X שניות
+  // currentTimeInterval = setInterval(saveCurrentTime, VIDEO_CURRENT_TIME_UPDATE_INTERVAL);
 }
 
 function wireControlBarPlayback() {
@@ -288,6 +289,12 @@ function wireControlBarPlayback() {
   if (v) {
     v.onplay  = () => { if (iconPlayPause) { iconPlayPause.className = 'fas fa-pause'; btnPlayPause?.setAttribute('aria-label','Pause'); } };
     v.onpause = () => { if (iconPlayPause) { iconPlayPause.className = 'fas fa-play';  btnPlayPause?.setAttribute('aria-label','Play');  } };
+  }
+
+  // CHG: שמירה רק בעת Pause, פעם אחת (ללא הצטברות מאזינים)
+  if (v && !v.__saveOnPauseBound) {
+    v.addEventListener('pause', saveCurrentTime);
+    v.__saveOnPauseBound = true;
   }
 
   if (btnBack10)    btnBack10.onclick    = () => { if (!v) return; v.currentTime = Math.max(0, (v.currentTime || 0) - 10); };

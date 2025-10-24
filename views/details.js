@@ -93,6 +93,19 @@ function fmtTime(t) {
   return h > 0 ? `${h}:${m}:${s}` : `${m}:${s}`;
 }
 
+/* ---------- progress save (ONLY on pause) ---------- */
+async function saveWatchProgress({ contentId, time, season = null, episode = null, context = 'details' }) {
+  try {
+    await fetch('/api/content/progress', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ contentId, season, episode, time, context })
+    });
+  } catch (err) {
+    console.error('Failed to save progress', err);
+  }
+}
+
 /* ---------- Wikipedia (actors) ---------- */
 async function fetchWikipediaActorInfo(actorName) {
   try {
@@ -237,7 +250,8 @@ function displayEpisodes() {
       el.className = 'episode-card';
       el.innerHTML = `<h4>Episode ${ep.episodeNumber}</h4><p>${ep.episodeTitle || ''}</p>`;
       el.addEventListener('click', () => {
-        window.location.href = `player.html?id=${currentContent.id}&season=${seasonNumber}&episode=${ep.episodeNumber}`;
+        // פתיחה תמיד מההתחלה
+        window.location.href = `player.html?id=${currentContent.id}&season=${seasonNumber}&episode=${ep.episodeNumber}&reset=1`;
       });
       episodesList.appendChild(el);
     });
@@ -363,7 +377,8 @@ function renderDrawerEpisodesDetails(seasonNumber) {
       btn.className = 'episode-row';
       btn.innerHTML = `<strong>Episode ${ep.episodeNumber}</strong> ${ep.episodeTitle ? '– ' + ep.episodeTitle : ''}`;
       btn.onclick = () => {
-        window.location.href = `player.html?id=${currentContent.id}&season=${season.seasonNumber}&episode=${ep.episodeNumber}`;
+        // פתיחה תמיד מההתחלה
+        window.location.href = `player.html?id=${currentContent.id}&season=${season.seasonNumber}&episode=${ep.episodeNumber}&reset=1`;
       };
       list.appendChild(btn);
     });
@@ -415,7 +430,8 @@ function navigatePrevNextFromDetails(dir) {
 
   const seasonNum = seasons[s].seasonNumber;
   const epNum = eps()[e].episodeNumber;
-  window.location.href = `player.html?id=${currentContent.id}&season=${seasonNum}&episode=${epNum}`;
+  // פתיחה תמיד מההתחלה
+  window.location.href = `player.html?id=${currentContent.id}&season=${seasonNum}&episode=${epNum}&reset=1`;
 }
 
 /* ---------- control bar wiring ---------- */
@@ -472,6 +488,13 @@ function wireDetailsControlBar() {
     if (iconPlayPause) {
       iconPlayPause.className = 'fas fa-play';
       btnPlayPause?.setAttribute('aria-label', 'Play');
+    }
+    // <<< שמירה רק בעת Pause >>>
+    const cid = currentContent?._id || currentContent?.id || contentId;
+    const t = Number.isFinite(v.currentTime) ? Math.floor(v.currentTime) : 0;
+    if (cid != null) {
+      // שומר בלי season/episode כי זה טריילר/תצוגה מקדימה בדף הפרטים
+      saveWatchProgress({ contentId: cid, time: t, context: 'details-trailer' });
     }
   });
 
