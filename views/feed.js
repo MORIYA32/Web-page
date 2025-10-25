@@ -204,18 +204,19 @@ function renderMovies(filterType = null) {
 
   mediaGenres.forEach((genre) => {
     const category = {
-        title: `Newest ${genre}`,
-        skipFallback: true,
-        filter: (mediaItem) => {
-            return mediaItem.genre.includes(genre);
-        },
-        displayLimit: 10,
-        sort: (medias) => medias.sort((a, b) => {
-            return -a.updatedAt.localeCompare(b.updatedAt);
-        })
-    }
-    categories.push(category)
-  })
+      title: `Newest ${genre}`,
+      skipFallback: true,
+      filter: (mediaItem) => {
+        return mediaItem.genre.includes(genre);
+      },
+      displayLimit: 10,
+      sort: (medias) =>
+        medias.sort((a, b) => {
+          return -a.updatedAt.localeCompare(b.updatedAt);
+        }),
+    };
+    categories.push(category);
+  });
 
   const mode = (
     document.getElementById("sortSelect")?.value ||
@@ -231,8 +232,8 @@ function renderMovies(filterType = null) {
       categoryMovies = category.sort([...categoryMovies]);
     }
 
-    if(Object.prototype.hasOwnProperty.call(category, "displayLimit")) {
-        categoryMovies = categoryMovies.splice(0, category.displayLimit)
+    if (Object.prototype.hasOwnProperty.call(category, "displayLimit")) {
+      categoryMovies = categoryMovies.splice(0, category.displayLimit);
     }
 
     if (mode) categoryMovies = sortArrayByMode(categoryMovies, mode);
@@ -391,6 +392,32 @@ function createMovieCard(movie) {
   return movieCard;
 }
 
+//filter by movies
+document.getElementById("moviesLink").addEventListener("click", function (e) {
+  e.preventDefault();
+  setActiveNavLink("moviesLink");
+  renderMovies("movie");
+});
+
+//filter by tv shows
+document.getElementById("tvShowsLink").addEventListener("click", function (e) {
+  e.preventDefault();
+  setActiveNavLink("tvShowsLink");
+  renderMovies("show");
+});
+
+//no filter, all content
+document.getElementById("homeLink").addEventListener("click", function (e) {
+  e.preventDefault();
+  setActiveNavLink("homeLink");
+  renderMovies();
+});
+
+document.getElementById("genreDropdown").addEventListener("click", () => {
+  console.log("Genre dropdown clicked");
+  setActiveNavLink("genreDropdown");
+});
+
 function setupCarousel(categoryIndex, originalLength) {
   const track = document.querySelector(
     `.carousel-track[data-category="${categoryIndex}"]`
@@ -404,6 +431,9 @@ function setupCarousel(categoryIndex, originalLength) {
   if (!track || !leftBtn || !rightBtn) return;
   let currentIndex = originalLength >= 4 ? originalLength : 0;
   const cardWidth = 290;
+  const scrollAmount = cardWidth * 4;
+
+  // Set initial position
   track.style.transform = `translateX(-${currentIndex * cardWidth}px)`;
   if (originalLength < 4) {
     leftBtn.style.display = "none";
@@ -593,6 +623,18 @@ function setActiveNavLink(activeId) {
     else link.classList.remove("active");
   });
 }
+
+// Genre filter click handler
+document.querySelectorAll("#genreFilterMenu .dropdown-item").forEach((item) => {
+  item.addEventListener("click", (e) => {
+    e.preventDefault();
+    const genre = e.target.dataset.genre;
+
+    setActiveNavLink("genreDropdown");
+
+    renderMoviesByGenre(genre);
+  });
+});
 
 function signOut() {
   localStorage.removeItem("isLoggedIn");
