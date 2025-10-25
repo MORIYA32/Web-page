@@ -1,12 +1,24 @@
 // Store movies data globally
 let moviesData = [];
 
+let mediaGenres = [];
+
 // Track user's activity (Likes and search)
 let userLikes = {};
 let isSearchActive = false;
 let filteredMovies = [];
 
-// Fetch content from backend
+function listGenres(medias) {
+  const genreSet = new Set();
+
+  medias.forEach((movie) => {
+    const genres = Array.isArray(movie.genre) ? movie.genre : [movie.genre];
+    genres.forEach((g) => genreSet.add(g.trim()));
+  });
+
+  return Array.from(genreSet).sort();
+}
+
 async function fetchContent() {
   try {
     const response = await fetch("/api/content");
@@ -15,6 +27,7 @@ async function fetchContent() {
     }
     const content = await response.json();
     moviesData = content;
+    mediaGenres = listGenres(moviesData);
     return content;
   } catch (error) {
     console.error("Error fetching content:", error);
@@ -27,18 +40,9 @@ function populateGenresDropdown() {
   genreMenu.innerHTML = "";
   genreMenu.classList.add("three-columns");
   genreMenu.classList.add("three-columns");
-  const genreSet = new Set();
-
-  moviesData.forEach((movie) => {
-    const genres = Array.isArray(movie.genre) ? movie.genre : [movie.genre];
-    genres.forEach((g) => genreSet.add(g.trim()));
-  });
-
-  // Sort genres alphabetically
-  const sortedGenres = Array.from(genreSet).sort();
 
   // Create dropdown items
-  sortedGenres.forEach((genre) => {
+  mediaGenres.forEach((genre) => {
     const li = document.createElement("li");
     li.innerHTML = `<a class="dropdown-item genre-filter-item" href="#" data-genre="${genre}">${genre}</a>`;
     genreMenu.appendChild(li);
@@ -126,13 +130,8 @@ function renderMovies(filterType = null) {
 
   // Get user's liked content genres for recommendations
   const userLikedContent = filteredData.filter((movie) => userLikes[movie._id]);
-  const userGenres = new Set();
-  userLikedContent.forEach((movie) => {
-    const genres = Array.isArray(movie.genre) ? movie.genre : [movie.genre];
-    genres.forEach((g) => userGenres.add(g.toLowerCase()));
-  });
+  const userGenres = listGenres(userLikedContent);
 
-  // Define categories
   const categories = [
     {
       title:
@@ -160,11 +159,18 @@ function renderMovies(filterType = null) {
       title: "Top Picks for You",
       filter: (movie) => {
         // ONLY show content from genres user has liked (no fallback)
-        if (userGenres.size > 0) {
+        if (userGenres.length > 0) {
           const genres = Array.isArray(movie.genre)
             ? movie.genre
             : [movie.genre];
-          return genres.some((g) => userGenres.has(g.toLowerCase()));
+
+          const lowerUserGenres = userGenres.map((genre) =>
+            genre.toLowerCase()
+          );
+
+          return genres.some((genre) =>
+            lowerUserGenres.includes(genre.toLowerCase())
+          );
         }
 
         // If no likes yet, don't show this category
