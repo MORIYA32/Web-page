@@ -383,7 +383,6 @@ document.getElementById("genreDropdown").addEventListener("click", () => {
   setActiveNavLink("genreDropdown");
 });
 
-// Set up carousel navigation
 function setupCarousel(categoryIndex, originalLength) {
   const track = document.querySelector(
     `.carousel-track[data-category="${categoryIndex}"]`
@@ -398,8 +397,8 @@ function setupCarousel(categoryIndex, originalLength) {
   // For small categories (< 4 items), start at position 0
   // For larger categories, start at middle set for infinite scroll
   let currentIndex = originalLength >= 4 ? originalLength : 0;
-  const cardWidth = 290; // 280px width + 10px gap
-  const scrollAmount = cardWidth * 4; // Scroll 4 items at a time
+  const cardWidth = 290;
+  const scrollAmount = cardWidth * 4;
 
   // Set initial position
   track.style.transform = `translateX(-${currentIndex * cardWidth}px)`;
@@ -663,7 +662,7 @@ document.querySelectorAll("#genreFilterMenu .dropdown-item").forEach((item) => {
     e.preventDefault();
     const genre = e.target.dataset.genre;
 
-    setActiveNavLink("genreDropdown"); // <--- activate genre dropdown button
+    setActiveNavLink("genreDropdown");
 
     renderMoviesByGenre(genre);
   });
