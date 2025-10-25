@@ -1,7 +1,23 @@
 let moviesData = [];
+
+let mediaGenres = [];
+
+// Track user's activity (Likes and search)
 let userLikes = {};
 let isSearchActive = false;
 let filteredMovies = [];
+
+function listGenres(medias) {
+  const genreSet = new Set();
+
+  medias.forEach((movie) => {
+    const genres = Array.isArray(movie.genre) ? movie.genre : [movie.genre];
+    genres.forEach((g) => genreSet.add(g.trim()));
+  });
+
+  return Array.from(genreSet).sort();
+}
+
 let currentSortMode = "";
 let adminRefreshTimer = null;
 
@@ -24,10 +40,11 @@ async function fetchContent() {
     const response = await fetch("/api/content");
     if (!response.ok) throw new Error("Failed to fetch content");
     const content = await response.json();
-    moviesData = Array.isArray(content) ? content : [];
-    return moviesData;
-  } catch (err) {
-    console.error("Error fetching content:", err);
+    moviesData = content;
+    mediaGenres = listGenres(moviesData);
+    return content;
+  } catch (error) {
+    console.error("Error fetching content:", error);
     return [];
   }
 }
@@ -65,13 +82,9 @@ function populateGenresDropdown() {
   genreMenu.innerHTML = "";
   genreMenu.classList.add("three-columns");
   genreMenu.classList.add("three-columns");
-  const genreSet = new Set();
-  moviesData.forEach((movie) => {
-    const genres = Array.isArray(movie.genre) ? movie.genre : [movie.genre];
-    genres.filter(Boolean).forEach((g) => genreSet.add(String(g).trim()));
-  });
-  const sortedGenres = Array.from(genreSet).sort();
-  sortedGenres.forEach((genre) => {
+
+  // Create dropdown items
+  mediaGenres.forEach((genre) => {
     const li = document.createElement("li");
     li.innerHTML = `<a class="dropdown-item genre-filter-item" href="#" data-genre="${genre}">${genre}</a>`;
     genreMenu.appendChild(li);
@@ -139,13 +152,8 @@ function renderMovies(filterType = null) {
       (m) => (m.type || "").toLowerCase() === "series"
     );
   const userLikedContent = filteredData.filter((movie) => userLikes[movie._id]);
-  const userGenres = new Set();
-  userLikedContent.forEach((movie) => {
-    const genres = Array.isArray(movie.genre) ? movie.genre : [movie.genre];
-    genres
-      .filter(Boolean)
-      .forEach((g) => userGenres.add(String(g).toLowerCase()));
-  });
+  const userGenres = listGenres(userLikedContent);
+
   const categories = [
     {
       title:
@@ -171,12 +179,26 @@ function renderMovies(filterType = null) {
     },
     {
       title: "Top Picks for You",
-      filter: (m) =>
-        userGenres.size > 0 &&
-        (Array.isArray(m.genre) ? m.genre : [m.genre]).some((g) =>
-          userGenres.has(String(g).toLowerCase())
-        ),
-      skipFallback: true,
+      filter: (movie) => {
+        // ONLY show content from genres user has liked (no fallback)
+        if (userGenres.length > 0) {
+          const genres = Array.isArray(movie.genre)
+            ? movie.genre
+            : [movie.genre];
+
+          const lowerUserGenres = userGenres.map((genre) =>
+            genre.toLowerCase()
+          );
+
+          return genres.some((genre) =>
+            lowerUserGenres.includes(genre.toLowerCase())
+          );
+        }
+
+        // If no likes yet, don't show this category
+        return false;
+      },
+      skipFallback: true, // Don't use all movies as fallback
     },
   ];
   const mode = (
@@ -184,6 +206,7 @@ function renderMovies(filterType = null) {
     currentSortMode ||
     ""
   ).trim();
+
   categories.forEach((category, categoryIndex) => {
     let categoryMovies = filteredData.filter(category.filter);
     if (category.sort) categoryMovies = category.sort([...categoryMovies]);
