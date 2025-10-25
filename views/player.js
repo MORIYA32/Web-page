@@ -1,4 +1,4 @@
-const VIDEO_CURRENT_TIME_UPDATE_INTERVAL = 5000; 
+const VIDEO_CURRENT_TIME_UPDATE_INTERVAL = 5000;
 const OPEN_EPISODES_ON_START = false;
 
 const userId = localStorage.getItem("userId");
@@ -20,7 +20,6 @@ function fmtTime(t){
   return h>0 ? `${h}:${m}:${s}` : `${m}:${s}`;
 }
 
-/* make sure native controls are fully disabled */
 function killNativeControlsHard() {
   const v = document.getElementById('videoPlayer');
   if (!v) return;
@@ -40,7 +39,6 @@ function ensureNoNativeControls() {
   killNativeControlsHard();
 }
 
-/* ========= auth ========= */
 function checkAuthentication() {
   const isLoggedIn = localStorage.getItem('isLoggedIn');
   if (!isLoggedIn) {
@@ -50,7 +48,6 @@ function checkAuthentication() {
   return true;
 }
 
-/* ========= api: content ========= */
 async function fetchContentDetails(id) {
   try {
     const response = await fetch(`/api/content`);
@@ -63,18 +60,15 @@ async function fetchContentDetails(id) {
   }
 }
 
-/* ========= video load ========= */
 function loadVideo(videoUrl, startTime = 0) {
   const videoPlayer = document.getElementById('videoPlayer');
   if (!videoPlayer) return;
-
   ensureNoNativeControls();
   videoPlayer.src = videoUrl || '';
   videoPlayer.currentTime = startTime || 0;
-
   videoPlayer.oncanplay = () => {
     ensureNoNativeControls();
-    videoPlayer.play().catch(()=>{ /* silent */ });
+    videoPlayer.play().catch(()=>{});
   };
 }
 
@@ -82,21 +76,17 @@ function updateEpisodeInfo() {
   const titleElement = document.getElementById('contentTitle');
   const detailsElement = document.getElementById('episodeDetails');
   if (!currentContent) return;
-
   if (currentContent.type === 'series') {
     const season = currentContent.seasons?.find(s => s.seasonNumber === currentSeason);
     const episode = season?.episodes?.find(e => e.episodeNumber === currentEpisode);
     titleElement.textContent = currentContent.title || '';
     detailsElement.textContent = `Season ${currentSeason} Episode ${currentEpisode}${episode?.episodeTitle ? ': ' + episode.episodeTitle : ''}`;
   } else {
-    // movie
     titleElement.textContent = currentContent.title || '';
-    const genres = Array.isArray(currentContent.genre) ? currentContent.genre
-                  : (Array.isArray(currentContent.genres) ? currentContent.genres : []);
+    const genres = Array.isArray(currentContent.genre) ? currentContent.genre : (Array.isArray(currentContent.genres) ? currentContent.genres : []);
     detailsElement.textContent = `${currentContent.year ?? ''}${genres.length ? ' • ' + genres.join(', ') : ''}`;
   }
 }
-
 
 function updateNavigationButtons() {
   const chipPrev    = document.getElementById('btnPrevEpisode');
@@ -105,7 +95,7 @@ function updateNavigationButtons() {
 
   [chipPrev, chipNext, btnEpisodes].forEach(el => {
     if (!el) return;
-    el.style.display = '';           
+    el.style.display = '';
     el.disabled = false;
     el.classList.remove('disabled');
     el.removeAttribute('aria-disabled');
@@ -166,7 +156,7 @@ function playNextEpisode() {
   } else {
     return;
   }
-  loadEpisode(0); // CHG: always start next episode from beginning
+  loadEpisode(0);
 }
 
 function playPreviousEpisode() {
@@ -180,14 +170,13 @@ function playPreviousEpisode() {
   } else {
     return;
   }
-  loadEpisode(0); // CHG: always start previous episode from beginning
+  loadEpisode(0);
 }
 
 async function saveCurrentTime() {
   const videoPlayer = document.getElementById('videoPlayer');
   if (!videoPlayer || !currentContent) return;
   const currentTime = videoPlayer.currentTime;
-
   try {
     await fetch('/api/progress', {
       method: 'POST',
@@ -200,8 +189,7 @@ async function saveCurrentTime() {
         currentTime
       })
     });
-  } catch (e) {
-  }
+  } catch (e) {}
 }
 
 async function getCurrentProgress() {
@@ -219,7 +207,7 @@ async function getCurrentProgress() {
 }
 
 async function loadEpisode(startTimeOverride) {
-  clearInterval(currentTimeInterval); // ok to keep (no interval will be set further)
+  clearInterval(currentTimeInterval);
 
   const startTime =
     (startTimeOverride !== undefined)
@@ -252,9 +240,6 @@ async function loadEpisode(startTimeOverride) {
       window.__openedDrawerOnce = true;
     }
   }
-
-  // CHG: אין יותר שמירה אוטומטית כל X שניות
-  // currentTimeInterval = setInterval(saveCurrentTime, VIDEO_CURRENT_TIME_UPDATE_INTERVAL);
 }
 
 function wireControlBarPlayback() {
@@ -277,7 +262,7 @@ function wireControlBarPlayback() {
   if (btnEpisodes) {
     const shouldHave = !isTrailer && (currentContent?.type === 'series' || (currentContent?.type === 'movie' && hasChapters));
     const label = (currentContent?.type === 'movie') ? 'Chapters' : 'Episodes';
-    btnEpisodes.style.display = ''; 
+    btnEpisodes.style.display = '';
     btnEpisodes.title = label;
     btnEpisodes.setAttribute('aria-label', label);
     btnEpisodes.disabled = !shouldHave;
@@ -291,7 +276,6 @@ function wireControlBarPlayback() {
     v.onpause = () => { if (iconPlayPause) { iconPlayPause.className = 'fas fa-play';  btnPlayPause?.setAttribute('aria-label','Play');  } };
   }
 
-  // CHG: שמירה רק בעת Pause, פעם אחת (ללא הצטברות מאזינים)
   if (v && !v.__saveOnPauseBound) {
     v.addEventListener('pause', saveCurrentTime);
     v.__saveOnPauseBound = true;
@@ -348,7 +332,6 @@ function wireControlBarPlayback() {
   syncUI();
 }
 
-/* ========= drawer ========= */
 function openEpisodesDrawer() {
   const drawer     = document.getElementById('episodesDrawer');
   const backdrop   = document.getElementById('episodesBackdrop');
@@ -440,7 +423,7 @@ function renderDrawerEpisodes(seasonNumber) {
         currentSeason  = season.seasonNumber;
         currentEpisode = ep.episodeNumber;
         closeEpisodesDrawer();
-        loadEpisode(0); // start selected episode from beginning
+        loadEpisode(0);
       };
       drawerEpisodesList.appendChild(btn);
     });
@@ -465,7 +448,6 @@ function renderDrawerChapters() {
   });
 }
 
-/* ========= init ========= */
 async function initializePlayer() {
   if (!checkAuthentication()) return;
   if (!initialContentId) { window.location.href = './feed.html'; return; }
@@ -483,7 +465,6 @@ async function initializePlayer() {
 
 document.addEventListener('DOMContentLoaded', initializePlayer);
 
-/* ========= force custom UI early & often ========= */
 (function enforceCustomControls() {
   const v = document.getElementById('videoPlayer');
   if (!v) return;
