@@ -129,9 +129,16 @@ function renderMovies(filterType = null) {
     // Define categories
     const categories = [
         { 
-            title: filterType === 'movie' ? 'Movies' : filterType === 'show' ? 'TV Shows' : 'Popular on Netflix', 
-            filter: () => true,
-            sort: (movies) => movies.sort((a, b) => (b.likes || 0) - (a.likes || 0))
+            title: filterType === 'movie' ? 'Movies' : filterType === 'show' ? 'TV Shows' : 'Popular Shows on Netflix', 
+            filter: (item) => item.type.toLowerCase() === 'series',
+            sort: (movies) => movies.sort((a, b) => (b.likes || 0) - (a.likes || 0)),
+            skipFallback: true
+        },
+        { 
+            title: filterType === 'movie' ? 'Movies' : filterType === 'show' ? 'TV Shows' : 'Popular Movies on Netflix', 
+            filter: (item) => item.type.toLowerCase() === 'movie',
+            sort: (movies) => movies.sort((a, b) => (b.likes || 0) - (a.likes || 0)),
+            skipFallback: true
         },
         { 
             title: 'Top Picks for You', 
