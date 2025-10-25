@@ -336,3 +336,100 @@ deleteUserForm.addEventListener('submit', async (e) => {
     deletePasswordError.textContent = 'Failed to delete account. Please try again.';
   }
 });
+
+
+async function fetchMoviesData() {
+  try {
+    const response = await fetch('/api/content');
+    if (!response.ok) {
+      throw new Error('Failed to fetch content');
+    }
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error('Error fetching content:', error);
+    return [];
+  }
+}
+
+async function calculateGenreLikes() {
+  const movies = await fetchMoviesData();
+  const allGenres = new Set();
+  movies.forEach(movie => {
+    movie.genre.forEach(g => allGenres.add(g));
+  });
+  const genreLikes = {};
+  allGenres.forEach(g => {
+    genreLikes[g] = 0;
+  });
+  movies.forEach(movie => {
+    movie.genre.forEach(g => {
+      genreLikes[g] += movie.likes || 0;
+    });
+  });
+  console.log('Genre Likes:', genreLikes);
+  return genreLikes;
+}
+
+async function prepareChartData() {
+  const genreLikes = await calculateGenreLikes();
+  const labels = Object.keys(genreLikes);
+  const data = Object.values(genreLikes);
+  return { labels, data };
+}
+
+
+
+//create pie chart
+async function renderGenreChart() {
+  const { labels, data } = await prepareChartData();
+  const ctx = document.getElementById('genreChart').getContext('2d');
+  const backgroundColors = [
+  "#ff6f91", "#ff9671", "#ffc75f", "#f9f871", "#c3f584",
+  "#7bdff2", "#6a6aff", "#b084cc", "#f49ac2", "#ffb3c6",
+  "#e2b6f0", "#a3d9ff", "#70d6ff", "#ff8fab", "#ffaaa6",
+  "#ffd6a5", "#fdffb6", "#caffbf", "#9bf6ff", "#a0c4ff",
+  "#bdb2ff", "#ffc6ff", "#ffadad", "#ffcacd", "#ffee93", "#d0f4de"
+];
+
+  new Chart(ctx, {
+    type: 'pie',
+    data: {
+      labels: labels,
+      datasets: [{
+        label: 'Total Likes',
+        data: data,
+        backgroundColor: backgroundColors,
+        borderColor: '#141414',
+        borderWidth: 2
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          position: 'bottom',
+          labels: {
+            color: '#b3b3b3'
+          }
+        },
+        tooltip: {
+          callbacks: {
+            label: function(context) {
+              const total = context.chart._metasets[context.datasetIndex].total;
+              const value = context.parsed;
+              const percentage = ((value / total) * 100).toFixed(1);
+              return `${context.label}: ${value} likes (${percentage}%)`;
+            }
+          }
+        }
+      }
+    }
+  });
+}
+
+// Call the function when the page loads
+renderGenreChart();
+
+

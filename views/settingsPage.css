@@ -210,6 +210,18 @@ body {
   background-color: #b20710;
 }
 
+#chartContainer {
+  width: 100%;
+  height: 400px;
+  margin: auto;
+}
+
+@media (max-width: 600px) {
+    #genreChart {
+        height: 200px;
+    }
+}
+
 @media (max-width: 768px) {
   .settings-container {
     padding: 10px;
