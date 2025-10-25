@@ -384,7 +384,13 @@ async function prepareChartData() {
 async function renderGenreChart() {
   const { labels, data } = await prepareChartData();
   const ctx = document.getElementById('genreChart').getContext('2d');
-  const backgroundColors = ['#E989F5','#F589DE','#89F5F1','#ED587A','#77B051'];
+  const backgroundColors = [
+  "#ff6f91", "#ff9671", "#ffc75f", "#f9f871", "#c3f584",
+  "#7bdff2", "#6a6aff", "#b084cc", "#f49ac2", "#ffb3c6",
+  "#e2b6f0", "#a3d9ff", "#70d6ff", "#ff8fab", "#ffaaa6",
+  "#ffd6a5", "#fdffb6", "#caffbf", "#9bf6ff", "#a0c4ff",
+  "#bdb2ff", "#ffc6ff", "#ffadad", "#ffcacd", "#ffee93", "#d0f4de"
+];
 
   new Chart(ctx, {
     type: 'pie',

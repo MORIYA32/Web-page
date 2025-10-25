@@ -211,9 +211,9 @@ body {
 }
 
 #chartContainer {
-  width: 500px;   /* desired width */
-  height: 400px;  /* desired height */
-  margin: auto;   /* optional: center it */
+  width: 500px;
+  height: 400px;
+  margin: auto;
 }
 
 @media (max-width: 768px) {
