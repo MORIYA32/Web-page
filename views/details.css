@@ -29,32 +29,59 @@ body {
     transition: all 0.3s ease;
     margin-bottom: 20px;
 }
-
 .back-button:hover {
     background-color: rgba(255, 255, 255, 0.1);
     border-color: #fff;
 }
-
 .back-button i {
     margin-right: 8px;
 }
 
 .trailer-section {
-    width: 100%;
-    height: 600px;
-    background-color: #000;
-    border-radius: 8px;
+    position: relative;
     overflow: hidden;
-    margin-bottom: 30px;
+    max-width: 980px;
+    margin: 0 auto 24px;
+    border-radius: 12px;
+    background-color: #000;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
 }
-
-.trailer-section video {
-    width: 100%;
-    height: 100%;
-    object-fit: contain;
+.video-wrapper {
+    position: relative;
+    isolation: isolate;
+    border-radius: 12px;
+    overflow: hidden;
     background: #000;
 }
+.trailer-section video {
+    display: block;
+    width: 100%;
+    height: auto;
+    aspect-ratio: 16 / 9;
+    object-fit: contain;
+    background: #000;
+    position: relative;
+    z-index: 1000;
+}
+.control-bar { z-index: 1030; }
+.episodes-drawer { z-index: 1050; }
+.episodes-drawer-backdrop { z-index: 1040; }
+body.drawer-open { overflow: hidden; }
+
+#trailerPlayer::-webkit-media-controls,
+#trailerPlayer::-webkit-media-controls-enclosure,
+#trailerPlayer::-webkit-media-controls-panel,
+#trailerPlayer::-webkit-media-controls-overlay-play-button,
+#trailerPlayer::-webkit-media-controls-play-button,
+#trailerPlayer::-webkit-media-controls-timeline,
+#trailerPlayer::-webkit-media-controls-current-time-display,
+#trailerPlayer::-webkit-media-controls-time-remaining-display,
+#trailerPlayer::-webkit-media-controls-volume-slider,
+#trailerPlayer::-webkit-media-controls-mute-button,
+#trailerPlayer::-webkit-media-controls-fullscreen-button {
+    display: none !important;
+}
+video::-moz-media-controls { display: none !important; }
 
 .content-details {
     padding: 20px;
@@ -89,22 +116,9 @@ body {
     padding: 8px 16px;
     border-radius: 4px;
 }
-
-.rating-item i.fab {
-    font-size: 24px;
-    color: #f5c518;
-}
-
-.rating-item .rt-icon {
-    width: 20px;
-    height: 20px;
-}
-
-.rating-item .rating-value {
-    font-size: 16px;
-    font-weight: 600;
-    color: #fff;
-}
+.rating-item i.fab { font-size: 24px; color: #f5c518; }
+.rating-item .rt-icon { width: 20px; height: 20px; }
+.rating-item .rating-value { font-size: 16px; font-weight: 600; color: #fff; }
 
 .action-buttons {
     display: flex;
@@ -119,15 +133,11 @@ body {
     border-radius: 4px;
     transition: all 0.3s ease;
 }
-
 .btn-play:hover {
     background-color: #e6e6e6;
     transform: translateY(-2px);
 }
-
-.btn-play i {
-    margin-right: 8px;
-}
+.btn-play i { margin-right: 8px; }
 
 .btn-like {
     padding: 12px 24px;
@@ -136,36 +146,25 @@ body {
     border-radius: 4px;
     transition: all 0.3s ease;
 }
-
 .btn-like:hover {
     background-color: rgba(255, 255, 255, 0.1);
     transform: translateY(-2px);
 }
-
 .btn-like.liked {
     background-color: rgba(229, 9, 20, 0.2);
     border-color: #e50914;
 }
+.btn-like.liked i { color: #e50914; }
 
-.btn-like.liked i {
-    color: #e50914;
-}
+.content-info { margin-bottom: 40px; }
 
-.content-info {
-    margin-bottom: 40px;
-}
-
-.info-section {
-    margin-bottom: 25px;
-}
-
+.info-section { margin-bottom: 25px; }
 .info-section h3 {
     font-size: 18px;
     font-weight: 600;
     color: #aaa;
     margin-bottom: 10px;
 }
-
 .info-section p {
     font-size: 16px;
     line-height: 1.6;
@@ -176,11 +175,7 @@ body {
     text-decoration: none;
     transition: color 0.2s;
 }
-
-.actor-link:hover {
-    color: #0052a3;
-    text-decoration: underline;
-}
+.actor-link:hover { color: #0052a3; text-decoration: underline; }
 
 .actor-card {
     display: inline-block;
@@ -189,14 +184,12 @@ body {
     width: 80px;
     vertical-align: top;
 }
-
 .actor-card img {
     width: 60px;
     height: 60px;
     border-radius: 50%;
     object-fit: cover;
 }
-
 .actor-card a,
 .actor-card span {
     text-decoration: none;
@@ -209,36 +202,24 @@ body {
     font-size: 14px;
     color: #ccc;
 }
-
-
-.actor-card a:hover {
-    text-decoration: underline;
-}
+.actor-card a:hover { text-decoration: underline; }
 
 .actor-placeholder {
     width: 60px;
     height: 60px;
     border-radius: 50%;
-    background-color: #555; /* nice gray */
+    background-color: #555;
     display: inline-block;
     vertical-align: middle;
 }
 
-
-.episodes-section {
-    margin-top: 40px;
-}
-
+.episodes-section { margin-top: 40px; }
 .episodes-section h3 {
     font-size: 24px;
     font-weight: 700;
     margin-bottom: 20px;
 }
-
-.season-selector {
-    margin-bottom: 25px;
-}
-
+.season-selector { margin-bottom: 25px; }
 .season-selector .form-select {
     background-color: rgba(20, 20, 20, 0.8);
     color: #fff;
@@ -253,7 +234,6 @@ body {
     flex-direction: column;
     gap: 15px;
 }
-
 .episode-card {
     background-color: rgba(20, 20, 20, 0.8);
     border: 1px solid rgba(255, 255, 255, 0.1);
@@ -262,19 +242,16 @@ body {
     cursor: pointer;
     transition: all 0.3s ease;
 }
-
 .episode-card:hover {
     background-color: rgba(255, 255, 255, 0.1);
     border-color: rgba(255, 255, 255, 0.3);
     transform: translateX(5px);
 }
-
 .episode-card h4 {
     font-size: 18px;
     font-weight: 600;
     margin-bottom: 5px;
 }
-
 .episode-card p {
     font-size: 14px;
     color: #aaa;
@@ -282,19 +259,7 @@ body {
 }
 
 @media (max-width: 768px) {
-    .trailer-section {
-        height: 300px;
-    }
-
-    .content-details h1 {
-        font-size: 28px;
-    }
-
-    .action-buttons {
-        flex-direction: column;
-    }
-
-    .action-buttons .btn {
-        width: 100%;
-    }
+    .content-details h1 { font-size: 28px; }
+    .action-buttons { flex-direction: column; }
+    .action-buttons .btn { width: 100%; }
 }
