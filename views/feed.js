@@ -180,6 +180,21 @@ function renderMovies(filterType = null) {
     },
   ];
 
+  mediaGenres.forEach((genre) => {
+    const category = {
+        title: `Newest ${genre}`,
+        skipFallback: true,
+        filter: (mediaItem) => {
+            return mediaItem.genre.includes(genre);
+        },
+        displayLimit: 10,
+        sort: (medias) => medias.sort((a, b) => {
+            return -a.updatedAt.localeCompare(b.updatedAt);
+        })
+    }
+    categories.push(category)
+  })
+
   categories.forEach((category, categoryIndex) => {
     // Filter movies for this category
     let categoryMovies = filteredData.filter(category.filter);
@@ -188,6 +203,11 @@ function renderMovies(filterType = null) {
     if (category.sort) {
       categoryMovies = category.sort([...categoryMovies]);
     }
+
+    if(Object.prototype.hasOwnProperty.call(category, "displayLimit")) {
+        categoryMovies = categoryMovies.splice(0, category.displayLimit)
+    }
+
     // If no movies in this category, skip rendering the entire category
     if (categoryMovies.length === 0) {
       return; // skip this category
