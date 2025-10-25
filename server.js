@@ -24,6 +24,9 @@ const adminSeriesRouter = require('./routes/adminSeries'); // <— הוספתי 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// Connect to MongoDB
+connectDB();
+
 // Function to ensure an admin user exists (seeding)
 async function ensureAdminUser() {
   const { ADMIN_EMAIL, ADMIN_PASSWORD } = process.env;
@@ -54,6 +57,9 @@ async function ensureAdminUser() {
   }
 }
 
+// One-time admin seeding
+ensureAdminUser();
+
 // Middleware
 app.use(cors());
 app.use(express.json());
@@ -70,6 +76,7 @@ app.use(cookieParser());
 // }))
 
 app.use(express.static('views'));
+app.use('/videos', authenticate, express.static(path.join(__dirname, 'videos')));
 
 app.use('/api/auth', authRoutes);
 app.use('/api/profiles', profileRoutes);
@@ -110,35 +117,16 @@ app.get('/admin/add', authenticate, requireAdmin, (req, res) => {
 
 // Error handling middleware
 app.use((err, req, res, next) => {
-    console.error('Error:', err.message);
-    res.status(500).json({ error: 'Internal server error' });
+  console.error('Error:', err.message);
+  res.status(500).json({ error: 'Internal server error' });
 });
 
 // 404 handler
 app.use('*', (req, res) => {
-    res.status(404).json({ error: 'Route not found' });
+  res.status(404).json({ error: 'Route not found' });
 });
 
-// Async startup function
-async function startServer() {
-  try {
-    // Connect to MongoDB first
-    await connectDB();
-    console.log('MongoDB connected successfully');
-    
-    // Then seed admin user
-    await ensureAdminUser();
-    
-    // Finally start the server
-    app.listen(PORT, () => {
-      console.log(`Server running on http://localhost:${PORT}`);
-      console.log(`Serving static files from views`);
-    });
-  } catch (err) {
-    console.error('Failed to start server:', err);
-    process.exit(1);
-  }
-}
-
-// Start the server
-startServer();
+app.listen(PORT, () => {
+  console.log(`Server running on http://localhost:${PORT}`);
+  console.log(`Serving static files from views`);
+});
