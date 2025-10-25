@@ -76,6 +76,7 @@ app.use(cookieParser());
 // }))
 
 app.use(express.static('views'));
+app.use('/videos', authenticate, express.static(path.join(__dirname, 'videos')));
 
 app.use('/api/auth', authRoutes);
 app.use('/api/profiles', profileRoutes);
