@@ -22,49 +22,37 @@ async function fetchContent() {
     }
 }
 
-// Fetch unique genres for dropdown
-function fetchGenres() {
-    const genresSet = new Set();
-    moviesData.forEach(item => {
-        const genres = Array.isArray(item.genre) ? item.genre : [item.genre];
-        genres.forEach(g => genresSet.add(g));
-    });
-    return Array.from(genresSet).sort();
-}
-
-// Populate genres dropdown
 function populateGenresDropdown() {
-    const genres = fetchGenres();
-    const genresMenu = document.getElementById('genresMenu');
-    const genresMenuMobile = document.getElementById('genresMenuMobile');
-    
-    if (!genresMenu || !genresMenuMobile) return;
-    
-    genresMenu.innerHTML = '';
-    genresMenuMobile.innerHTML = '';
-    
-    genres.forEach(genre => {
-        const li = document.createElement('li');
-        li.innerHTML = `<a class="dropdown-item" href="genre.html?genre=${encodeURIComponent(genre)}">${genre}</a>`;
-        genresMenu.appendChild(li);
-        
-        const liMobile = li.cloneNode(true);
-        genresMenuMobile.appendChild(liMobile);
-    });
-}
+    const genreMenu = document.getElementById('genreFilterMenu');
+    genreMenu.innerHTML = '';
+    genreMenu.classList.add('three-columns');
+    genreMenu.classList.add('three-columns'); 
+    const genreSet = new Set();
 
-// GroupBy utility function
-function groupBy(array, key) {
-    return array.reduce((result, item) => {
-        const values = Array.isArray(item[key]) ? item[key] : [item[key]];
-        values.forEach(value => {
-            if (!result[value]) {
-                result[value] = [];
-            }
-            result[value].push(item);
+    moviesData.forEach(movie => {
+        const genres = Array.isArray(movie.genre) ? movie.genre : [movie.genre];
+        genres.forEach(g => genreSet.add(g.trim()));
+    });
+
+    // Sort genres alphabetically
+    const sortedGenres = Array.from(genreSet).sort();
+
+    // Create dropdown items
+    sortedGenres.forEach(genre => {
+        const li = document.createElement('li');
+        li.innerHTML = `<a class="dropdown-item genre-filter-item" href="#" data-genre="${genre}">${genre}</a>`;
+        genreMenu.appendChild(li);
+    });
+
+    document.querySelectorAll('#genreFilterMenu .dropdown-item').forEach(item => {
+        item.addEventListener('click', (e) => {
+            e.preventDefault();
+            const genre = e.target.dataset.genre;
+
+            setActiveNavLink('genreDropdown');
+            renderMoviesByGenre(genre);
         });
-        return result;
-    }, {});
+    });
 }
 
 //LocalStorage for likes count
@@ -119,12 +107,19 @@ function loadUserLikesFromStorage() {
 }
 
 // Render movies in Netflix-style horizontal categories
-function renderMovies() {
+function renderMovies(filterType = null) {
     const categoriesContainer = document.getElementById('categoriesContainer');
     categoriesContainer.innerHTML = '';
 
+    let filteredData = [...moviesData];
+    if (filterType === 'movie') {
+        filteredData = filteredData.filter(movie => movie.type.toLowerCase() === 'movie');
+    } else if (filterType === 'show') {
+        filteredData = filteredData.filter(movie => movie.type.toLowerCase() === 'series');
+    }
+
     // Get user's liked content genres for recommendations
-    const userLikedContent = moviesData.filter(movie => userLikes[movie._id]);
+    const userLikedContent = filteredData.filter(movie => userLikes[movie._id]);
     const userGenres = new Set();
     userLikedContent.forEach(movie => {
         const genres = Array.isArray(movie.genre) ? movie.genre : [movie.genre];
@@ -134,15 +129,15 @@ function renderMovies() {
     // Define categories
     const categories = [
         { 
-            title: 'Popular Shows on Netflix', 
-            filter: (item) => item.type === 'series',
-            sort: (items) => items.sort((a, b) => (b.likes || 0) - (a.likes || 0)),
+            title: filterType === 'movie' ? 'Movies' : filterType === 'show' ? 'TV Shows' : 'Popular Shows on Netflix', 
+            filter: (item) => item.type.toLowerCase() === 'series',
+            sort: (movies) => movies.sort((a, b) => (b.likes || 0) - (a.likes || 0)),
             skipFallback: true
         },
         { 
-            title: 'Popular Movies on Netflix', 
-            filter: (item) => item.type === 'movie',
-            sort: (items) => items.sort((a, b) => (b.likes || 0) - (a.likes || 0)),
+            title: filterType === 'movie' ? 'Movies' : filterType === 'show' ? 'TV Shows' : 'Popular Movies on Netflix', 
+            filter: (item) => item.type.toLowerCase() === 'movie',
+            sort: (movies) => movies.sort((a, b) => (b.likes || 0) - (a.likes || 0)),
             skipFallback: true
         },
         { 
@@ -163,21 +158,20 @@ function renderMovies() {
 
     categories.forEach((category, categoryIndex) => {
         // Filter movies for this category
-        let categoryMovies = moviesData.filter(category.filter);
+        let categoryMovies = filteredData.filter(category.filter);
         
         // Apply sorting if defined
         if (category.sort) {
             categoryMovies = category.sort([...categoryMovies]);
         }
-        
-        // Skip category if empty and shouldn't use fallback
-        if (category.skipFallback && categoryMovies.length === 0) {
-            return;
+        // If no movies in this category, skip rendering the entire category
+        if (categoryMovies.length === 0) {
+            return;  // skip this category
         }
         
-        // If category is empty or has few items, use all movies (unless skipFallback is true)
+        // Skip category if empty and shouldn't use fallback
         if (!category.skipFallback && categoryMovies.length < 3) {
-            categoryMovies = [...moviesData];
+            categoryMovies = [...filteredData];
         }
 
         // Only triple content for infinite scroll if there are 4+ items
@@ -221,6 +215,54 @@ function renderMovies() {
     });
 }
 
+function renderMoviesByGenre(selectedGenre) {
+    const categoriesContainer = document.getElementById('categoriesContainer');
+    categoriesContainer.innerHTML = '';
+
+    const genreFiltered = moviesData.filter(movie => {
+        const genres = Array.isArray(movie.genre) ? movie.genre : [movie.genre];
+        return genres.some(g => g.toLowerCase() === selectedGenre.toLowerCase());
+    });
+
+    if (genreFiltered.length === 0) {
+        categoriesContainer.innerHTML = `<div style="color: white; padding: 20px;">No titles found in "${selectedGenre}"</div>`;
+        return;
+    }
+
+    const categoryRow = document.createElement('div');
+    categoryRow.className = 'category-row';
+    categoryRow.innerHTML = `
+        <h3 class="category-title">${selectedGenre} Titles</h3>
+        <div class="carousel-container">
+            <button class="carousel-arrow left" data-category="genre">
+                <i class="fas fa-chevron-left"></i>
+            </button>
+            <div class="carousel-wrapper">
+                <div class="carousel-track" data-category="genre"></div>
+            </div>
+            <button class="carousel-arrow right" data-category="genre">
+                <i class="fas fa-chevron-right"></i>
+            </button>
+        </div>
+    `;
+
+    categoriesContainer.appendChild(categoryRow);
+
+    const track = categoryRow.querySelector('.carousel-track');
+
+    const infiniteMovies = genreFiltered.length >= 4
+        ? [...genreFiltered, ...genreFiltered, ...genreFiltered]
+        : genreFiltered;
+
+    infiniteMovies.forEach(movie => {
+        const card = createMovieCard(movie);
+        track.appendChild(card);
+    });
+
+    setupCarousel("genre", genreFiltered.length);
+}
+
+
 // Create a movie card element
 function createMovieCard(movie) {
     const movieCard = document.createElement('div');
@@ -261,6 +303,35 @@ function createMovieCard(movie) {
 
     return movieCard;
 }
+
+
+//filter by movies
+document.getElementById('moviesLink').addEventListener('click', function (e) {
+    e.preventDefault();
+    setActiveNavLink('moviesLink');
+    renderMovies('movie');
+});
+
+//filter by tv shows
+document.getElementById('tvShowsLink').addEventListener('click', function (e) {
+    e.preventDefault();
+    setActiveNavLink('tvShowsLink');
+    renderMovies('show');
+});
+
+
+//no filter, all content
+document.getElementById('homeLink').addEventListener('click', function(e) {
+    e.preventDefault();
+    setActiveNavLink('homeLink');
+    renderMovies();
+});
+
+document.getElementById('genreDropdown').addEventListener('click', () => {
+  console.log('Genre dropdown clicked');
+  setActiveNavLink('genreDropdown');
+});
+
 
 // Set up carousel navigation
 function setupCarousel(categoryIndex, originalLength) {
@@ -512,6 +583,31 @@ function updateProfileDropdown() {
     }
 }
 
+function setActiveNavLink(activeId) {
+    document.querySelectorAll('.nav-link, #genreDropdown').forEach(link => {
+        if (link.id === activeId) {
+            link.classList.add('active');
+        } else {
+            link.classList.remove('active');
+        }
+    });
+}
+
+
+// Genre filter click handler
+document.querySelectorAll('#genreFilterMenu .dropdown-item').forEach(item => {
+    item.addEventListener('click', (e) => {
+        e.preventDefault();
+        const genre = e.target.dataset.genre;
+
+        setActiveNavLink('genreDropdown');  // <--- activate genre dropdown button
+
+        renderMoviesByGenre(genre);
+    });
+});
+
+
+
 function signOut() {
     localStorage.removeItem("isLoggedIn");
     localStorage.removeItem("userId");
@@ -540,10 +636,7 @@ document.addEventListener('DOMContentLoaded', async function () {
     
     // Load user likes from server
     await loadUserLikesFromServer();
-    
-    // Populate genres dropdown
     populateGenresDropdown();
-    
     renderMovies();
 
     // Search event listeners
