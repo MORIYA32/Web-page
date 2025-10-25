@@ -210,6 +210,12 @@ body {
   background-color: #b20710;
 }
 
+#chartContainer {
+  width: 500px;   /* desired width */
+  height: 400px;  /* desired height */
+  margin: auto;   /* optional: center it */
+}
+
 @media (max-width: 768px) {
   .settings-container {
     padding: 10px;
