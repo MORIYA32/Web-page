@@ -201,6 +201,22 @@ function renderMovies(filterType = null) {
       skipFallback: true, // Don't use all movies as fallback
     },
   ];
+
+  mediaGenres.forEach((genre) => {
+    const category = {
+        title: `Newest ${genre}`,
+        skipFallback: true,
+        filter: (mediaItem) => {
+            return mediaItem.genre.includes(genre);
+        },
+        displayLimit: 10,
+        sort: (medias) => medias.sort((a, b) => {
+            return -a.updatedAt.localeCompare(b.updatedAt);
+        })
+    }
+    categories.push(category)
+  })
+
   const mode = (
     document.getElementById("sortSelect")?.value ||
     currentSortMode ||
@@ -209,9 +225,24 @@ function renderMovies(filterType = null) {
 
   categories.forEach((category, categoryIndex) => {
     let categoryMovies = filteredData.filter(category.filter);
-    if (category.sort) categoryMovies = category.sort([...categoryMovies]);
+
+    // Apply sorting if defined
+    if (category.sort) {
+      categoryMovies = category.sort([...categoryMovies]);
+    }
+
+    if(Object.prototype.hasOwnProperty.call(category, "displayLimit")) {
+        categoryMovies = categoryMovies.splice(0, category.displayLimit)
+    }
+
     if (mode) categoryMovies = sortArrayByMode(categoryMovies, mode);
-    if (categoryMovies.length === 0) return;
+
+    // If no movies in this category, skip rendering the entire category
+    if (categoryMovies.length === 0) {
+      return; // skip this category
+    }
+
+    // Skip category if empty and shouldn't use fallback
     if (!category.skipFallback && categoryMovies.length < 3) {
       categoryMovies = [...filteredData];
       if (mode) categoryMovies = sortArrayByMode(categoryMovies, mode);
