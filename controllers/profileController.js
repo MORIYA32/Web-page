@@ -5,11 +5,7 @@ const MAX_PROFILES_PER_USER = Number(process.env.MAX_PROFILES_PER_USER || 5);
 class ProfileController {
   async getProfiles(req, res) {
     try {
-      const userId = req.userId || req.query.userId; 
-      if (!userId) {
-        return res.status(400).json({ error: 'User ID is required' });
-      }
-      const profiles = await Profile.find({ userId });
+      const profiles = await Profile.find({ userId: req.user.id  });
       res.json(profiles);
     } catch (error) {
       console.error('Get profiles error:', error);
@@ -19,17 +15,13 @@ class ProfileController {
 
   async createProfile(req, res) {
     try {
-      const userId = req.userId || req.body.userId; 
       const { name, avatar } = req.body;
 
-      if (!userId) {
-        return res.status(400).json({ error: 'User ID is required' });
-      }
       if (!name || name.trim().length < 1) {
         return res.status(400).json({ error: 'Profile name is required' });
       }
 
-      const count = await Profile.countDocuments({ userId });
+      const count = await Profile.countDocuments({ userId: req.user.id });
       if (count >= MAX_PROFILES_PER_USER) {
         return res.status(400).json({
           error: 'You have reached the limit of 5 profiles per user.',
@@ -65,18 +57,14 @@ class ProfileController {
 
   async updateProfile(req, res) {
     try {
-      const userId = req.userId || req.body.userId; 
       const { profileId } = req.params;
       const { name } = req.body;
 
-      if (!userId) {
-        return res.status(400).json({ error: 'User ID is required' });
-      }
       if (!name || name.trim().length < 1) {
         return res.status(400).json({ error: 'Profile name is required' });
       }
 
-      const profile = await Profile.findOne({ _id: profileId, userId });
+      const profile = await Profile.findOne({ _id: profileId, userId: req.user.id });
       if (!profile) {
         return res.status(404).json({ error: 'Profile not found' });
       }
@@ -97,14 +85,9 @@ class ProfileController {
 
   async deleteProfile(req, res) {
     try {
-      const userId = req.userId || req.query.userId; 
       const { profileId } = req.params;
 
-      if (!userId) {
-        return res.status(400).json({ error: 'User ID is required' });
-      }
-
-      const profile = await Profile.findOneAndDelete({ _id: profileId, userId });
+      const profile = await Profile.findOneAndDelete({ _id: profileId, userId: req.user.id });
       if (!profile) {
         return res.status(404).json({ error: 'Profile not found' });
       }
