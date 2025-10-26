@@ -3,6 +3,8 @@ let userLikes = {};
 let isSearchActive = false;
 let filteredMovies = [];
 let currentSortMode = '';
+let adminRefreshTimer = null;
+
 
 function sortArrayByMode(arr, mode) {
   const copy = [...arr];
@@ -26,6 +28,27 @@ async function fetchContent() {
     return [];
   }
 }
+
+function idsHash(arr){ return arr.map(x => x._id || x.id).filter(Boolean).sort().join('|'); }
+
+async function refreshIfChanged(){
+  const before = idsHash(moviesData);
+  await fetchContent();
+  const after = idsHash(moviesData);
+  if (before !== after){
+    populateGenresDropdown();
+    if (window.lastGenre) renderMoviesByGenre(window.lastGenre);
+    else renderMovies();
+  }
+}
+
+function startAdminAutoRefresh(){
+  const email = (localStorage.getItem('userEmail') || '').toLowerCase();
+  const isAdmin = localStorage.getItem('isAdmin') === 'true' || email === 'admin@admin.com';
+  if (!isAdmin || adminRefreshTimer) return;
+  adminRefreshTimer = setInterval(refreshIfChanged, 15000);
+}
+
 
 function populateGenresDropdown() {
   const genreMenu = document.getElementById('genreFilterMenu');
@@ -190,9 +213,16 @@ function createMovieCard(movie) {
   movieCard.className = 'movie-card';
   const userHasLiked = userLikes[movie._id] || false;
   const genreDisplay = Array.isArray(movie.genre) ? movie.genre.join(', ') : movie.genre;
+  const firstGenre = Array.isArray(movie.genre) ? (movie.genre[0] || '') : movie.genre || '';
   movieCard.innerHTML = `
     <div class="movie-poster">
       <img src="${movie.thumbnail || movie.poster}" alt="${movie.title} poster">
+      <div class="card-actions">
+        <button class="action-btn play" data-id="${movie.id || movie._id}"><i class="fas fa-play"></i></button>
+        <button class="action-btn add"><i class="fas fa-plus"></i></button>
+        <button class="action-btn like ${userHasLiked ? 'active' : ''}" data-like-id="${movie._id}"><i class="${userHasLiked ? 'fas' : 'far'} fa-thumbs-up"></i></button>
+        <button class="action-btn more" data-genre="${firstGenre}"><i class="fas fa-chevron-down"></i></button>
+      </div>
     </div>
     <div class="movie-info">
       <div class="movie-title">${movie.title}</div>
@@ -205,7 +235,7 @@ function createMovieCard(movie) {
     </div>
   `;
   movieCard.addEventListener('click', (e) => {
-    if (!e.target.closest('.like-btn')) {
+    if (!e.target.closest('.like-btn') && !e.target.closest('.card-actions')) {
       window.location.href = `details.html?id=${movie.id}`;
     }
   });
@@ -213,6 +243,21 @@ function createMovieCard(movie) {
   likeBtn.addEventListener('click', (e) => {
     e.stopPropagation();
     toggleLike(movie._id);
+  });
+  const playBtn = movieCard.querySelector('.action-btn.play');
+  playBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    window.location.href = `details.html?id=${movie.id}`;
+  });
+  const likeQuick = movieCard.querySelector('.action-btn.like');
+  likeQuick.addEventListener('click', (e) => {
+    e.stopPropagation();
+    toggleLike(movie._id);
+  });
+  const moreBtn = movieCard.querySelector('.action-btn.more');
+  moreBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    openMoreLikeThis(firstGenre);
   });
   return movieCard;
 }
@@ -406,6 +451,29 @@ function signOut() {
   window.location.href = './login.html';
 }
 
+function openMoreLikeThis(genre) {
+  if (!genre) return;
+  const modal = document.getElementById('moreLikeModal');
+  const grid = document.getElementById('moreLikeGrid');
+  const title = document.getElementById('moreLikeTitle');
+  title.textContent = `More Like This • ${genre}`;
+  grid.innerHTML = '';
+  const results = moviesData.filter(m => {
+    const gs = Array.isArray(m.genre) ? m.genre : [m.genre];
+    return gs.some(g => String(g).toLowerCase() === String(genre).toLowerCase());
+  });
+  results.forEach(m => {
+    const c = createMovieCard(m);
+    grid.appendChild(c);
+  });
+  modal.style.display = 'block';
+}
+
+function closeMoreLikeThis() {
+  const modal = document.getElementById('moreLikeModal');
+  if (modal) modal.style.display = 'none';
+}
+
 document.addEventListener('DOMContentLoaded', async function () {
   if (!checkAuthentication()) return;
   updateWelcomeMessage();
@@ -414,6 +482,8 @@ document.addEventListener('DOMContentLoaded', async function () {
   await loadUserLikesFromServer();
   populateGenresDropdown();
   renderMovies();
+
+    startAdminAutoRefresh();
 
   const searchIcon = document.getElementById('searchIcon');
   const searchInput = document.getElementById('searchInput');
@@ -460,4 +530,10 @@ document.addEventListener('DOMContentLoaded', async function () {
 
   const signOutBtn = document.getElementById('signOutBtn');
   if (signOutBtn) signOutBtn.addEventListener('click', (e) => { e.preventDefault(); signOut(); });
+
+  const modalClose = document.getElementById('moreLikeClose');
+  if (modalClose) modalClose.addEventListener('click', () => closeMoreLikeThis());
+  document.getElementById('moreLikeModal')?.addEventListener('click', (e) => {
+    if (e.target.id === 'moreLikeModal') closeMoreLikeThis();
+  });
 });
