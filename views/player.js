@@ -1,4 +1,4 @@
-const VIDEO_CURRENT_TIME_UPDATE_INTERVAL = 5000;
+const MEDIA_UPDATE_PROGRESS_TIME_INTERVAL = 5000;
 const OPEN_EPISODES_ON_START = false;
 
 const userId = localStorage.getItem("userId");
@@ -156,7 +156,7 @@ function playNextEpisode() {
   } else {
     return;
   }
-  loadEpisode(0);
+  loadEpisode();
 }
 
 function playPreviousEpisode() {
@@ -170,10 +170,10 @@ function playPreviousEpisode() {
   } else {
     return;
   }
-  loadEpisode(0);
+  loadEpisode();
 }
 
-async function saveCurrentTime() {
+async function saveMediaProgress() {
   const videoPlayer = document.getElementById('videoPlayer');
   if (!videoPlayer || !currentContent) return;
   const currentTime = videoPlayer.currentTime;
@@ -182,7 +182,7 @@ async function saveCurrentTime() {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        userId,
+        profileId: localStorage.getItem("selectedProfileId"),
         contentId: currentContent.id,
         season: currentSeason,
         episode: currentEpisode,
@@ -195,7 +195,7 @@ async function saveCurrentTime() {
 async function getCurrentProgress() {
   if (!currentContent) return 0;
   try {
-    const res = await fetch(`/api/progress?userId=${encodeURIComponent(userId)}&contentId=${encodeURIComponent(currentContent.id)}&season=${currentSeason}&episode=${currentEpisode}`);
+    const res = await fetch(`/api/progress?profileId=${encodeURIComponent(localStorage.getItem("selectedProfileId"))}&contentId=${encodeURIComponent(currentContent.id)}&season=${currentSeason}&episode=${currentEpisode}`);
     if (res.ok) {
       const data = await res.json();
       return data.currentTime || 0;
@@ -240,6 +240,8 @@ async function loadEpisode(startTimeOverride) {
       window.__openedDrawerOnce = true;
     }
   }
+
+  currentTimeInterval = setInterval(saveMediaProgress, MEDIA_UPDATE_PROGRESS_TIME_INTERVAL)
 }
 
 function wireControlBarPlayback() {
@@ -277,7 +279,7 @@ function wireControlBarPlayback() {
   }
 
   if (v && !v.__saveOnPauseBound) {
-    v.addEventListener('pause', saveCurrentTime);
+    v.addEventListener('pause', saveMediaProgress);
     v.__saveOnPauseBound = true;
   }
 
@@ -363,7 +365,7 @@ function openEpisodesDrawer() {
       btn.type = 'button';
       btn.className = 'episode-row';
       btn.textContent = 'Restart movie';
-      btn.onclick = () => { closeEpisodesDrawer(); loadEpisode(0); };
+      btn.onclick = () => { closeEpisodesDrawer(); loadEpisode(); };
       epsList.appendChild(btn);
     }
   }
@@ -423,7 +425,7 @@ function renderDrawerEpisodes(seasonNumber) {
         currentSeason  = season.seasonNumber;
         currentEpisode = ep.episodeNumber;
         closeEpisodesDrawer();
-        loadEpisode(0);
+        loadEpisode();
       };
       drawerEpisodesList.appendChild(btn);
     });
