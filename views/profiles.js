@@ -17,7 +17,7 @@ async function fetchProfiles() {
       return [];
     }
     
-    const response = await fetch(`/api/profiles?userId=${userId}`);
+    const response = await fetch(`/api/profiles`);
     if (!response.ok) {
       throw new Error('Failed to fetch profiles');
     }
@@ -113,16 +113,14 @@ function renderProfiles(profiles, manageMode = false) {
   }
 }
 
-// Update profile name
 async function updateProfileName(profileId, newName) {
   try {
-    const userId = localStorage.getItem("userId");
-    const response = await fetch(`/api/profiles/${profileId}`, {
+    const response = await fetch(`/api/profiles/`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ name: newName, userId })
+      body: JSON.stringify({ name: newName })
     });
     
     if (!response.ok) {
@@ -139,8 +137,7 @@ async function updateProfileName(profileId, newName) {
 // Delete profile
 async function deleteProfile(profileId) {
   try {
-    const userId = localStorage.getItem("userId");
-    const response = await fetch(`/api/profiles/${profileId}?userId=${userId}`, {
+    const response = await fetch(`/api/profiles/${profileId}`, {
       method: 'DELETE'
     });
     
