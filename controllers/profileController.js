@@ -107,4 +107,12 @@ class ProfileController {
   }
 }
 
-module.exports = new ProfileController();
+async function doesProfileIdBelongToUser(userId, profileId) {
+    const profile = await Profile.findOne({ _id: profileId, userId });
+    return !!profile;
+}
+
+module.exports = {
+  profileController: new ProfileController(),
+  doesProfileIdBelongToUser,
+};

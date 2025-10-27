@@ -70,7 +70,43 @@ function loadVideo(videoUrl, startTime = 0) {
     ensureNoNativeControls();
     videoPlayer.play().catch(()=>{});
   };
+  videoPlayer.addEventListener("ended", (event) => {
+    setVideoWatched();
+  });
+  videoPlayer.addEventListener('ended', () => clearInterval(currentTimeInterval));
+
 }
+
+async function setVideoWatched() {
+  if (!currentContent) return;
+
+  const profileId = localStorage.getItem("selectedProfileId");
+  const type =
+    currentContent.type === "series" ? "episode" : "movie";
+
+  const body = {
+    profileId,
+    contentId: currentContent._id,
+    type,
+    completed: true
+  };
+
+  if (type === "episode") {
+    body.seasonNumber = currentSeason;
+    body.episodeNumber = currentEpisode;
+  }
+
+  const res = await fetch("/api/watched", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body)
+  });
+
+  if (!res.ok) {
+    console.error("Failed to mark video as watched");
+  }
+}
+
 
 function updateEpisodeInfo() {
   const titleElement = document.getElementById('contentTitle');
@@ -176,7 +212,11 @@ function playPreviousEpisode() {
 async function saveMediaProgress() {
   const videoPlayer = document.getElementById('videoPlayer');
   if (!videoPlayer || !currentContent) return;
+
   const currentTime = videoPlayer.currentTime;
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 10000);
+
   try {
     await fetch('/api/progress', {
       method: 'POST',
@@ -187,10 +227,18 @@ async function saveMediaProgress() {
         season: currentSeason,
         episode: currentEpisode,
         currentTime
-      })
+      }),
+      signal: controller.signal
     });
-  } catch (e) {}
+  } catch (e) {
+    if (e.name === 'AbortError') {
+      console.warn('Progress update timed out');
+    } else {
+      console.error('Progress update failed:', e);
+    }
+  }
 }
+
 
 async function getCurrentProgress() {
   if (!currentContent) return 0;
@@ -478,3 +526,10 @@ document.addEventListener('DOMContentLoaded', initializePlayer);
   setTimeout(force, 400);
   setTimeout(force, 1000);
 })();
+
+window.addEventListener("beforeunload", () => {
+  if (currentTimeInterval) {
+    clearInterval(currentTimeInterval);
+    currentTimeInterval = null;
+  }
+});
