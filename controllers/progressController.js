@@ -37,6 +37,47 @@ class ProgressController {
             res.status(500).json({ error: 'Server error' });
         }
     }
+
+    async getProfileActivityByDay(req, res) {
+        const { profileId } = req.query;
+        if (!profileId) return res.status(400).json({ error: 'Missing profileId' });
+
+        if (!await doesProfileIdBelongToUser(req.user.id, profileId)) {
+            return res.status(400).json({ error: 'Profile Id does not belong to user' });
+        }
+
+        try {
+            const progressRecords = await Progress.find({ profileId });
+
+            const activityByDay = {};
+
+            // We'll count each episode once per day
+            progressRecords.forEach(record => {
+                const date = new Date(record.updatedAt).toISOString().split('T')[0];
+
+                if (!activityByDay[date]) activityByDay[date] = new Set();
+
+                // store episode identifier (season+episode) in the set
+                const episodeKey = `${record.season}-${record.episode}`;
+                activityByDay[date].add(episodeKey);
+            });
+
+            // Convert sets to counts
+            const result = {};
+            for (const date in activityByDay) {
+                result[date] = activityByDay[date].size;
+            }
+
+            res.json(result);
+        } catch (err) {
+            console.error(err);
+            res.status(500).json({ error: 'Server error' });
+        }
+    }
+
+
+
+
 }
 
 async function doesProfileIdBelongToUser(userId, profileId) {

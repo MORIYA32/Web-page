@@ -352,6 +352,21 @@ async function fetchMoviesData() {
   }
 }
 
+// Fetch profile activity data
+async function fetchProfileActivity(profileId) {
+    try {
+        const response = await fetch(`/api/progress/activity?profileId=${profileId}`, {
+            credentials: 'include'
+        });
+        if (!response.ok) throw new Error('Failed to fetch activity');
+        const activityData = await response.json();
+        return activityData;
+    } catch (err) {
+        console.error(err);
+        return {};
+    }
+}
+
 async function calculateGenreLikes() {
   const movies = await fetchMoviesData();
   const allGenres = new Set();
@@ -429,7 +444,56 @@ async function renderGenreChart() {
   });
 }
 
+//create bar chart
+async function renderActivityChart(profileId) {
+    const activityData = await fetchProfileActivity(profileId);
+
+    const labels = Object.keys(activityData).sort(); // Dates
+    const data = Object.values(activityData); // Counts per day
+
+    const ctx = document.getElementById('activityChart').getContext('2d');
+
+    new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels,
+            datasets: [{
+                label: 'Episodes Watched/Continued',
+                data,
+                backgroundColor: '#e50914', // Netflix red
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: { display: false },
+                tooltip: { enabled: true }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: 'Episodes'
+                    }
+                },
+                x: {
+                    title: {
+                        display: true,
+                        text: 'Date'
+                    }
+                }
+            }
+        }
+    });
+}
+
+
 // Call the function when the page loads
 renderGenreChart();
+
+//call the fumction for the current profile
+const selectedProfileId = localStorage.getItem('selectedProfileId');
+renderActivityChart(selectedProfileId);
 
 

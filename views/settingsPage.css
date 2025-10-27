@@ -216,6 +216,18 @@ body {
   margin: auto;
 }
 
+#activityChartContainer {
+  width: 100%;
+  height: 400px;
+  margin: auto;
+}
+
+@media (max-width: 600px) {
+  #activityChart {
+      height: 200px;
+  }
+}
+
 @media (max-width: 600px) {
     #genreChart {
         height: 200px;
