@@ -163,6 +163,20 @@ function renderMovies(filterType = null) {
     }
   ];
 
+  mediaGenres.forEach((genre) => {
+    const category = {
+        title: `Newest ${genre}`,
+        skipFallback: true,
+        filter: (mediaItem) => {
+            return mediaItem.genre.includes(genre);
+        },
+        displayLimit: 10,
+        sort: (medias) => medias.sort((a, b) => {
+            return -a.updatedAt.localeCompare(b.updatedAt);
+        })
+    }
+    categories.push(category)
+  })
   const mode = (document.getElementById('sortSelect')?.value || currentSortMode || '').trim();
   categories.forEach((category, categoryIndex) => {
     let categoryMovies = filteredData.filter(category.filter);
