@@ -4,7 +4,18 @@ let isSearchActive = false;
 let filteredMovies = [];
 let currentSortMode = '';
 let adminRefreshTimer = null;
+let mediaGenres = [];
 
+function listGenres(medias) {
+  const genreSet = new Set();
+
+  medias.forEach((movie) => {
+    const genres = Array.isArray(movie.genre) ? movie.genre : [movie.genre];
+    genres.forEach((g) => genreSet.add(g.trim()));
+  });
+
+  return Array.from(genreSet).sort();
+}
 
 function sortArrayByMode(arr, mode) {
   const copy = [...arr];
@@ -18,13 +29,16 @@ function sortArrayByMode(arr, mode) {
 
 async function fetchContent() {
   try {
-    const response = await fetch('/api/content');
-    if (!response.ok) throw new Error('Failed to fetch content');
+    const response = await fetch("/api/content");
+    if (!response.ok) {
+      throw new Error("Failed to fetch content");
+    }
     const content = await response.json();
-    moviesData = Array.isArray(content) ? content : [];
-    return moviesData;
-  } catch (err) {
-    console.error('Error fetching content:', err);
+    moviesData = content;
+    mediaGenres = listGenres(moviesData);
+    return content;
+  } catch (error) {
+    console.error("Error fetching content:", error);
     return [];
   }
 }
@@ -56,13 +70,7 @@ function populateGenresDropdown() {
   genreMenu.innerHTML = '';
   genreMenu.classList.add('three-columns');
   genreMenu.classList.add('three-columns');
-  const genreSet = new Set();
-  moviesData.forEach(movie => {
-    const genres = Array.isArray(movie.genre) ? movie.genre : [movie.genre];
-    genres.filter(Boolean).forEach(g => genreSet.add(String(g).trim()));
-  });
-  const sortedGenres = Array.from(genreSet).sort();
-  sortedGenres.forEach(genre => {
+  mediaGenres.forEach(genre => {
     const li = document.createElement('li');
     li.innerHTML = `<a class="dropdown-item genre-filter-item" href="#" data-genre="${genre}">${genre}</a>`;
     genreMenu.appendChild(li);
@@ -120,16 +128,41 @@ function renderMovies(filterType = null) {
   if (filterType === 'movie') filteredData = filteredData.filter(m => (m.type || '').toLowerCase() === 'movie');
   else if (filterType === 'show') filteredData = filteredData.filter(m => (m.type || '').toLowerCase() === 'series');
   const userLikedContent = filteredData.filter(movie => userLikes[movie._id]);
-  const userGenres = new Set();
-  userLikedContent.forEach(movie => {
-    const genres = Array.isArray(movie.genre) ? movie.genre : [movie.genre];
-    genres.filter(Boolean).forEach(g => userGenres.add(String(g).toLowerCase()));
-  });
+  const userGenres = listGenres(userLikedContent);
   const categories = [
-    { title: filterType === 'movie' ? 'Movies' : filterType === 'show' ? 'TV Shows' : 'Popular Shows on Netflix', filter: (i) => (i.type || '').toLowerCase() === 'series', sort: (ms) => ms.sort((a,b)=>(b.likes||0)-(a.likes||0)), skipFallback: true },
-    { title: filterType === 'movie' ? 'Movies' : filterType === 'show' ? 'TV Shows' : 'Popular Movies on Netflix', filter: (i) => (i.type || '').toLowerCase() === 'movie', sort: (ms) => ms.sort((a,b)=>(b.likes||0)-(a.likes||0)), skipFallback: true },
-    { title: 'Top Picks for You', filter: (m) => userGenres.size>0 && (Array.isArray(m.genre)?m.genre:[m.genre]).some(g=>userGenres.has(String(g).toLowerCase())), skipFallback: true }
+    {
+      title: filterType === 'movie' ? 'Movies' : filterType === 'show' ? 'TV Shows' : 'Popular Shows on Netflix', 
+      filter: (i) => (i.type || '').toLowerCase() === 'series',
+      sort: (ms) => ms.sort((a,b)=>(b.likes||0)-(a.likes||0)),
+      skipFallback: true
+    },
+    { title: filterType === 'movie' ? 'Movies' : filterType === 'show' ? 'TV Shows' : 'Popular Movies on Netflix', 
+      filter: (i) => (i.type || '').toLowerCase() === 'movie',
+      sort: (ms) => ms.sort((a,b)=>(b.likes||0)-(a.likes||0)),
+      skipFallback: true
+    },
+    { title: 'Top Picks for You',
+      filter: (movie) => {
+        if (userGenres.length > 0) {
+          const genres = Array.isArray(movie.genre)
+            ? movie.genre
+            : [movie.genre];
+
+          const lowerUserGenres = userGenres.map((genre) =>
+            genre.toLowerCase()
+          );
+
+          return genres.some((genre) =>
+            lowerUserGenres.includes(genre.toLowerCase())
+          );
+        }
+
+        return false;
+      },
+      skipFallback: true
+    }
   ];
+
   const mode = (document.getElementById('sortSelect')?.value || currentSortMode || '').trim();
   categories.forEach((category, categoryIndex) => {
     let categoryMovies = filteredData.filter(category.filter);
