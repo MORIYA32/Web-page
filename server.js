@@ -81,7 +81,7 @@ app.use('/videos', authenticate, express.static(path.join(__dirname, 'videos')))
 app.use('/api/auth', authRoutes);
 app.use('/api/profiles', profileRoutes);
 app.use('/api/content', contentRoutes);
-app.use('/api/progress', progressRoutes);
+app.use('/api/progress', authenticate, progressRoutes);
 
 app.use('/api/admin', authenticate, requireAdmin, adminSeriesRouter);
 
