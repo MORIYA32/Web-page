@@ -1,84 +1,75 @@
-const Profile = require('../models/Profile');
+const Profile = require("../models/Profile");
 
 const MAX_PROFILES_PER_USER = Number(process.env.MAX_PROFILES_PER_USER || 5);
 
 class ProfileController {
   async getProfiles(req, res) {
     try {
-      const userId = req.userId || req.query.userId; 
-      if (!userId) {
-        return res.status(400).json({ error: 'User ID is required' });
-      }
-      const profiles = await Profile.find({ userId });
+      const profiles = await Profile.find({ userId: req.user.id });
       res.json(profiles);
     } catch (error) {
-      console.error('Get profiles error:', error);
-      res.status(500).json({ error: 'Failed to fetch profiles' });
+      console.error("Get profiles error:", error);
+      res.status(500).json({ error: "Failed to fetch profiles" });
     }
   }
 
   async createProfile(req, res) {
     try {
-      const userId = req.userId || req.body.userId; 
       const { name, avatar } = req.body;
 
-      if (!userId) {
-        return res.status(400).json({ error: 'User ID is required' });
-      }
       if (!name || name.trim().length < 1) {
-        return res.status(400).json({ error: 'Profile name is required' });
+        return res.status(400).json({ error: "Profile name is required" });
       }
 
-      const count = await Profile.countDocuments({ userId });
+      const count = await Profile.countDocuments({ userId: req.user.id });
       if (count >= MAX_PROFILES_PER_USER) {
         return res.status(400).json({
-          error: 'You have reached the limit of 5 profiles per user.',
+          error: "You have reached the limit of 5 profiles per user.",
           message: `You can have up to ${MAX_PROFILES_PER_USER} profiles per user.`,
-          limit: MAX_PROFILES_PER_USER
+          limit: MAX_PROFILES_PER_USER,
         });
       }
 
       const newProfile = await Profile.create({
         userId,
         name: name.trim(),
-        avatar
+        avatar,
       });
 
       console.log(`New profile created: ${newProfile.name} for user ${userId}`);
 
       res.status(201).json({
-        message: 'Profile created successfully',
-        profile: newProfile
+        message: "Profile created successfully",
+        profile: newProfile,
       });
     } catch (error) {
-      if (error?.name === 'ProfileLimitError') {
+      if (error?.name === "ProfileLimitError") {
         return res.status(400).json({
-          error: 'Max profile per user',
+          error: "Max profile per user",
           message: error.message,
-          limit: MAX_PROFILES_PER_USER
+          limit: MAX_PROFILES_PER_USER,
         });
       }
-      console.error('Create profile error:', error);
-      res.status(500).json({ error: 'Failed to create profile' });
+      console.error("Create profile error:", error);
+      res.status(500).json({ error: "Failed to create profile" });
     }
   }
 
   async updateProfile(req, res) {
     try {
-      const userId = req.userId || req.body.userId; 
       const { profileId } = req.params;
       const { name } = req.body;
 
-      if (!userId) {
-        return res.status(400).json({ error: 'User ID is required' });
-      }
       if (!name || name.trim().length < 1) {
-        return res.status(400).json({ error: 'Profile name is required' });
+        return res.status(400).json({ error: "Profile name is required" });
       }
 
-      const profile = await Profile.findOne({ _id: profileId, userId });
+      const profile = await Profile.findOne({
+        _id: profileId,
+        userId: req.user.id,
+      });
       if (!profile) {
-        return res.status(404).json({ error: 'Profile not found' });
+        return res.status(404).json({ error: "Profile not found" });
       }
 
       profile.name = name.trim();
@@ -86,34 +77,32 @@ class ProfileController {
 
       console.log(`Profile updated: ${profile.name}`);
       res.json({
-        message: 'Profile updated successfully',
-        profile
+        message: "Profile updated successfully",
+        profile,
       });
     } catch (error) {
-      console.error('Update profile error:', error);
-      res.status(500).json({ error: 'Failed to update profile' });
+      console.error("Update profile error:", error);
+      res.status(500).json({ error: "Failed to update profile" });
     }
   }
 
   async deleteProfile(req, res) {
     try {
-      const userId = req.userId || req.query.userId; 
       const { profileId } = req.params;
 
-      if (!userId) {
-        return res.status(400).json({ error: 'User ID is required' });
-      }
-
-      const profile = await Profile.findOneAndDelete({ _id: profileId, userId });
+      const profile = await Profile.findOneAndDelete({
+        _id: profileId,
+        userId: req.user.id,
+      });
       if (!profile) {
-        return res.status(404).json({ error: 'Profile not found' });
+        return res.status(404).json({ error: "Profile not found" });
       }
 
       console.log(`Profile deleted: ${profile.name}`);
-      res.json({ message: 'Profile deleted successfully' });
+      res.json({ message: "Profile deleted successfully" });
     } catch (error) {
-      console.error('Delete profile error:', error);
-      res.status(500).json({ error: 'Failed to delete profile' });
+      console.error("Delete profile error:", error);
+      res.status(500).json({ error: "Failed to delete profile" });
     }
   }
 }
