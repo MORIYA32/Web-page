@@ -31,12 +31,12 @@ class ProfileController {
       }
 
       const newProfile = await Profile.create({
-        userId,
+        userId: req.user.id,
         name: name.trim(),
         avatar,
       });
 
-      console.log(`New profile created: ${newProfile.name} for user ${userId}`);
+      console.log(`New profile created: ${newProfile.name} for user ${req.user.id}`);
 
       res.status(201).json({
         message: "Profile created successfully",
