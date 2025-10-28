@@ -549,3 +549,23 @@ document.addEventListener('click', (e) => {
   }
 });
 
+
+//more info modal
+const moreInfoBtn = document.querySelector('.trailer-buttons .info-btn');
+const moreInfoModal = document.getElementById('moreInfoModal');
+const moreInfoClose = document.getElementById('moreInfoClose');
+
+moreInfoBtn.addEventListener('click', () => {
+  moreInfoModal.style.display = 'flex';
+});
+
+moreInfoClose.addEventListener('click', () => {
+  moreInfoModal.style.display = 'none';
+});
+
+moreInfoModal.addEventListener('click', (e) => {
+  if(e.target === moreInfoModal) {
+    moreInfoModal.style.display = 'none';
+  }
+});
+
