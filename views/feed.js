@@ -244,11 +244,6 @@ function createMovieCard(movie) {
     e.stopPropagation();
     toggleLike(movie._id);
   });
-  const playBtn = movieCard.querySelector('.action-btn.play');
-  playBtn.addEventListener('click', (e) => {
-    e.stopPropagation();
-    window.location.href = `details.html?id=${movie.id}`;
-  });
   const likeQuick = movieCard.querySelector('.action-btn.like');
   likeQuick.addEventListener('click', (e) => {
     e.stopPropagation();
@@ -537,3 +532,20 @@ document.addEventListener('DOMContentLoaded', async function () {
     if (e.target.id === 'moreLikeModal') closeMoreLikeThis();
   });
 });
+
+// Global Play Button Handler (works for trailer section too)
+document.addEventListener('click', (e) => {
+  const btn = e.target.closest('.action-btn.play, .btn.play-btn');
+  if (btn) {
+    e.preventDefault();
+    e.stopPropagation();
+
+    const movieId = btn.dataset.id;
+    if (movieId) {
+      window.location.href = `details.html?id=${movieId}`;
+    } else {
+      console.warn('Play button clicked but no data-id found.');
+    }
+  }
+});
+
