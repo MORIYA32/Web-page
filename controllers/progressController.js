@@ -37,6 +37,39 @@ class ProgressController {
             res.status(500).json({ error: 'Server error' });
         }
     }
+
+    async getProfileProgress(req, res) {
+        try {
+            const { profileId } = req.query;
+
+            if (!profileId) {
+                return res.status(400).json({ error: 'Missing profileId' });
+            }
+
+            const progressRecords = await Progress.find({ profileId });
+            const activityByDay = {};
+            const today = new Date();
+
+            for (let i = 6; i >= 0; i--) {
+                const date = new Date(today);
+                date.setDate(today.getDate() - i);
+                const dateString = date.toISOString().split('T')[0];
+                activityByDay[dateString] = 0;
+            }
+            progressRecords.forEach(record => {
+                const recordDate = new Date(record.updatedAt).toISOString().split('T')[0];
+                if (activityByDay.hasOwnProperty(recordDate)) {
+                    activityByDay[recordDate] += 1;
+                }
+            });
+
+            res.json(activityByDay);
+        } catch (err) {
+            console.error(err);
+            res.status(500).json({ error: 'Server error' });
+        }
+    }
+
 }
 
 async function doesProfileIdBelongToUser(userId, profileId) {

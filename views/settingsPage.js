@@ -429,7 +429,103 @@ async function renderGenreChart() {
   });
 }
 
+async function fetchProfileActivity() {
+    const selectedProfileId = localStorage.getItem('selectedProfileId');
+
+    if (!selectedProfileId) {
+        console.error('No selectedProfileId found in localStorage');
+        return;
+    }
+
+    try {
+        const res = await fetch(`http://localhost:3000/api/progress/activity?profileId=${selectedProfileId}`, {
+            method: 'GET',
+            headers: { 'Content-Type': 'application/json' },
+        });
+
+        if (!res.ok) throw new Error('Failed to fetch profile activity');
+
+        const data = await res.json();
+        console.log('Activity Data:', data);
+        return data;
+
+    } catch (err) {
+        console.error('Error fetching profile activity:', err);
+    }
+}
+
+
+//create bar chart
+async function renderActivityChart() {
+    const activityData = await fetchProfileActivity();
+
+    if (!activityData) return;
+
+    const labels = Object.keys(activityData);
+    const data = Object.values(activityData);
+
+    const ctx = document.getElementById('activityChart').getContext('2d');
+
+    if (window.activityChart && typeof window.activityChart.destroy === 'function') {
+        window.activityChart.destroy();
+    }
+
+    window.activityChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels,
+            datasets: [{
+                label: 'Profile Activity',
+                data,
+                backgroundColor: labels.map(date => {
+                    const today = new Date().toISOString().split('T')[0];
+                    return date === today ? '#ff6f91' : '#b084cc';
+                }),
+                borderRadius: 5
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    enabled: true,
+                    callbacks: {
+                        label: ctx => `${ctx.parsed.y} episodes`
+                    }
+                },
+                title: {
+                    display: true,
+                    text: 'Activity in the Last 7 Days',
+                    font: { size: 18 }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: 'Profile Activity',
+                        font: { size: 14 }
+                    },
+                    ticks: { stepSize: 1 }
+                },
+                x: {
+                    title: {
+                        display: true,
+                        text: 'Date',
+                        font: { size: 14 }
+                    }
+                }
+            }
+        }
+    });
+}
+
+document.addEventListener('DOMContentLoaded', renderActivityChart);
+
 // Call the function when the page loads
 renderGenreChart();
+
 
 

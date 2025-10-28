@@ -83,6 +83,7 @@ app.use('/api/profiles', authenticate, profileRoutes);
 app.use('/api/content', contentRoutes);
 app.use('/api/progress', authenticate, progressRoutes);
 
+
 app.use('/api/admin', authenticate, requireAdmin, adminSeriesRouter);
 
 // Serve static HTML files
