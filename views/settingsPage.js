@@ -475,11 +475,11 @@ async function renderActivityChart() {
         data: {
             labels,
             datasets: [{
-                label: 'Episodes Watched/Continued (Last 7 Days)',
+                label: 'Profile Activity',
                 data,
                 backgroundColor: labels.map(date => {
                     const today = new Date().toISOString().split('T')[0];
-                    return date === today ? '#ffcc00' : '#e50914';
+                    return date === today ? '#ff6f91' : '#b084cc';
                 }),
                 borderRadius: 5
             }]
@@ -505,7 +505,7 @@ async function renderActivityChart() {
                     beginAtZero: true,
                     title: {
                         display: true,
-                        text: 'Episodes Watched',
+                        text: 'Profile Activity',
                         font: { size: 14 }
                     },
                     ticks: { stepSize: 1 }
