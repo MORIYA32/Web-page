@@ -352,21 +352,6 @@ async function fetchMoviesData() {
   }
 }
 
-// Fetch profile activity data
-async function fetchProfileActivity(profileId) {
-    try {
-        const response = await fetch(`/api/progress/activity?profileId=${profileId}`, {
-            credentials: 'include'
-        });
-        if (!response.ok) throw new Error('Failed to fetch activity');
-        const activityData = await response.json();
-        return activityData;
-    } catch (err) {
-        console.error(err);
-        return {};
-    }
-}
-
 async function calculateGenreLikes() {
   const movies = await fetchMoviesData();
   const allGenres = new Set();
@@ -444,43 +429,92 @@ async function renderGenreChart() {
   });
 }
 
-//create bar chart
-async function renderActivityChart(profileId) {
-    const activityData = await fetchProfileActivity(profileId);
+async function fetchProfileActivity() {
+    const selectedProfileId = localStorage.getItem('selectedProfileId');
 
-    const labels = Object.keys(activityData).sort(); // Dates
-    const data = Object.values(activityData); // Counts per day
+    if (!selectedProfileId) {
+        console.error('No selectedProfileId found in localStorage');
+        return;
+    }
+
+    try {
+        const res = await fetch(`http://localhost:3000/api/progress/activity?profileId=${selectedProfileId}`, {
+            method: 'GET',
+            headers: { 'Content-Type': 'application/json' },
+        });
+
+        if (!res.ok) throw new Error('Failed to fetch profile activity');
+
+        const data = await res.json();
+        console.log('Activity Data:', data);
+        return data;
+
+    } catch (err) {
+        console.error('Error fetching profile activity:', err);
+    }
+}
+
+
+//create bar chart
+async function renderActivityChart() {
+    const activityData = await fetchProfileActivity();
+
+    if (!activityData) return;
+
+    const labels = Object.keys(activityData);
+    const data = Object.values(activityData);
 
     const ctx = document.getElementById('activityChart').getContext('2d');
 
-    new Chart(ctx, {
+    if (window.activityChart && typeof window.activityChart.destroy === 'function') {
+        window.activityChart.destroy();
+    }
+
+    window.activityChart = new Chart(ctx, {
         type: 'bar',
         data: {
             labels,
             datasets: [{
-                label: 'Episodes Watched/Continued',
+                label: 'Episodes Watched/Continued (Last 7 Days)',
                 data,
-                backgroundColor: '#e50914', // Netflix red
+                backgroundColor: labels.map(date => {
+                    const today = new Date().toISOString().split('T')[0];
+                    return date === today ? '#ffcc00' : '#e50914';
+                }),
+                borderRadius: 5
             }]
         },
         options: {
             responsive: true,
             plugins: {
                 legend: { display: false },
-                tooltip: { enabled: true }
+                tooltip: {
+                    enabled: true,
+                    callbacks: {
+                        label: ctx => `${ctx.parsed.y} episodes`
+                    }
+                },
+                title: {
+                    display: true,
+                    text: 'Activity in the Last 7 Days',
+                    font: { size: 18 }
+                }
             },
             scales: {
                 y: {
                     beginAtZero: true,
                     title: {
                         display: true,
-                        text: 'Episodes'
-                    }
+                        text: 'Episodes Watched',
+                        font: { size: 14 }
+                    },
+                    ticks: { stepSize: 1 }
                 },
                 x: {
                     title: {
                         display: true,
-                        text: 'Date'
+                        text: 'Date',
+                        font: { size: 14 }
                     }
                 }
             }
@@ -488,12 +522,10 @@ async function renderActivityChart(profileId) {
     });
 }
 
+document.addEventListener('DOMContentLoaded', renderActivityChart);
 
 // Call the function when the page loads
 renderGenreChart();
 
-//call the fumction for the current profile
-const selectedProfileId = localStorage.getItem('selectedProfileId');
-renderActivityChart(selectedProfileId);
 
 

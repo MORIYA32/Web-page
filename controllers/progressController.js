@@ -38,45 +38,37 @@ class ProgressController {
         }
     }
 
-    async getProfileActivityByDay(req, res) {
-        const { profileId } = req.query;
-        if (!profileId) return res.status(400).json({ error: 'Missing profileId' });
-
-        if (!await doesProfileIdBelongToUser(req.user.id, profileId)) {
-            return res.status(400).json({ error: 'Profile Id does not belong to user' });
-        }
-
+    async getProfileProgress(req, res) {
         try {
-            const progressRecords = await Progress.find({ profileId });
+            const { profileId } = req.query;
 
-            const activityByDay = {};
-
-            // We'll count each episode once per day
-            progressRecords.forEach(record => {
-                const date = new Date(record.updatedAt).toISOString().split('T')[0];
-
-                if (!activityByDay[date]) activityByDay[date] = new Set();
-
-                // store episode identifier (season+episode) in the set
-                const episodeKey = `${record.season}-${record.episode}`;
-                activityByDay[date].add(episodeKey);
-            });
-
-            // Convert sets to counts
-            const result = {};
-            for (const date in activityByDay) {
-                result[date] = activityByDay[date].size;
+            if (!profileId) {
+                return res.status(400).json({ error: 'Missing profileId' });
             }
 
-            res.json(result);
+            const progressRecords = await Progress.find({ profileId });
+            const activityByDay = {};
+            const today = new Date();
+
+            for (let i = 6; i >= 0; i--) {
+                const date = new Date(today);
+                date.setDate(today.getDate() - i);
+                const dateString = date.toISOString().split('T')[0];
+                activityByDay[dateString] = 0;
+            }
+            progressRecords.forEach(record => {
+                const recordDate = new Date(record.updatedAt).toISOString().split('T')[0];
+                if (activityByDay.hasOwnProperty(recordDate)) {
+                    activityByDay[recordDate] += 1;
+                }
+            });
+
+            res.json(activityByDay);
         } catch (err) {
             console.error(err);
             res.status(500).json({ error: 'Server error' });
         }
     }
-
-
-
 
 }
 
