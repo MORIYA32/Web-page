@@ -1,15 +1,6 @@
 let currentContent = null;
 let userLikes = {};
 let moviesData = [];
-let currentSortMode = '';
-
-
-
-
-
-
-
-
 
 const urlParams = new URLSearchParams(window.location.search);
 const contentId = urlParams.get('id');
@@ -623,12 +614,14 @@ async function initializeDetailsPage() {
   document.getElementById('episodesBackdrop')?.addEventListener('click', closeEpisodesDrawerDetails);
 
   wireDetailsControlBar();
+
+  await fetchContent();
+  if (currentContent?.genre) {
+    renderSimilarMovies(currentContent.genre);
+  }
 }
 
-
-
-
-
+//get content
 async function fetchContent() {
   try {
     const response = await fetch('/api/content');
@@ -643,30 +636,8 @@ async function fetchContent() {
 }
 
 
-function createMovieCard(movie) {
-  const movieCard = document.createElement('div');
-  movieCard.className = 'movie-card';
-
-  const genreDisplay = Array.isArray(movie.genre) ? movie.genre.join(', ') : movie.genre;
-
-  movieCard.innerHTML = `
-    <div class="movie-poster">
-      <img src="${movie.thumbnail || movie.poster}" alt="${movie.title} poster">
-    </div>
-  `;
-
-  // Clicking the card goes to details
-  movieCard.addEventListener('click', () => {
-    window.location.href = `details.html?id=${movie.id || movie._id}`;
-  });
-
-  return movieCard;
-}
-
-
-
-function renderMoviesByGenre(selectedGenre) {
-  window.lastGenre = selectedGenre;
+//find similar movies by genre
+function renderSimilarMovies(selectedGenres) {
   const categoriesContainer = document.getElementById('categoriesContainer');
   if (!categoriesContainer) return;
   categoriesContainer.innerHTML = '';
@@ -674,164 +645,51 @@ function renderMoviesByGenre(selectedGenre) {
   const params = new URLSearchParams(window.location.search);
   const currentMovieId = params.get('id');
 
-  // Normalize selected genres (support array or string)
-  const selectedGenres = Array.isArray(selectedGenre)
-    ? selectedGenre.map(g => g.toLowerCase().trim())
-    : String(selectedGenre).split(',').map(g => g.toLowerCase().trim());
+  const genres = Array.isArray(selectedGenres)
+    ? selectedGenres.map(g => g.toLowerCase().trim())
+    : String(selectedGenres).split(',').map(g => g.toLowerCase().trim());
 
-  // Filter and exclude current movie
-  const genreFiltered = moviesData.filter(movie => {
-    const genres = Array.isArray(movie.genre)
+  const filtered = moviesData.filter(movie => {
+    const movieGenres = Array.isArray(movie.genre)
       ? movie.genre.map(g => g.toLowerCase().trim())
       : [String(movie.genre).toLowerCase().trim()];
-    const hasCommonGenre = genres.some(g => selectedGenres.includes(g));
+    const hasCommonGenre = movieGenres.some(g => genres.includes(g));
     return hasCommonGenre && String(movie.id || movie._id) !== String(currentMovieId);
   });
 
-  // ✅ Remove duplicates (even if movie matches multiple genres)
   const uniqueMovies = Array.from(
-    new Map(genreFiltered.map(movie => [String(movie._id || movie.id), movie])).values()
+    new Map(filtered.map(movie => [String(movie._id || movie.id), movie])).values()
   );
 
   if (uniqueMovies.length === 0) {
-    categoriesContainer.innerHTML = `<div style="color: white; padding: 20px;">No related titles found in "${selectedGenres.join(', ')}"</div>`;
+    categoriesContainer.innerHTML = `<div class="no-similar-msg">No similar titles found.</div>`;
     return;
   }
 
-  // Build the section
-  const categoryRow = document.createElement('div');
-  categoryRow.className = 'category-row';
-  categoryRow.innerHTML = `
-    <h3 class="category-title">Similar ${selectedGenres.join(', ')} Titles</h3>
-    <div class="carousel-container">
-      <button type="button" class="carousel-arrow left" data-category="genre">
-        <i class="fas fa-chevron-left"></i>
-      </button>
-      <div class="carousel-wrapper">
-        <div class="carousel-track" data-category="genre"></div>
-      </div>
-      <button type="button" class="carousel-arrow right" data-category="genre">
-        <i class="fas fa-chevron-right"></i>
-      </button>
-    </div>
-  `;
-  categoriesContainer.appendChild(categoryRow);
+  const grid = document.createElement('div');
+  grid.className = 'similar-grid';
+  categoriesContainer.appendChild(grid);
 
-  const track = categoryRow.querySelector('.carousel-track');
-  const infiniteMovies =
-    uniqueMovies.length >= 4 ? [...uniqueMovies, ...uniqueMovies, ...uniqueMovies] : uniqueMovies;
+  uniqueMovies.slice(0, 20).forEach(movie => {
+    const card = document.createElement('div');
+    card.className = 'similar-card';
 
-  infiniteMovies.forEach(movie => {
-    const card = createMovieCard(movie);
-    track.appendChild(card);
-  });
+    const img = document.createElement('img');
+    img.src = movie.thumbnail || movie.poster || '/placeholder.jpg';
+    img.alt = movie.title;
+    card.appendChild(img);
 
-  setupCarousel('genre', uniqueMovies.length);
-}
+    const caption = document.createElement('div');
+    caption.className = 'similar-card-caption';
+    caption.textContent = movie.title;
+    card.appendChild(caption);
 
+    card.addEventListener('click', () => {
+      window.location.href = `details.html?id=${movie.id || movie._id}`;
+    });
 
-
-
-
-
-
-
-// 1. Get the movie ID from the URL
-// Rename urlParams to params
-const params = new URLSearchParams(window.location.search);
-const currentMovieId = params.get('id'); // e.g., "7"
-
-
-// 2. Make sure moviesData is loaded (from your fetchContent)
-fetchContent().then(() => {
-  // 3. Find the current movie by id
-  const currentMovie = moviesData.find(
-    m => String(m.id) === currentMovieId || String(m._id) === currentMovieId
-  );
-
-  if (!currentMovie) {
-    console.error('Movie not found');
-    return;
-  }
-
-  // Handle multiple genres instead of just one
-  const movieGenres = Array.isArray(currentMovie.genre)
-    ? currentMovie.genre
-    : [currentMovie.genre];
-
-  window.lastGenre = movieGenres; // save all genres
-  renderMoviesByGenre(movieGenres);
-
-});
-
-
-function setupCarousel(categoryIndex, originalLength) {
-  const track = document.querySelector(`.carousel-track[data-category="${categoryIndex}"]`);
-  const leftBtn = document.querySelector(`.carousel-arrow.left[data-category="${categoryIndex}"]`);
-  const rightBtn = document.querySelector(`.carousel-arrow.right[data-category="${categoryIndex}"]`);
-  if (!track || !leftBtn || !rightBtn) return;
-
-  const cardWidth = 290;
-  const cardsPerView = 4;
-  let currentIndex = 0;
-
-  const totalCards = track.children.length;
-  if (totalCards <= cardsPerView) {
-    leftBtn.style.display = 'none';
-    rightBtn.style.display = 'none';
-    return;
-  }
-
-  // Function to move carousel
-  function updateCarousel() {
-    track.style.transform = `translateX(-${currentIndex * cardWidth}px)`;
-  }
-
-  // Next
-  rightBtn.addEventListener('click', () => {
-    currentIndex += cardsPerView;
-    track.style.transition = 'transform 0.5s ease';
-    updateCarousel();
-
-    // If we go past the end, reset after transition ends
-    if (currentIndex >= totalCards) {
-      setTimeout(() => {
-        track.style.transition = 'none';
-        currentIndex = 0;
-        updateCarousel();
-      }, 510);
-    }
-  });
-
-  // Previous
-  leftBtn.addEventListener('click', () => {
-    currentIndex -= cardsPerView;
-    track.style.transition = 'transform 0.5s ease';
-    updateCarousel();
-
-    if (currentIndex < 0) {
-      setTimeout(() => {
-        track.style.transition = 'none';
-        // Go to last full group
-        currentIndex = Math.floor((totalCards - 1) / cardsPerView) * cardsPerView;
-        updateCarousel();
-      }, 510);
-    }
+    grid.appendChild(card);
   });
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 document.addEventListener('DOMContentLoaded', initializeDetailsPage);

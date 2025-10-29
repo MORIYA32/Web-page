@@ -278,7 +278,6 @@ video::-moz-media-controls { display: none !important; }
   gap: 15px;
 }
 
-/* === RELATED MOVIES SECTION === */
 .categories-container {
   margin-top: 40px;
   padding: 0 40px;
@@ -296,51 +295,7 @@ video::-moz-media-controls { display: none !important; }
   margin-bottom: 15px;
 }
 
-/* === CAROUSEL === */
-.carousel-container {
-  position: relative;
-  overflow: hidden;
-}
-
-.carousel-wrapper {
-  overflow: hidden;
-  width: 100%;
-}
-
-.carousel-track {
-  display: flex;
-  gap: 12px;
-  transition: transform 0.5s ease;
-}
-
-/* === ARROWS === */
-.carousel-arrow {
-  position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
-  z-index: 2;
-  background-color: rgba(0, 0, 0, 0.5);
-  color: white;
-  border: none;
-  border-radius: 50%;
-  width: 40px;
-  height: 40px;
-  cursor: pointer;
-}
-
-.carousel-arrow.left {
-  left: -20px;
-}
-
-.carousel-arrow.right {
-  right: -20px;
-}
-
-.carousel-arrow i {
-  font-size: 18px;
-}
-
-/* === MOVIE CARDS === */
+/*MOVIE CARDS*/
 .movie-card {
   flex: 0 0 auto;
   width: 180px;
@@ -359,5 +314,63 @@ video::-moz-media-controls { display: none !important; }
   display: block;
   border-radius: 8px;
 }
+
+/*Similar Movies*/
+
+.similar-title {
+  color: #fff;
+  margin: 20px 0 10px;
+  font-size: 1.5em;
+  font-weight: 600;
+  text-align: left;
+}
+
+.similar-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 16px;
+  justify-content: center;
+  margin-bottom: 40px;
+}
+
+.similar-card {
+  cursor: pointer;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+  overflow: hidden;
+  text-align: center;
+  color: #fff;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.similar-card:hover {
+  transform: scale(1.05);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+
+.similar-card img {
+  width: 100%;
+  aspect-ratio: 16 / 9;   /* ✅ makes it wide */
+  object-fit: cover;
+  display: block;
+  border-bottom: 2px solid rgba(255, 255, 255, 0.05);
+}
+
+.similar-card-caption {
+  padding: 8px;
+  font-weight: bold;
+  font-size: 1em;
+}
+
+.no-similar-msg {
+  color: #ccc;
+  padding: 20px;
+  text-align: center;
+  font-size: 1.1em;
+}
+
+
+
+
 
 
