@@ -646,48 +646,23 @@ async function fetchContent() {
 function createMovieCard(movie) {
   const movieCard = document.createElement('div');
   movieCard.className = 'movie-card';
-  const userHasLiked = userLikes[movie._id] || false;
+
   const genreDisplay = Array.isArray(movie.genre) ? movie.genre.join(', ') : movie.genre;
-  const firstGenre = Array.isArray(movie.genre) ? (movie.genre[0] || '') : movie.genre || '';
+
   movieCard.innerHTML = `
     <div class="movie-poster">
       <img src="${movie.thumbnail || movie.poster}" alt="${movie.title} poster">
-      <div class="card-actions">
-        <button class="action-btn play" data-id="${movie.id || movie._id}"><i class="fas fa-play"></i></button>
-        <button class="action-btn add"><i class="fas fa-plus"></i></button>
-        <button class="action-btn like ${userHasLiked ? 'active' : ''}" data-like-id="${movie._id}"><i class="${userHasLiked ? 'fas' : 'far'} fa-thumbs-up"></i></button>
-        <button class="action-btn more" data-genre="${firstGenre}"><i class="fas fa-chevron-down"></i></button>
-      </div>
-    </div>
-    <div class="movie-info">
-      <div class="movie-title">${movie.title}</div>
-      <div class="movie-details">${movie.year} • ${movie.type}</div>
-      <div class="movie-genre">${genreDisplay || ''}</div>
-      <button class="like-btn ${userHasLiked ? 'liked' : ''}" data-movie-id="${movie._id}">
-        <i class="heart-icon ${userHasLiked ? 'fas' : 'far'} fa-heart"></i>
-        ${movie.likes || 0} ${(movie.likes || 0) === 1 ? 'like' : 'likes'}
-      </button>
     </div>
   `;
-  movieCard.addEventListener('click', (e) => {
-    if (!e.target.closest('.like-btn') && !e.target.closest('.card-actions')) {
-      window.location.href = `details.html?id=${movie.id}`;
-    }
+
+  // Clicking the card goes to details
+  movieCard.addEventListener('click', () => {
+    window.location.href = `details.html?id=${movie.id || movie._id}`;
   });
 
-  const playBtn = movieCard.querySelector('.action-btn.play');
-  playBtn.addEventListener('click', (e) => {
-    e.stopPropagation();
-    window.location.href = `details.html?id=${movie.id}`;
-  });
-
-  const moreBtn = movieCard.querySelector('.action-btn.more');
-  moreBtn.addEventListener('click', (e) => {
-    e.stopPropagation();
-    openMoreLikeThis(firstGenre);
-  });
   return movieCard;
 }
+
 
 
 function renderMoviesByGenre(selectedGenre) {
@@ -695,20 +670,39 @@ function renderMoviesByGenre(selectedGenre) {
   const categoriesContainer = document.getElementById('categoriesContainer');
   if (!categoriesContainer) return;
   categoriesContainer.innerHTML = '';
+
+  const params = new URLSearchParams(window.location.search);
+  const currentMovieId = params.get('id');
+
+  // Normalize selected genres (support array or string)
+  const selectedGenres = Array.isArray(selectedGenre)
+    ? selectedGenre.map(g => g.toLowerCase().trim())
+    : String(selectedGenre).split(',').map(g => g.toLowerCase().trim());
+
+  // Filter and exclude current movie
   const genreFiltered = moviesData.filter(movie => {
-    const genres = Array.isArray(movie.genre) ? movie.genre : [movie.genre];
-    return genres.some(g => String(g).toLowerCase() === String(selectedGenre).toLowerCase());
+    const genres = Array.isArray(movie.genre)
+      ? movie.genre.map(g => g.toLowerCase().trim())
+      : [String(movie.genre).toLowerCase().trim()];
+    const hasCommonGenre = genres.some(g => selectedGenres.includes(g));
+    return hasCommonGenre && String(movie.id || movie._id) !== String(currentMovieId);
   });
-  const mode = (document.getElementById('sortSelect')?.value || currentSortMode || '').trim();
-  const sorted = mode ? sortArrayByMode(genreFiltered, mode) : genreFiltered;
-  if (sorted.length === 0) {
-    categoriesContainer.innerHTML = `<div style="color: white; padding: 20px;">No titles found in "${selectedGenre}"</div>`;
+
+  // ✅ Remove duplicates (even if movie matches multiple genres)
+  const uniqueMovies = Array.from(
+    new Map(genreFiltered.map(movie => [String(movie._id || movie.id), movie])).values()
+  );
+
+  if (uniqueMovies.length === 0) {
+    categoriesContainer.innerHTML = `<div style="color: white; padding: 20px;">No related titles found in "${selectedGenres.join(', ')}"</div>`;
     return;
   }
+
+  // Build the section
   const categoryRow = document.createElement('div');
   categoryRow.className = 'category-row';
   categoryRow.innerHTML = `
-    <h3 class="category-title">${selectedGenre} Titles</h3>
+    <h3 class="category-title">Similar ${selectedGenres.join(', ')} Titles</h3>
     <div class="carousel-container">
       <button type="button" class="carousel-arrow left" data-category="genre">
         <i class="fas fa-chevron-left"></i>
@@ -722,14 +716,23 @@ function renderMoviesByGenre(selectedGenre) {
     </div>
   `;
   categoriesContainer.appendChild(categoryRow);
+
   const track = categoryRow.querySelector('.carousel-track');
-  const infiniteMovies = sorted.length >= 4 ? [...sorted, ...sorted, ...sorted] : sorted;
+  const infiniteMovies =
+    uniqueMovies.length >= 4 ? [...uniqueMovies, ...uniqueMovies, ...uniqueMovies] : uniqueMovies;
+
   infiniteMovies.forEach(movie => {
     const card = createMovieCard(movie);
     track.appendChild(card);
   });
-  setupCarousel('genre', sorted.length);
+
+  setupCarousel('genre', uniqueMovies.length);
 }
+
+
+
+
+
 
 
 
@@ -751,13 +754,74 @@ fetchContent().then(() => {
     return;
   }
 
-  // 4. Pick the first genre (or any genre you want)
-  const firstGenre = Array.isArray(currentMovie.genre) ? currentMovie.genre[0] : currentMovie.genre;
+  // Handle multiple genres instead of just one
+  const movieGenres = Array.isArray(currentMovie.genre)
+    ? currentMovie.genre
+    : [currentMovie.genre];
 
-  // 5. Save it to window.lastGenre and render related movies
-  window.lastGenre = firstGenre;
-  renderMoviesByGenre(firstGenre);
+  window.lastGenre = movieGenres; // save all genres
+  renderMoviesByGenre(movieGenres);
+
 });
+
+
+function setupCarousel(categoryIndex, originalLength) {
+  const track = document.querySelector(`.carousel-track[data-category="${categoryIndex}"]`);
+  const leftBtn = document.querySelector(`.carousel-arrow.left[data-category="${categoryIndex}"]`);
+  const rightBtn = document.querySelector(`.carousel-arrow.right[data-category="${categoryIndex}"]`);
+  if (!track || !leftBtn || !rightBtn) return;
+
+  const cardWidth = 290;
+  const cardsPerView = 4;
+  let currentIndex = 0;
+
+  const totalCards = track.children.length;
+  if (totalCards <= cardsPerView) {
+    leftBtn.style.display = 'none';
+    rightBtn.style.display = 'none';
+    return;
+  }
+
+  // Function to move carousel
+  function updateCarousel() {
+    track.style.transform = `translateX(-${currentIndex * cardWidth}px)`;
+  }
+
+  // Next
+  rightBtn.addEventListener('click', () => {
+    currentIndex += cardsPerView;
+    track.style.transition = 'transform 0.5s ease';
+    updateCarousel();
+
+    // If we go past the end, reset after transition ends
+    if (currentIndex >= totalCards) {
+      setTimeout(() => {
+        track.style.transition = 'none';
+        currentIndex = 0;
+        updateCarousel();
+      }, 510);
+    }
+  });
+
+  // Previous
+  leftBtn.addEventListener('click', () => {
+    currentIndex -= cardsPerView;
+    track.style.transition = 'transform 0.5s ease';
+    updateCarousel();
+
+    if (currentIndex < 0) {
+      setTimeout(() => {
+        track.style.transition = 'none';
+        // Go to last full group
+        currentIndex = Math.floor((totalCards - 1) / cardsPerView) * cardsPerView;
+        updateCarousel();
+      }, 510);
+    }
+  });
+}
+
+
+
 
 
 

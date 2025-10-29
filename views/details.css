@@ -278,3 +278,86 @@ video::-moz-media-controls { display: none !important; }
   gap: 15px;
 }
 
+/* === RELATED MOVIES SECTION === */
+.categories-container {
+  margin-top: 40px;
+  padding: 0 40px;
+  color: white;
+}
+
+.category-row {
+  margin-bottom: 40px;
+  position: relative;
+}
+
+.category-title {
+  font-size: 1.6rem;
+  font-weight: 600;
+  margin-bottom: 15px;
+}
+
+/* === CAROUSEL === */
+.carousel-container {
+  position: relative;
+  overflow: hidden;
+}
+
+.carousel-wrapper {
+  overflow: hidden;
+  width: 100%;
+}
+
+.carousel-track {
+  display: flex;
+  gap: 12px;
+  transition: transform 0.5s ease;
+}
+
+/* === ARROWS === */
+.carousel-arrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 2;
+  background-color: rgba(0, 0, 0, 0.5);
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  cursor: pointer;
+}
+
+.carousel-arrow.left {
+  left: -20px;
+}
+
+.carousel-arrow.right {
+  right: -20px;
+}
+
+.carousel-arrow i {
+  font-size: 18px;
+}
+
+/* === MOVIE CARDS === */
+.movie-card {
+  flex: 0 0 auto;
+  width: 180px;
+  cursor: pointer;
+  overflow: hidden;
+  border-radius: 8px;
+  transition: transform 0.3s ease;
+}
+
+.movie-card:hover {
+  transform: scale(1.05);
+}
+
+.movie-card img {
+  width: 100%;
+  display: block;
+  border-radius: 8px;
+}
+
+
