@@ -3,7 +3,9 @@ let userLikes = {};
 let isSearchActive = false;
 let filteredMovies = [];
 let currentSortMode = '';
+let currentFilterMode = '';
 let adminRefreshTimer = null;
+let watchedData = { };
 let mediaGenres = [];
 
 function listGenres(medias) {
@@ -16,6 +18,28 @@ function listGenres(medias) {
 
   return Array.from(genreSet).sort();
 }
+
+
+async function loadWatchedFromServer() {
+  const profileId = localStorage.getItem('selectedProfileId');
+  if (!profileId) return;
+
+  try {
+    const res = await fetch(`/api/watched/list?profileId=${encodeURIComponent(profileId)}`, {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' },
+    });
+
+    if (res.ok) {
+      watchedData = await res.json();;
+    } else {
+      console.warn('Failed to load watched list');
+    }
+  } catch (err) {
+    console.error('Error loading watched list:', err);
+  }
+}
+
 
 function sortArrayByMode(arr, mode) {
   const copy = [...arr];
@@ -120,6 +144,22 @@ async function loadUserLikesFromServer() {
   }
 }
 
+function isFullyWatched(item) {
+  const watchedItems = watchedData.filter(w => String(w.contentId) === String(item._id));
+  if (!watchedItems.length) return false;
+
+  if ((item.type || '').toLowerCase() === 'movie') return true;
+
+  const watchedCount = watchedItems.filter(w => w.completed).length;
+
+  const totalEpisodes = (item.seasons || []).reduce(
+    (sum, s) => sum + (s.episodes?.length || 0), 0
+  );
+
+  return totalEpisodes > 0 && watchedCount >= totalEpisodes;
+}
+
+
 function renderMovies(filterType = null) {
   const categoriesContainer = document.getElementById('categoriesContainer');
   if (!categoriesContainer) return;
@@ -127,6 +167,15 @@ function renderMovies(filterType = null) {
   let filteredData = [...moviesData];
   if (filterType === 'movie') filteredData = filteredData.filter(m => (m.type || '').toLowerCase() === 'movie');
   else if (filterType === 'show') filteredData = filteredData.filter(m => (m.type || '').toLowerCase() === 'series');
+  if (currentFilterMode === 'watched') {
+    filteredData = filteredData.filter(m => {
+        return isFullyWatched(m);
+    });
+  } else if (currentFilterMode === 'didnt_watch') {
+    filteredData = filteredData.filter(m => {
+        return !isFullyWatched(m);
+    });
+  }
   const userLikedContent = filteredData.filter(movie => userLikes[movie._id]);
   const userGenres = listGenres(userLikedContent);
   const categories = [
@@ -522,6 +571,7 @@ document.addEventListener('DOMContentLoaded', async function () {
   updateProfileDropdown();
   await fetchContent();
   await loadUserLikesFromServer();
+  await loadWatchedFromServer();
   populateGenresDropdown();
   renderMovies();
 
@@ -558,6 +608,23 @@ document.addEventListener('DOMContentLoaded', async function () {
     currentSortMode = sortSelect.value || '';
     sortSelect.addEventListener('change', () => {
       currentSortMode = sortSelect.value || '';
+      const searchResultsVisible = document.getElementById('searchResults')?.style.display === 'block';
+      if (searchResultsVisible) {
+        const q = document.getElementById('searchInput')?.value || '';
+        performSearch(q);
+      } else if (window.lastGenre) {
+        renderMoviesByGenre(window.lastGenre);
+      } else {
+        renderMovies();
+      }
+    });
+  }
+
+  const filterSelect = document.getElementById('filterSelect');
+  if (filterSelect) {
+    currentFilterMode = filterSelect.value || '';
+    filterSelect.addEventListener('change', () => {
+      currentFilterMode = filterSelect.value || '';
       const searchResultsVisible = document.getElementById('searchResults')?.style.display === 'block';
       if (searchResultsVisible) {
         const q = document.getElementById('searchInput')?.value || '';

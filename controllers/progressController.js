@@ -1,5 +1,5 @@
 const Progress = require('../models/Progress');
-const Profile = require('../models/Profile');
+const { doesProfileIdBelongToUser } = require('../controllers/profileController');
 
 class ProgressController {
     async updateProgress(req, res) {
@@ -17,6 +17,7 @@ class ProgressController {
                 { currentTime },
                 { new: true, upsert: true }
             );
+            res.status(200).json({ message: 'Progress updated' });
         } catch (err) {
             res.status(500).json({ error: 'Server error' });
         }
@@ -70,11 +71,6 @@ class ProgressController {
         }
     }
 
-}
-
-async function doesProfileIdBelongToUser(userId, profileId) {
-    const profile = await Profile.findOne({ _id: profileId, userId });
-    return !!profile;
 }
 
 module.exports = ProgressController;

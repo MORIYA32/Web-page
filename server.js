@@ -19,6 +19,7 @@ const authRoutes = require('./routes/auth');
 const profileRoutes = require('./routes/profiles');
 const contentRoutes = require('./routes/content');
 const progressRoutes = require('./routes/progress');
+const watchedRoutes = require('./routes/watched');
 const adminSeriesRouter = require('./routes/adminSeries'); // <— הוספתי את זה
 
 const app = express();
@@ -82,6 +83,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/profiles', authenticate, profileRoutes);
 app.use('/api/content', contentRoutes);
 app.use('/api/progress', authenticate, progressRoutes);
+app.use('/api/watched', authenticate, watchedRoutes);
 
 
 app.use('/api/admin', authenticate, requireAdmin, adminSeriesRouter);
