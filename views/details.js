@@ -1,5 +1,15 @@
 let currentContent = null;
 let userLikes = {};
+let moviesData = [];
+let currentSortMode = '';
+
+
+
+
+
+
+
+
 
 const urlParams = new URLSearchParams(window.location.search);
 const contentId = urlParams.get('id');
@@ -614,5 +624,150 @@ async function initializeDetailsPage() {
 
   wireDetailsControlBar();
 }
+
+
+
+
+
+async function fetchContent() {
+  try {
+    const response = await fetch('/api/content');
+    if (!response.ok) throw new Error('Failed to fetch content');
+    const content = await response.json();
+    moviesData = Array.isArray(content) ? content : [];
+    return moviesData;
+  } catch (err) {
+    console.error('Error fetching content:', err);
+    return [];
+  }
+}
+
+
+function createMovieCard(movie) {
+  const movieCard = document.createElement('div');
+  movieCard.className = 'movie-card';
+  const userHasLiked = userLikes[movie._id] || false;
+  const genreDisplay = Array.isArray(movie.genre) ? movie.genre.join(', ') : movie.genre;
+  const firstGenre = Array.isArray(movie.genre) ? (movie.genre[0] || '') : movie.genre || '';
+  movieCard.innerHTML = `
+    <div class="movie-poster">
+      <img src="${movie.thumbnail || movie.poster}" alt="${movie.title} poster">
+      <div class="card-actions">
+        <button class="action-btn play" data-id="${movie.id || movie._id}"><i class="fas fa-play"></i></button>
+        <button class="action-btn add"><i class="fas fa-plus"></i></button>
+        <button class="action-btn like ${userHasLiked ? 'active' : ''}" data-like-id="${movie._id}"><i class="${userHasLiked ? 'fas' : 'far'} fa-thumbs-up"></i></button>
+        <button class="action-btn more" data-genre="${firstGenre}"><i class="fas fa-chevron-down"></i></button>
+      </div>
+    </div>
+    <div class="movie-info">
+      <div class="movie-title">${movie.title}</div>
+      <div class="movie-details">${movie.year} • ${movie.type}</div>
+      <div class="movie-genre">${genreDisplay || ''}</div>
+      <button class="like-btn ${userHasLiked ? 'liked' : ''}" data-movie-id="${movie._id}">
+        <i class="heart-icon ${userHasLiked ? 'fas' : 'far'} fa-heart"></i>
+        ${movie.likes || 0} ${(movie.likes || 0) === 1 ? 'like' : 'likes'}
+      </button>
+    </div>
+  `;
+  movieCard.addEventListener('click', (e) => {
+    if (!e.target.closest('.like-btn') && !e.target.closest('.card-actions')) {
+      window.location.href = `details.html?id=${movie.id}`;
+    }
+  });
+
+  const playBtn = movieCard.querySelector('.action-btn.play');
+  playBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    window.location.href = `details.html?id=${movie.id}`;
+  });
+
+  const moreBtn = movieCard.querySelector('.action-btn.more');
+  moreBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    openMoreLikeThis(firstGenre);
+  });
+  return movieCard;
+}
+
+
+function renderMoviesByGenre(selectedGenre) {
+  window.lastGenre = selectedGenre;
+  const categoriesContainer = document.getElementById('categoriesContainer');
+  if (!categoriesContainer) return;
+  categoriesContainer.innerHTML = '';
+  const genreFiltered = moviesData.filter(movie => {
+    const genres = Array.isArray(movie.genre) ? movie.genre : [movie.genre];
+    return genres.some(g => String(g).toLowerCase() === String(selectedGenre).toLowerCase());
+  });
+  const mode = (document.getElementById('sortSelect')?.value || currentSortMode || '').trim();
+  const sorted = mode ? sortArrayByMode(genreFiltered, mode) : genreFiltered;
+  if (sorted.length === 0) {
+    categoriesContainer.innerHTML = `<div style="color: white; padding: 20px;">No titles found in "${selectedGenre}"</div>`;
+    return;
+  }
+  const categoryRow = document.createElement('div');
+  categoryRow.className = 'category-row';
+  categoryRow.innerHTML = `
+    <h3 class="category-title">${selectedGenre} Titles</h3>
+    <div class="carousel-container">
+      <button type="button" class="carousel-arrow left" data-category="genre">
+        <i class="fas fa-chevron-left"></i>
+      </button>
+      <div class="carousel-wrapper">
+        <div class="carousel-track" data-category="genre"></div>
+      </div>
+      <button type="button" class="carousel-arrow right" data-category="genre">
+        <i class="fas fa-chevron-right"></i>
+      </button>
+    </div>
+  `;
+  categoriesContainer.appendChild(categoryRow);
+  const track = categoryRow.querySelector('.carousel-track');
+  const infiniteMovies = sorted.length >= 4 ? [...sorted, ...sorted, ...sorted] : sorted;
+  infiniteMovies.forEach(movie => {
+    const card = createMovieCard(movie);
+    track.appendChild(card);
+  });
+  setupCarousel('genre', sorted.length);
+}
+
+
+
+// 1. Get the movie ID from the URL
+// Rename urlParams to params
+const params = new URLSearchParams(window.location.search);
+const currentMovieId = params.get('id'); // e.g., "7"
+
+
+// 2. Make sure moviesData is loaded (from your fetchContent)
+fetchContent().then(() => {
+  // 3. Find the current movie by id
+  const currentMovie = moviesData.find(
+    m => String(m.id) === currentMovieId || String(m._id) === currentMovieId
+  );
+
+  if (!currentMovie) {
+    console.error('Movie not found');
+    return;
+  }
+
+  // 4. Pick the first genre (or any genre you want)
+  const firstGenre = Array.isArray(currentMovie.genre) ? currentMovie.genre[0] : currentMovie.genre;
+
+  // 5. Save it to window.lastGenre and render related movies
+  window.lastGenre = firstGenre;
+  renderMoviesByGenre(firstGenre);
+});
+
+
+
+
+
+
+
+
+
+
+
 
 document.addEventListener('DOMContentLoaded', initializeDetailsPage);
