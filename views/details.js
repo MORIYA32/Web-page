@@ -1,5 +1,6 @@
 let currentContent = null;
 let userLikes = {};
+let moviesData = [];
 
 const urlParams = new URLSearchParams(window.location.search);
 const contentId = urlParams.get('id');
@@ -613,6 +614,82 @@ async function initializeDetailsPage() {
   document.getElementById('episodesBackdrop')?.addEventListener('click', closeEpisodesDrawerDetails);
 
   wireDetailsControlBar();
+
+  await fetchContent();
+  if (currentContent?.genre) {
+    renderSimilarMovies(currentContent.genre);
+  }
+}
+
+//get content
+async function fetchContent() {
+  try {
+    const response = await fetch('/api/content');
+    if (!response.ok) throw new Error('Failed to fetch content');
+    const content = await response.json();
+    moviesData = Array.isArray(content) ? content : [];
+    return moviesData;
+  } catch (err) {
+    console.error('Error fetching content:', err);
+    return [];
+  }
+}
+
+
+//find similar movies by genre
+function renderSimilarMovies(selectedGenres) {
+  const categoriesContainer = document.getElementById('categoriesContainer');
+  if (!categoriesContainer) return;
+  categoriesContainer.innerHTML = '';
+
+  const params = new URLSearchParams(window.location.search);
+  const currentMovieId = params.get('id');
+
+  const genres = Array.isArray(selectedGenres)
+    ? selectedGenres.map(g => g.toLowerCase().trim())
+    : String(selectedGenres).split(',').map(g => g.toLowerCase().trim());
+
+  const filtered = moviesData.filter(movie => {
+    const movieGenres = Array.isArray(movie.genre)
+      ? movie.genre.map(g => g.toLowerCase().trim())
+      : [String(movie.genre).toLowerCase().trim()];
+    const hasCommonGenre = movieGenres.some(g => genres.includes(g));
+    return hasCommonGenre && String(movie.id || movie._id) !== String(currentMovieId);
+  });
+
+  const uniqueMovies = Array.from(
+    new Map(filtered.map(movie => [String(movie._id || movie.id), movie])).values()
+  );
+
+  if (uniqueMovies.length === 0) {
+    categoriesContainer.innerHTML = `<div class="no-similar-msg">No similar titles found.</div>`;
+    return;
+  }
+
+  const grid = document.createElement('div');
+  grid.className = 'similar-grid';
+  categoriesContainer.appendChild(grid);
+
+  uniqueMovies.slice(0, 20).forEach(movie => {
+    const card = document.createElement('div');
+    card.className = 'similar-card';
+
+    const img = document.createElement('img');
+    img.src = movie.thumbnail || movie.poster || '/placeholder.jpg';
+    img.alt = movie.title;
+    card.appendChild(img);
+
+    const caption = document.createElement('div');
+    caption.className = 'similar-card-caption';
+    caption.textContent = movie.title;
+    card.appendChild(caption);
+
+    card.addEventListener('click', () => {
+      window.location.href = `details.html?id=${movie.id || movie._id}`;
+    });
+
+    grid.appendChild(card);
+  });
 }
 
 document.addEventListener('DOMContentLoaded', initializeDetailsPage);
