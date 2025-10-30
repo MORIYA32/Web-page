@@ -104,8 +104,7 @@ function populateGenresDropdown() {
       e.preventDefault();
       const genre = e.currentTarget.dataset.genre;
       window.lastGenre = genre;
-      setActiveNavLink('genreDropdown');
-      renderMoviesByGenre(genre);
+      window.location.href = `genre.html?genre=${encodeURIComponent(genre)}`;
     });
   });
 }
@@ -332,9 +331,18 @@ function createMovieCard(movie) {
   `;
   movieCard.addEventListener('click', (e) => {
     if (!e.target.closest('.like-btn') && !e.target.closest('.card-actions')) {
-      window.location.href = `details.html?id=${movie.id}`;
+      const movieId = movie.id || movie._id;
+      if (!movieId) return;
+
+      // Detect where we are
+      const fromPage = window.location.pathname.includes('genre.html')
+        ? `genre.html${fromGenre ? '?genre=' + encodeURIComponent(fromGenre) : ''}`
+        : 'feed.html';
+
+      window.location.href = `details.html?id=${movieId}&from=${encodeURIComponent(fromPage)}`;
     }
   });
+
   const likeBtn = movieCard.querySelector('.like-btn');
   likeBtn.addEventListener('click', (e) => {
     e.stopPropagation();

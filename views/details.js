@@ -3,6 +3,7 @@ let userLikes = {};
 
 const urlParams = new URLSearchParams(window.location.search);
 const contentId = urlParams.get('id');
+const fromPage = urlParams.get('from') || 'feed.html';
 
 /* ---------- auth ---------- */
 function checkAuthentication() {
@@ -587,8 +588,9 @@ async function initializeDetailsPage() {
   displayEpisodes();
 
   document.getElementById('backButton').addEventListener('click', () => {
-    window.location.href = './feed.html';
+    window.location.href = fromPage;
   });
+
 
   document.getElementById('playButton').addEventListener('click', () => {
     const v = document.getElementById('trailerPlayer');
