@@ -135,29 +135,11 @@ function renderGenreContent() {
         container.innerHTML = `<p style="color: white; text-align: center;">No content found for ${currentGenre}</p>`;
         return;
     }
+
     const sortedByPopularity = [...genreContent].sort((a, b) => b.likes - a.likes);
-    createCategory(`Popular in ${currentGenre}`, sortedByPopularity, container, 0);
-
-    if (userLikes.size > 0) {
-        const likedGenres = new Set();
-        allContent.forEach(item => {
-            if (userLikes.has(item._id)) {
-                const genres = Array.isArray(item.genre) ? item.genre : [item.genre];
-                genres.forEach(g => likedGenres.add(g));
-            }
-        });
-
-        const recommendations = genreContent.filter(item => {
-            if (userLikes.has(item._id)) return false;
-            const genres = Array.isArray(item.genre) ? item.genre : [item.genre];
-            return genres.some(g => likedGenres.has(g));
-        });
-
-        if (recommendations.length > 0) {
-            createCategory('Top Picks for You', recommendations, container, 1);
-        }
-    }
+    createCategory('', sortedByPopularity, container, 0);
 }
+
 
 function createCategory(title, content, container, categoryIndex) {
     const categoryDiv = document.createElement('div');
