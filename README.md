@@ -13,6 +13,8 @@ git clone https://github.com/MORIYA32/Web-page.git
 ```bash
 cd Web-page
 ```
+
+add the .env file to the project.
 ```bash
 cd npm install
 ```
@@ -34,6 +36,7 @@ npm start
 - **views** – Contains HTML, CSS and JavaScript files  
   - **views/videos** – Keeps video content for streaming  
 - **server.js** – The main entry point of the application
+- **.env** - Contains the environment variavles required for running the application
 
 ## Main Features
 
@@ -42,3 +45,13 @@ npm start
 3. **Personalized Content** – Delivers content recommendations based on user preferences.  
 4. **Profile Management** – Enables users to create, edit, and manage their profiles.  
 5. **Admin Content Management** – Allows administrators to add and manage platform content.
+
+## Technologies Used
+
+- Node.js
+- Express.js
+- MongoDB
+- Mongoose
+- HTML
+- CSS
+- JavaScript
