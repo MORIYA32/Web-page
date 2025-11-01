@@ -130,10 +130,10 @@ function saveUserLikesToStorage() {
 }
 
 async function loadUserLikesFromServer() {
-  const userId = localStorage.getItem('userId');
-  if (!userId) return;
+  const profileId = localStorage.getItem('selectedProfileId');
+  if (!profileId) return;
   try {
-    const response = await fetch(`/api/content/user-likes?userId=${userId}`);
+    const response = await fetch(`/api/content/profile-like?profileId=${profileId}`);
     if (response.ok) {
       const data = await response.json();
       userLikes = {};
@@ -393,15 +393,15 @@ function setupCarousel(categoryIndex, originalLength) {
 }
 
 async function toggleLike(movieId) {
-  const userId = localStorage.getItem('userId');
-  if (!userId) return;
+  const profileId = localStorage.getItem('selectedProfileId');
+  if (!profileId) return;
   const movie = moviesData.find(m => m._id === movieId);
   if (!movie) return;
   try {
     const response = await fetch(`/api/content/${movieId}/like`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ userId })
+      body: JSON.stringify({ profileId })
     });
     if (!response.ok) throw new Error('Failed to update like');
     const data = await response.json();
