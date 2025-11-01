@@ -26,7 +26,7 @@ router.get('/', contentController.getContent.bind(contentController));
 router.post('/:id/like', contentController.likeContent.bind(contentController));
 
 // GET /api/content/user-likes
-router.get('/profile-likes', contentController.getUserLikes.bind(contentController));
+router.get('/profile-like', contentController.getUserLikes.bind(contentController));
 
 
 

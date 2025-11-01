@@ -110,11 +110,11 @@ function populateGenresDropdown() {
   });
 }
 
-function saveLikesToStorage() {
-  const likesData = {};
-  moviesData.forEach(movie => { likesData[movie._id] = movie.likes; });
-  localStorage.setItem('netflixLikes', JSON.stringify(likesData));
-}
+// function saveLikesToStorage() {
+//   const likesData = {};
+//   moviesData.forEach(movie => { likesData[movie._id] = movie.likes; });
+//   localStorage.setItem('netflixLikes', JSON.stringify(likesData));
+// }
 
 function loadLikesFromStorage() {
   const stored = localStorage.getItem('netflixLikes');
@@ -125,9 +125,9 @@ function loadLikesFromStorage() {
   });
 }
 
-function saveUserLikesToStorage() {
-  localStorage.setItem('netflixUserLikes', JSON.stringify(userLikes));
-}
+// function saveUserLikesToStorage() {
+//   localStorage.setItem('netflixUserLikes', JSON.stringify(userLikes));
+// }
 
 async function loadUserLikesFromServer() {
   const profileId = localStorage.getItem('selectedProfileId');
@@ -401,39 +401,52 @@ async function toggleLike(movieId) {
     const response = await fetch(`/api/content/${movieId}/like`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ profileId })
+      body: JSON.stringify({ selectedProfileId: profileId })
     });
     if (!response.ok) throw new Error('Failed to update like');
     const data = await response.json();
+    console.log("FRONTEND RESPONSE:", data);
+    console.log("MOVIE BEFORE UPDATE:", movie.likes, userLikes[movieId]);
     movie.likes = data.likes;
     userLikes[movieId] = data.userHasLiked;
-    saveLikesToStorage();
-    saveUserLikesToStorage();
+    //saveLikesToStorage();
+    //saveUserLikesToStorage();
     updateLikeButton(movieId, movie.likes, userLikes[movieId]);
+    console.log("MOVIE AFTER UPDATE:", movie.likes, userLikes[movieId]);
   } catch (err) {
     console.error('Error updating like:', err);
   }
 }
 
 function updateLikeButton(movieId, likeCount, userHasLiked) {
-  const buttons = document.querySelectorAll(`[data-movie-id="${movieId}"]`);
-  buttons.forEach(button => {
+
+  document.querySelectorAll(`[data-movie-id="${movieId}"]`).forEach(button => {
     const heartIcon = button.querySelector('.heart-icon');
+
     if (userHasLiked) {
       button.classList.add('liked');
-      heartIcon?.classList.remove('far');
       heartIcon?.classList.add('fas');
+      heartIcon?.classList.remove('far');
     } else {
       button.classList.remove('liked');
-      heartIcon?.classList.remove('fas');
       heartIcon?.classList.add('far');
+      heartIcon?.classList.remove('fas');
     }
+
     button.innerHTML = `<i class="heart-icon ${userHasLiked ? 'fas' : 'far'} fa-heart"></i> ${likeCount} ${likeCount === 1 ? 'like' : 'likes'}`;
-    const newHeartIcon = button.querySelector('.heart-icon');
-    newHeartIcon?.classList.add('heart-animation');
-    setTimeout(() => { newHeartIcon?.classList.remove('heart-animation'); }, 600);
+  });
+
+  document.querySelectorAll(`[data-like-id="${movieId}"]`).forEach(btn => {
+    if (userHasLiked) {
+      btn.classList.add('active');
+      btn.innerHTML = `<i class="fas fa-thumbs-up"></i>`;
+    } else {
+      btn.classList.remove('active');
+      btn.innerHTML = `<i class="far fa-thumbs-up"></i>`;
+    }
   });
 }
+
 
 function toggleSearch() {
   const searchInput = document.getElementById('searchInput');

@@ -24,10 +24,10 @@ class ContentController {
     async likeContent(req, res) {
         try {
             const { id } = req.params;
-            const { userId } = req.body;
+            const { selectedProfileId } = req.body;
             
-            if (!userId) {
-                return res.status(400).json({ error: 'userId is required' });
+            if (!selectedProfileId) {
+                return res.status(400).json({ error: 'profileId is required' });
             }
             
             const content = await Content.findById(id);
@@ -39,13 +39,17 @@ class ContentController {
             if (typeof content.likes !== 'number') content.likes = 0;
             if (!Array.isArray(content.likedBy)) content.likedBy = [];
 
-            const hasLiked = content.likedBy.includes(userId);
+            const hasLiked = content.likedBy.some(
+                uid => uid.toString() === selectedProfileId.toString()
+            );
             
             if (hasLiked) {
-                content.likedBy = content.likedBy.filter(uid => uid !== userId);
+                content.likedBy = content.likedBy.filter(
+                    uid => uid.toString() !== selectedProfileId.toString()
+                );
                 content.likes = Math.max(0, content.likes - 1);
             } else {
-                content.likedBy.push(userId);
+                content.likedBy.push(selectedProfileId);
                 content.likes += 1;
             }
             
@@ -53,6 +57,9 @@ class ContentController {
             
             console.log(`Content ${!hasLiked ? 'liked' : 'unliked'}: ${content.title} (${content.likes} likes)`);
             
+            console.log("BACKEND → likedBy array:", content.likedBy);
+            console.log("BACKEND → likes number:", content.likes);
+            console.log("BACKEND → userHasLiked:", !hasLiked);
             res.json({ 
                 message: 'Like updated successfully',
                 likes: content.likes,
@@ -66,14 +73,14 @@ class ContentController {
 
     async getUserLikes(req, res) {
         try {
-            const { userId } = req.query;
+            const profileId = req.query.profileId;
             
-            if (!userId) {
-                return res.status(400).json({ error: 'userId is required' });
+            if (!profileId ) {
+                return res.status(400).json({ error: 'profileId is required' });
             }
             
             const likedContent = await Content.find({ 
-                likedBy: userId 
+                likedBy: profileId  
             }).select('_id');
             
             const likedIds = likedContent.map(content => content._id.toString());
