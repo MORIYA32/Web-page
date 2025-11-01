@@ -71,7 +71,7 @@ function loadVideo(videoUrl, startTime = 0) {
     ensureNoNativeControls();
     videoPlayer.play().catch(()=>{});
   };
-  videoPlayer.addEventListener("ended", (event) => {
+  videoPlayer.addEventListener("ended", () => {
     setVideoWatched();
   });
   videoPlayer.addEventListener('ended', () => clearInterval(currentTimeInterval));
@@ -79,29 +79,23 @@ function loadVideo(videoUrl, startTime = 0) {
 
 async function setVideoWatched() {
   if (!currentContent) return;
-
   const profileId = localStorage.getItem("selectedProfileId");
-  const type =
-    currentContent.type === "series" ? "episode" : "movie";
-
+  const type = currentContent.type === "series" ? "episode" : "movie";
   const body = {
     profileId,
     contentId: currentContent._id,
     type,
     completed: true
   };
-
   if (type === "episode") {
     body.seasonNumber = currentSeason;
     body.episodeNumber = currentEpisode;
   }
-
   const res = await fetch("/api/watched", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body)
   });
-
   if (!res.ok) {
     console.error("Failed to mark video as watched");
   }
@@ -131,32 +125,21 @@ function updateNavigationButtons() {
   [chipPrev, chipNext, btnEpisodes].forEach(el => {
     if (!el) return;
     el.style.display = '';
-    el.disabled = false;
-    el.classList.remove('disabled');
-    el.removeAttribute('aria-disabled');
   });
 
+  const isSeries = currentContent?.type === 'series' && !isTrailer;
+  const isMovie  = currentContent?.type === 'movie' && !isTrailer;
   const hasChapters = Array.isArray(currentContent?.chapters) && currentContent.chapters.length > 0;
 
-  const shouldHaveEpisodes =
-    !isTrailer && (
-      currentContent?.type === 'series' ||
-      (currentContent?.type === 'movie' && hasChapters)
-    );
-
   if (btnEpisodes) {
-    const label = (currentContent?.type === 'movie') ? 'Chapters' : 'Episodes';
+    const label = isMovie ? 'Chapters' : 'Episodes';
+    const shouldHave = isSeries || (isMovie && hasChapters);
     btnEpisodes.title = label;
     btnEpisodes.setAttribute('aria-label', label);
-    btnEpisodes.disabled = !shouldHaveEpisodes;
-    btnEpisodes.classList.toggle('disabled', !shouldHaveEpisodes);
-    btnEpisodes.setAttribute('aria-disabled', String(!shouldHaveEpisodes));
+    btnEpisodes.disabled = !shouldHave;
+    btnEpisodes.classList.toggle('disabled', !shouldHave);
+    btnEpisodes.setAttribute('aria-disabled', String(!shouldHave));
   }
-
-  const isSeries = currentContent?.type === 'series' && !isTrailer;
-
-  if (chipPrev) chipPrev.style.visibility = isSeries ? 'visible' : 'hidden';
-  if (chipNext) chipNext.style.visibility = isSeries ? 'visible' : 'hidden';
 
   if (isSeries) {
     const seasonData = currentContent.seasons?.find(s => s.seasonNumber === currentSeason);
@@ -166,17 +149,41 @@ function updateNavigationButtons() {
     const hasPrev = (currentEpisode > 1) || (currentSeason > 1);
 
     if (chipPrev) {
+      chipPrev.style.visibility = 'visible';
       chipPrev.disabled = !hasPrev;
       chipPrev.classList.toggle('disabled', !hasPrev);
+      chipPrev.classList.remove('pressed');
+      chipPrev.removeAttribute('aria-pressed');
       chipPrev.setAttribute('aria-disabled', String(!hasPrev));
+      chipPrev.title = hasPrev ? 'Previous Episode' : 'No previous episode';
     }
-
     if (chipNext) {
+      chipNext.style.visibility = 'visible';
       chipNext.disabled = !hasNext;
       chipNext.classList.toggle('disabled', !hasNext);
+      chipNext.classList.remove('pressed');
+      chipNext.removeAttribute('aria-pressed');
       chipNext.setAttribute('aria-disabled', String(!hasNext));
       chipNext.title = hasNext ? 'Next Episode' : 'No next episode';
     }
+    return;
+  }
+
+  if (chipPrev) {
+    chipPrev.style.visibility = 'visible';
+    chipPrev.disabled = true;
+    chipPrev.classList.add('disabled', 'pressed');
+    chipPrev.setAttribute('aria-disabled', 'true');
+    chipPrev.setAttribute('aria-pressed', 'true');
+    chipPrev.title = 'Not available for movies';
+  }
+  if (chipNext) {
+    chipNext.style.visibility = 'visible';
+    chipNext.disabled = true;
+    chipNext.classList.add('disabled', 'pressed');
+    chipNext.setAttribute('aria-disabled', 'true');
+    chipNext.setAttribute('aria-pressed', 'true');
+    chipNext.title = 'Not available for movies';
   }
 }
 
@@ -211,11 +218,9 @@ function playPreviousEpisode() {
 async function saveMediaProgress() {
   const videoPlayer = document.getElementById('videoPlayer');
   if (!videoPlayer || !currentContent) return;
-
   const currentTime = videoPlayer.currentTime;
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 10000);
-
+  setTimeout(() => controller.abort(), 10000);
   try {
     await fetch('/api/progress', {
       method: 'POST',
@@ -230,11 +235,8 @@ async function saveMediaProgress() {
       signal: controller.signal
     });
   } catch (e) {
-    if (e.name === 'AbortError') {
-      console.warn('Progress update timed out');
-    } else {
-      console.error('Progress update failed:', e);
-    }
+    if (e.name === 'AbortError') console.warn('Progress update timed out');
+    else console.error('Progress update failed:', e);
   }
 }
 
@@ -397,7 +399,7 @@ function wireControlBarPlayback() {
   }
 
   if (btnEpisodes) btnEpisodes.onclick = openEpisodesDrawer;
-  if (btnPrevEp)   btnPrevEp.onclick   = playPreviousEpisode;
+  if (btnPrevEp)   btnPrevEp.onclick   = () => { if (!btnPrevEp.disabled) playPreviousEpisode(); };
   if (btnNextEp)   btnNextEp.onclick   = () => { if (!btnNextEp.disabled) playNextEpisode(); };
   if (btnRestart)  btnRestart.onclick  = restartFromBeginning;
 
