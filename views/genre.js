@@ -2,6 +2,8 @@
 let allContent = [];
 let userLikes = new Set();
 let currentGenre = '';
+let watchedData = [];
+let currentFilterMode = '';
 
 // Get genre from URL
 function getGenreFromURL() {
@@ -22,6 +24,49 @@ async function fetchContent() {
         console.error('Error fetching content:', error);
         return [];
     }
+}
+
+async function loadWatchedFromServer() {
+  const profileId = localStorage.getItem('selectedProfileId');
+  if (!profileId) return;
+
+  try {
+    const res = await fetch(`/api/watched/list?profileId=${encodeURIComponent(profileId)}`, {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' },
+    });
+
+    if (res.ok) {
+      watchedData = await res.json();;
+    } else {
+      console.warn('Failed to load watched list');
+    }
+  } catch (err) {
+    console.error('Error loading watched list:', err);
+  }
+}
+
+function isFullyWatched(item) {
+  const watchedItems = watchedData.filter(w => String(w.contentId) === String(item._id));
+  if (!watchedItems.length) return false;
+
+  if ((item.type || '').toLowerCase() === 'movie') return true;
+
+  const watchedCount = watchedItems.filter(w => w.completed).length;
+
+  const totalEpisodes = (item.seasons || []).reduce(
+    (sum, s) => sum + (s.episodes?.length || 0), 0
+  );
+
+  return totalEpisodes > 0 && watchedCount >= totalEpisodes;
+}
+
+const filterSelect = document.getElementById('filterSelect');
+if (filterSelect) {
+  filterSelect.addEventListener('change', () => {
+    currentFilterMode = filterSelect.value || '';
+    renderGenreContent();
+  });
 }
 
 // Fetch unique genres for dropdown
@@ -121,24 +166,31 @@ function filterByGenre(genre) {
 
 
 function renderGenreContent() {
-    const container = document.getElementById('categoriesContainer');
-    const titleElement = document.getElementById('genreTitle');
-    const pageTitle = document.getElementById('pageTitle');
-    
-    container.innerHTML = '';
-    titleElement.textContent = currentGenre;
-    pageTitle.textContent = `${currentGenre} - Netflix`;
+  const container = document.getElementById('categoriesContainer');
+  const titleElement = document.getElementById('genreTitle');
+  const pageTitle = document.getElementById('pageTitle');
 
-    const genreContent = filterByGenre(currentGenre);
+  container.innerHTML = '';
+  titleElement.textContent = currentGenre;
+  pageTitle.textContent = `${currentGenre} - Netflix`;
 
-    if (genreContent.length === 0) {
-        container.innerHTML = `<p style="color: white; text-align: center;">No content found for ${currentGenre}</p>`;
-        return;
-    }
+  let genreContent = filterByGenre(currentGenre);
 
-    const sortedByPopularity = [...genreContent].sort((a, b) => b.likes - a.likes);
-    createCategory('', sortedByPopularity, container, 0);
+  if (currentFilterMode === 'watched') {
+    genreContent = genreContent.filter(isFullyWatched);
+  } else if (currentFilterMode === 'didnt_watch') {
+    genreContent = genreContent.filter(item => !isFullyWatched(item));
+  }
+
+  if (genreContent.length === 0) {
+    container.innerHTML = `<p style="color: white; text-align: center;">No content found for this filter.</p>`;
+    return;
+  }
+
+  const sortedByPopularity = [...genreContent].sort((a, b) => b.likes - a.likes);
+  createCategory('', sortedByPopularity, container, 0);
 }
+
 
 
 function createCategory(title, content, container, categoryIndex) {
@@ -483,6 +535,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     const userId = localStorage.getItem('userId');
     await loadUserLikesFromServer(userId);
+    await loadWatchedFromServer();
     await fetchContent();
     await populateGenresDropdown();
     renderGenreContent();
