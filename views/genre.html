@@ -129,12 +129,20 @@
   </div>
 
   <!-- Genre content section -->
-
   <div class="feed" id="mainFeed">
     <div class="container-fluid">
-      <div class="feed-header">
-        <h2 class="section-title" id="genreTitle">Loading...</h2>
+      <div class="feed-header d-flex justify-content-between align-items-center flex-wrap">
+        <h2 class="section-title mb-2 mb-md-0" id="genreTitle">Loading...</h2>
+        <div class="sort-controls">
+          <select id="filterSelect" class="form-select sort-select me-3">
+            <option value="">None</option>
+            <option value="watched">Watched</option>
+            <option value="didnt_watch">Didn't finish watching</option>
+          </select>
+        </div>
       </div>
+
+
       <div id="categoriesContainer">
         <!-- Categories with horizontal scrolling load dynamically here -->
       </div>
