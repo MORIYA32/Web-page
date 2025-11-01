@@ -315,7 +315,6 @@ function createMovieCard(movie) {
       <img src="${movie.thumbnail || movie.poster}" alt="${movie.title} poster">
       <div class="card-actions">
         <button class="action-btn play" data-id="${movie.id || movie._id}"><i class="fas fa-play"></i></button>
-        <button class="action-btn add"><i class="fas fa-plus"></i></button>
         <button class="action-btn like ${userHasLiked ? 'active' : ''}" data-like-id="${movie._id}"><i class="${userHasLiked ? 'fas' : 'far'} fa-thumbs-up"></i></button>
         <button class="action-btn more" data-genre="${firstGenre}"><i class="fas fa-chevron-down"></i></button>
       </div>
