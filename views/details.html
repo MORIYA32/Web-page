@@ -43,23 +43,23 @@
 
               <div class="controls-center">
                 <span class="time-text" id="timeCurrent">00:00</span>
-                <input type="range" id="seek" min="0" max="100" step="0.1" value="0" aria-label="Seek timeline" />
+                <input type="range" id="seek" min="0" max="100" step="0.1" value="0" aria-label="Seek timeline">
                 <span class="time-text" id="timeTotal">00:00</span>
               </div>
 
               <div class="controls-right">
+                <button class="ctrl-chip" id="btnRestart" title="Watch from Beginning" aria-label="Watch from Beginning">
+                  <i class="fas fa-rotate-left"></i>
+                </button>
                 <button class="ctrl-chip" id="btnPrevEpisode" title="Previous Episode" aria-label="Previous episode">
                   <i class="fas fa-backward"></i>
                 </button>
-
                 <button class="ctrl-chip" id="btnNextEpisode" title="Next Episode" aria-label="Next episode">
                   <i class="fas fa-forward"></i>
                 </button>
-
                 <button class="ctrl-chip" id="btnEpisodes" title="Episodes" aria-label="Episodes">
                   <i class="fas fa-list"></i>
                 </button>
-
                 <button class="fs-btn" id="btnFullscreen" title="Fullscreen" aria-label="Fullscreen">
                   <i class="fas fa-up-right-and-down-left-from-center"></i>
                 </button>
@@ -82,8 +82,8 @@
                 </div>
                 <div class="rating-item" id="rtRating" style="display: none;">
                     <svg class="rt-icon" viewBox="0 0 24 24" width="18" height="18" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Rotten Tomatoes">
-                      <path d="M12 4c1.2-1.5 3-2.5 5-2 0 2-1 3-2 3 3 0 7 3 7 7 0 4.4-3.6 8-8 8H10C5.6 20 2 16.4 2 12c0-4 3-7 7-7 .5 0 1 .1 1.5.2.4-.5.9-1 1.5-1.2z" fill="#d32f2f"/>
-                      <path d="M14 5c.8-.1 1.7-.7 2.1-1.6.2-.4.3-.9.4-1.4.7.2 1.3.5 1.8.9.9.7 1.4 1.6 1.7 2.6-.8-.3-1.7-.5-2.6-.5-1 0-2 .2-2.9.6-.2-.3-.4-.5-.5-.6z" fill="#2e7d32"/>
+                      <path d="M12 4c1.2-1.5 3-2.5 5-2 0 2-1 3-2 3 3 0 7 3 7 7 0 4.4-3.6 8-8 8H10C5.6 20 2 16.4 2 12c0-4 3-7 7-7 .5 0 1 .1 1.5.2.4-.5.9-1 1.5-1.2z" fill="#d32f2f"></path>
+                      <path d="M14 5c.8-.1 1.7-.7 2.1-1.6.2-.4.3-.9.4-1.4.7.2 1.3.5 1.8.9.9.7 1.4 1.6 1.7 2.6-.8-.3-1.7-.5-2.6-.5-1 0-2 .2-2.9.6-.2-.3-.4-.5-.5-.6z" fill="#2e7d32"></path>
                     </svg>
                     <span class="rating-value"></span>
                 </div>
@@ -140,7 +140,7 @@
         <div class="drawer-episodes" id="drawerChaptersList" style="display:none;"></div>
       </div>
     </div>
-    <!-- Related Movies Section -->
+
     <div class="related-movies-section">
       <h3>More to like</h3>
       <div id="categoriesContainer"></div>

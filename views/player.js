@@ -6,6 +6,7 @@ const userId = localStorage.getItem("userId");
 const urlParams = new URLSearchParams(window.location.search);
 const initialContentId = urlParams.get('id');
 const isTrailer = urlParams.get('trailer') === 'true';
+const resetAll = urlParams.get('reset') === '1';
 
 let currentContent = null;
 let currentSeason  = parseInt(urlParams.get('season'), 10) || 1;
@@ -74,7 +75,6 @@ function loadVideo(videoUrl, startTime = 0) {
     setVideoWatched();
   });
   videoPlayer.addEventListener('ended', () => clearInterval(currentTimeInterval));
-
 }
 
 async function setVideoWatched() {
@@ -106,7 +106,6 @@ async function setVideoWatched() {
     console.error("Failed to mark video as watched");
   }
 }
-
 
 function updateEpisodeInfo() {
   const titleElement = document.getElementById('contentTitle');
@@ -239,7 +238,6 @@ async function saveMediaProgress() {
   }
 }
 
-
 async function getCurrentProgress() {
   if (!currentContent) return 0;
   try {
@@ -292,6 +290,42 @@ async function loadEpisode(startTimeOverride) {
   currentTimeInterval = setInterval(saveMediaProgress, MEDIA_UPDATE_PROGRESS_TIME_INTERVAL)
 }
 
+function restartFromBeginning() {
+  const v = document.getElementById('videoPlayer');
+  if (!v) return;
+  if (!currentContent) {
+    try { v.currentTime = 0; v.play(); } catch(e) {}
+    return;
+  }
+  if (isTrailer || currentContent.type !== 'series') {
+    try {
+      v.pause();
+      v.currentTime = 0;
+      v.play();
+    } catch(e) {}
+    saveMediaProgress();
+    return;
+  }
+  const onFirst = ((Number(currentSeason) || 1) === 1) && ((Number(currentEpisode) || 1) === 1);
+  if (onFirst) {
+    try {
+      v.pause();
+      v.currentTime = 0;
+      v.play();
+    } catch(e) {}
+    saveMediaProgress();
+  } else {
+    const base = window.location.pathname.replace(/\/+$/,'');
+    const qs = new URLSearchParams(window.location.search);
+    qs.set('id', initialContentId);
+    qs.set('season','1');
+    qs.set('episode','1');
+    qs.set('reset','1');
+    qs.delete('trailer');
+    window.location.href = `${base}?${qs.toString()}`;
+  }
+}
+
 function wireControlBarPlayback() {
   const v  = document.getElementById('videoPlayer');
   const btnPlayPause  = document.getElementById('btnPlayPause');
@@ -302,6 +336,7 @@ function wireControlBarPlayback() {
   const btnEpisodes   = document.getElementById('btnEpisodes');
   const btnPrevEp     = document.getElementById('btnPrevEpisode');
   const btnNextEp     = document.getElementById('btnNextEpisode');
+  const btnRestart    = document.getElementById('btnRestart');
   const seek          = document.getElementById('seek');
   const timeCur       = document.getElementById('timeCurrent');
   const timeTot       = document.getElementById('timeTotal');
@@ -364,6 +399,7 @@ function wireControlBarPlayback() {
   if (btnEpisodes) btnEpisodes.onclick = openEpisodesDrawer;
   if (btnPrevEp)   btnPrevEp.onclick   = playPreviousEpisode;
   if (btnNextEp)   btnNextEp.onclick   = () => { if (!btnNextEp.disabled) playNextEpisode(); };
+  if (btnRestart)  btnRestart.onclick  = restartFromBeginning;
 
   function syncUI() {
     if (!v) return;
@@ -510,7 +546,7 @@ async function initializePlayer() {
   document.getElementById('episodesBackdrop')?.addEventListener('click', closeEpisodesDrawer);
 
   ensureNoNativeControls();
-  await loadEpisode();
+  await loadEpisode(resetAll ? 0 : undefined);
 }
 
 document.addEventListener('DOMContentLoaded', initializePlayer);

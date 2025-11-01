@@ -6,7 +6,6 @@ const urlParams = new URLSearchParams(window.location.search);
 const contentId = urlParams.get('id');
 const fromPage = urlParams.get('from') || 'feed.html';
 
-/* ---------- auth ---------- */
 function checkAuthentication() {
   const isLoggedIn = localStorage.getItem('isLoggedIn');
   if (!isLoggedIn) {
@@ -16,7 +15,6 @@ function checkAuthentication() {
   return true;
 }
 
-/* ---------- likes ---------- */
 function loadUserLikesFromStorage() {
   const stored = localStorage.getItem('userLikes');
   if (stored) userLikes = JSON.parse(stored);
@@ -41,7 +39,6 @@ function saveUserLikesToStorage() {
   localStorage.setItem('userLikes', JSON.stringify(userLikes));
 }
 
-/* ---------- content ---------- */
 async function fetchContentDetails(id) {
   try {
     const response = await fetch(`/api/content`);
@@ -54,7 +51,6 @@ async function fetchContentDetails(id) {
   }
 }
 
-/* ---------- utils ---------- */
 function normalizeVideoPath(path) {
   if (!path) return '';
   const cleaned = path.replace(/\\/g, '/');
@@ -95,7 +91,6 @@ function fmtTime(t) {
   return h > 0 ? `${h}:${m}:${s}` : `${m}:${s}`;
 }
 
-/* ---------- progress save (ONLY on pause) ---------- */
 async function saveWatchProgress({ contentId, time, season = null, episode = null, context = 'details' }) {
   try {
     await fetch('/api/content/progress', {
@@ -108,7 +103,6 @@ async function saveWatchProgress({ contentId, time, season = null, episode = nul
   }
 }
 
-/* ---------- Wikipedia (actors) ---------- */
 async function fetchWikipediaActorInfo(actorName) {
   try {
     const response = await fetch(`https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(actorName)}`);
@@ -125,7 +119,6 @@ async function fetchWikipediaActorInfo(actorName) {
   return { url: null, image: null };
 }
 
-/* ---------- trailer load ---------- */
 function loadTrailer(trailerUrl) {
   const v = document.getElementById('trailerPlayer');
   const url = normalizeVideoPath(trailerUrl);
@@ -138,24 +131,19 @@ function loadTrailer(trailerUrl) {
   };
 }
 
-/* ---------- UI fill ---------- */
 async function updateContentDetails() {
   document.getElementById('contentTitle').textContent = currentContent.title;
   document.getElementById('contentYear').textContent = currentContent.year;
   document.getElementById('contentType').textContent = currentContent.type === 'series' ? 'TV Series' : 'Movie';
   document.getElementById('contentGenre').textContent = (currentContent.genre || []).join(', ');
-
-  // actors with Wikipedia image + link
   const actorsContainer = document.getElementById('contentActors');
   actorsContainer.innerHTML = '';
   const actors = currentContent.actors || [];
   const infos = await Promise.all(actors.map(a => fetchWikipediaActorInfo(a)));
-
   actors.forEach((actor, idx) => {
     const info = infos[idx] || {};
     const card = document.createElement('div');
     card.className = 'actor-card';
-
     if (info.image) {
       const img = document.createElement('img');
       img.src = info.image;
@@ -166,7 +154,6 @@ async function updateContentDetails() {
       placeholder.className = 'actor-placeholder';
       card.appendChild(placeholder);
     }
-
     if (info.url) {
       const link = document.createElement('a');
       link.href = info.url;
@@ -179,13 +166,10 @@ async function updateContentDetails() {
       span.textContent = actor;
       card.appendChild(span);
     }
-
     actorsContainer.appendChild(card);
   });
-
   const desc = (currentContent.description || '').trim();
   document.getElementById('contentDescription').textContent = desc || 'No description available.';
-
   const likeButton = document.getElementById('likeButton');
   const userHasLiked = userLikes[currentContent._id] === true;
   if (userHasLiked) {
@@ -204,12 +188,10 @@ async function fetchAndDisplayRatings() {
     if (!res.ok) throw new Error('Failed to fetch ratings');
     const data = await res.json();
     if (!data.ratings) return;
-
     const ratingsSection = document.getElementById('ratingsSection');
     const imdbRating = document.getElementById('imdbRating');
     const rtRating = document.getElementById('rtRating');
     let show = false;
-
     if (data.ratings.imdb) {
       imdbRating.querySelector('.rating-value').textContent = data.ratings.imdb;
       imdbRating.style.display = 'flex';
@@ -226,24 +208,19 @@ async function fetchAndDisplayRatings() {
   }
 }
 
-/* ---------- episodes list (details page) ---------- */
 function displayEpisodes() {
   if (currentContent.type !== 'series') return;
-
   const episodesSection = document.getElementById('episodesSection');
   const seasonSelect = document.getElementById('seasonSelect');
   const episodesList = document.getElementById('episodesList');
-
   episodesSection.style.display = 'block';
   seasonSelect.innerHTML = '';
-
   (currentContent.seasons || []).forEach(season => {
     const opt = document.createElement('option');
     opt.value = season.seasonNumber;
     opt.textContent = `Season ${season.seasonNumber}`;
     seasonSelect.appendChild(opt);
   });
-
   function renderSeason(seasonNumber) {
     const season = (currentContent.seasons || []).find(s => s.seasonNumber == seasonNumber);
     episodesList.innerHTML = '';
@@ -252,22 +229,18 @@ function displayEpisodes() {
       el.className = 'episode-card';
       el.innerHTML = `<h4>Episode ${ep.episodeNumber}</h4><p>${ep.episodeTitle || ''}</p>`;
       el.addEventListener('click', () => {
-        // פתיחה תמיד מההתחלה
         window.location.href = `player.html?id=${currentContent.id}&season=${seasonNumber}&episode=${ep.episodeNumber}&reset=1`;
       });
       episodesList.appendChild(el);
     });
   }
-
   seasonSelect.addEventListener('change', e => renderSeason(e.target.value));
   renderSeason((currentContent.seasons || [])[0]?.seasonNumber);
 }
 
-/* ---------- like toggle ---------- */
 async function toggleLike() {
   const userId = localStorage.getItem('userId');
   if (!userId) return;
-
   const likeButton = document.getElementById('likeButton');
   try {
     const res = await fetch(`/api/content/${currentContent._id}/like`, {
@@ -279,7 +252,6 @@ async function toggleLike() {
     const data = await res.json();
     userLikes[currentContent._id] = data.userHasLiked;
     saveUserLikesToStorage();
-
     if (userLikes[currentContent._id]) {
       likeButton.classList.add('liked');
       likeButton.innerHTML = '<i class="fas fa-heart"></i> Liked';
@@ -292,7 +264,6 @@ async function toggleLike() {
   }
 }
 
-/* ---------- episodes/chapters drawer (details page) ---------- */
 function openEpisodesDrawerFromDetails() {
   const drawer = document.getElementById('episodesDrawer');
   const backdrop = document.getElementById('episodesBackdrop');
@@ -300,14 +271,11 @@ function openEpisodesDrawerFromDetails() {
   const seasonRow = document.getElementById('seriesSeasonRow');
   const epsList = document.getElementById('drawerEpisodesList');
   const chaptersEl = document.getElementById('drawerChaptersList');
-
   if (!currentContent) return;
-
   epsList.innerHTML = '';
   chaptersEl.innerHTML = '';
   chaptersEl.style.display = 'none';
   seasonRow.style.display = 'none';
-
   if (currentContent.type === 'series') {
     titleElm.textContent = 'Episodes';
     seasonRow.style.display = '';
@@ -332,7 +300,6 @@ function openEpisodesDrawerFromDetails() {
       epsList.appendChild(btn);
     }
   }
-
   drawer.classList.add('open');
   backdrop.classList.add('open');
   drawer.setAttribute('aria-hidden', 'false');
@@ -379,7 +346,6 @@ function renderDrawerEpisodesDetails(seasonNumber) {
       btn.className = 'episode-row';
       btn.innerHTML = `<strong>Episode ${ep.episodeNumber}</strong> ${ep.episodeTitle ? '– ' + ep.episodeTitle : ''}`;
       btn.onclick = () => {
-        // פתיחה תמיד מההתחלה
         window.location.href = `player.html?id=${currentContent.id}&season=${season.seasonNumber}&episode=${ep.episodeNumber}&reset=1`;
       };
       list.appendChild(btn);
@@ -411,11 +377,9 @@ function navigatePrevNextFromDetails(dir) {
   if (!currentContent || currentContent.type !== 'series') return;
   const seasons = (currentContent.seasons || []).slice().sort((a, b) => a.seasonNumber - b.seasonNumber);
   if (!seasons.length) return;
-
   let s = 0;
   let e = 0;
   const eps = () => seasons[s].episodes.slice().sort((a, b) => a.episodeNumber - b.episodeNumber);
-
   if (dir === 'next') {
     if (e + 1 < eps().length) e++;
     else if (s + 1 < seasons.length) {
@@ -429,18 +393,23 @@ function navigatePrevNextFromDetails(dir) {
       e = eps().length - 1;
     } else return;
   }
-
   const seasonNum = seasons[s].seasonNumber;
   const epNum = eps()[e].episodeNumber;
-  // פתיחה תמיד מההתחלה
   window.location.href = `player.html?id=${currentContent.id}&season=${seasonNum}&episode=${epNum}&reset=1`;
 }
 
-/* ---------- control bar wiring ---------- */
+function restartFromBeginningDetails() {
+  if (!currentContent) return;
+  if (currentContent.type === 'series') {
+    window.location.href = `player.html?id=${currentContent.id}&season=1&episode=1&reset=1`;
+  } else {
+    window.location.href = `player.html?id=${currentContent.id}&reset=1`;
+  }
+}
+
 function wireDetailsControlBar() {
   const v = document.getElementById('trailerPlayer');
   if (!v) return;
-
   const btnPlayPause = document.getElementById('btnPlayPause');
   const iconPlayPause = btnPlayPause?.querySelector('i');
   const btnBack10 = document.getElementById('btnBack10');
@@ -449,15 +418,13 @@ function wireDetailsControlBar() {
   const btnEpisodes = document.getElementById('btnEpisodes');
   const btnPrevEp = document.getElementById('btnPrevEpisode');
   const btnNextEp = document.getElementById('btnNextEpisode');
+  const btnRestart = document.getElementById('btnRestart');
   const seek = document.getElementById('seek');
   const timeCur = document.getElementById('timeCurrent');
   const timeTot = document.getElementById('timeTotal');
-
   ensureNoNativeControlsDetails();
-
   const isSeries = currentContent?.type === 'series';
   const hasChapters = Array.isArray(currentContent?.chapters) && currentContent.chapters.length > 0;
-
   if (btnEpisodes) {
     const label = isSeries ? 'Episodes' : 'Chapters';
     const shouldHave = isSeries || hasChapters;
@@ -469,7 +436,6 @@ function wireDetailsControlBar() {
     btnEpisodes.setAttribute('aria-disabled', String(!shouldHave));
     btnEpisodes.onclick = openEpisodesDrawerFromDetails;
   }
-
   if (btnPrevEp) {
     btnPrevEp.style.visibility = isSeries ? 'visible' : 'hidden';
     btnPrevEp.onclick = () => navigatePrevNextFromDetails('prev');
@@ -478,7 +444,9 @@ function wireDetailsControlBar() {
     btnNextEp.style.visibility = isSeries ? 'visible' : 'hidden';
     btnNextEp.onclick = () => navigatePrevNextFromDetails('next');
   }
-
+  if (btnRestart) {
+    btnRestart.onclick = restartFromBeginningDetails;
+  }
   if (btnPlayPause) btnPlayPause.onclick = () => (v.paused ? v.play() : v.pause());
   v.addEventListener('play', () => {
     if (iconPlayPause) {
@@ -491,21 +459,17 @@ function wireDetailsControlBar() {
       iconPlayPause.className = 'fas fa-play';
       btnPlayPause?.setAttribute('aria-label', 'Play');
     }
-    // <<< שמירה רק בעת Pause >>>
     const cid = currentContent?._id || currentContent?.id || contentId;
     const t = Number.isFinite(v.currentTime) ? Math.floor(v.currentTime) : 0;
     if (cid != null) {
-      // שומר בלי season/episode כי זה טריילר/תצוגה מקדימה בדף הפרטים
       saveWatchProgress({ contentId: cid, time: t, context: 'details-trailer' });
     }
   });
-
   if (btnBack10) btnBack10.onclick = () => (v.currentTime = Math.max(0, (v.currentTime || 0) - 10));
   if (btnForward10) btnForward10.onclick = () => {
     const d = v.duration || 0;
     v.currentTime = Math.min(d, (v.currentTime || 0) + 10);
   };
-
   if (seek) {
     seek.oninput = () => {
       if (!Number.isFinite(v.duration)) return;
@@ -513,7 +477,6 @@ function wireDetailsControlBar() {
       seek.style.setProperty('--seek', `${seek.value}%`);
     };
   }
-
   if (btnFullscreen) {
     btnFullscreen.onclick = () => {
       const wrapper = document.getElementById('video-wrapper') || v;
@@ -536,7 +499,6 @@ function wireDetailsControlBar() {
       }
     };
   }
-
   function syncUI() {
     const d = v.duration || 0;
     const c = v.currentTime || 0;
@@ -548,11 +510,9 @@ function wireDetailsControlBar() {
     if (timeCur) timeCur.textContent = fmtTime(c);
     if (timeTot) timeTot.textContent = fmtTime(d);
   }
-
   v.addEventListener('loadedmetadata', syncUI);
   v.addEventListener('timeupdate', syncUI);
   syncUI();
-
   const force = () => ensureNoNativeControlsDetails();
   ['loadedmetadata', 'canplay', 'play', 'pause', 'timeupdate', 'enterpictureinpicture', 'webkitpresentationmodechanged', 'emptied']
     .forEach(ev => v.addEventListener(ev, force));
@@ -561,38 +521,30 @@ function wireDetailsControlBar() {
   setTimeout(force, 1000);
 }
 
-/* ---------- init ---------- */
 async function initializeDetailsPage() {
   if (!checkAuthentication()) return;
   if (!contentId) {
     window.location.href = './feed.html';
     return;
   }
-
   await loadUserLikesFromServer();
-
   currentContent = await fetchContentDetails(contentId);
   if (!currentContent) {
     alert('Content not found');
     window.location.href = './feed.html';
     return;
   }
-
   const previewUrl =
     currentContent.videoUrl ||
     currentContent.trailerUrl ||
     firstEpisodeUrlIfAny(currentContent);
   if (previewUrl) loadTrailer(previewUrl);
-
   updateContentDetails();
   fetchAndDisplayRatings();
   displayEpisodes();
-
   document.getElementById('backButton').addEventListener('click', () => {
     window.location.href = fromPage;
   });
-
-
   document.getElementById('playButton').addEventListener('click', () => {
     const v = document.getElementById('trailerPlayer');
     const url =
@@ -600,7 +552,6 @@ async function initializeDetailsPage() {
         ? firstEpisodeUrlIfAny(currentContent) || currentContent.trailerUrl
         : currentContent.videoUrl || currentContent.trailerUrl;
     if (!url) return;
-
     const normalized = normalizeVideoPath(url);
     const currentSrc = v.currentSrc || v.src || '';
     if (!currentSrc.endsWith(normalized)) {
@@ -610,20 +561,16 @@ async function initializeDetailsPage() {
     v.play().catch(() => v.focus());
     v.scrollIntoView({ behavior: 'smooth', block: 'center' });
   });
-
   document.getElementById('likeButton').addEventListener('click', toggleLike);
   document.getElementById('closeEpisodes')?.addEventListener('click', closeEpisodesDrawerDetails);
   document.getElementById('episodesBackdrop')?.addEventListener('click', closeEpisodesDrawerDetails);
-
   wireDetailsControlBar();
-
   await fetchContent();
   if (currentContent?.genre) {
     renderSimilarMovies(currentContent.genre);
   }
 }
 
-//get content
 async function fetchContent() {
   try {
     const response = await fetch('/api/content');
@@ -637,20 +584,15 @@ async function fetchContent() {
   }
 }
 
-
-//find similar movies by genre
 function renderSimilarMovies(selectedGenres) {
   const categoriesContainer = document.getElementById('categoriesContainer');
   if (!categoriesContainer) return;
   categoriesContainer.innerHTML = '';
-
   const params = new URLSearchParams(window.location.search);
   const currentMovieId = params.get('id');
-
   const genres = Array.isArray(selectedGenres)
     ? selectedGenres.map(g => g.toLowerCase().trim())
     : String(selectedGenres).split(',').map(g => g.toLowerCase().trim());
-
   const filtered = moviesData.filter(movie => {
     const movieGenres = Array.isArray(movie.genre)
       ? movie.genre.map(g => g.toLowerCase().trim())
@@ -658,38 +600,30 @@ function renderSimilarMovies(selectedGenres) {
     const hasCommonGenre = movieGenres.some(g => genres.includes(g));
     return hasCommonGenre && String(movie.id || movie._id) !== String(currentMovieId);
   });
-
   const uniqueMovies = Array.from(
     new Map(filtered.map(movie => [String(movie._id || movie.id), movie])).values()
   );
-
   if (uniqueMovies.length === 0) {
     categoriesContainer.innerHTML = `<div class="no-similar-msg">No similar titles found.</div>`;
     return;
   }
-
   const grid = document.createElement('div');
   grid.className = 'similar-grid';
   categoriesContainer.appendChild(grid);
-
   uniqueMovies.slice(0, 20).forEach(movie => {
     const card = document.createElement('div');
     card.className = 'similar-card';
-
     const img = document.createElement('img');
     img.src = movie.thumbnail || movie.poster || '/placeholder.jpg';
     img.alt = movie.title;
     card.appendChild(img);
-
     const caption = document.createElement('div');
     caption.className = 'similar-card-caption';
     caption.textContent = movie.title;
     card.appendChild(caption);
-
     card.addEventListener('click', () => {
       window.location.href = `details.html?id=${movie.id || movie._id}`;
     });
-
     grid.appendChild(card);
   });
 }
