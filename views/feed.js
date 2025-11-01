@@ -7,6 +7,7 @@ let currentFilterMode = '';
 let adminRefreshTimer = null;
 let watchedData = { };
 let mediaGenres = [];
+let currentTypeFilter = '';
 
 function listGenres(medias) {
   const genreSet = new Set();
@@ -606,9 +607,9 @@ document.addEventListener('DOMContentLoaded', async function () {
   const homeLink = document.getElementById('homeLink');
   const genreDropdown = document.getElementById('genreDropdown');
 
-  if (moviesLink) moviesLink.addEventListener('click', (e) => { e.preventDefault(); setActiveNavLink('moviesLink'); window.lastGenre = undefined; renderMovies('movie'); });
-  if (tvShowsLink) tvShowsLink.addEventListener('click', (e) => { e.preventDefault(); setActiveNavLink('tvShowsLink'); window.lastGenre = undefined; renderMovies('show'); });
-  if (homeLink) homeLink.addEventListener('click', (e) => { e.preventDefault(); setActiveNavLink('homeLink'); window.lastGenre = undefined; renderMovies(); });
+  if (moviesLink) moviesLink.addEventListener('click', (e) => { e.preventDefault(); setActiveNavLink('moviesLink'); window.lastGenre = undefined; currentTypeFilter = 'movie'; renderMovies('movie'); });
+  if (tvShowsLink) tvShowsLink.addEventListener('click', (e) => { e.preventDefault(); setActiveNavLink('tvShowsLink'); window.lastGenre = undefined; currentTypeFilter = 'show'; renderMovies('show'); });
+  if (homeLink) homeLink.addEventListener('click', (e) => { e.preventDefault(); setActiveNavLink('homeLink'); window.lastGenre = undefined; currentTypeFilter = ''; renderMovies(); });
   if (genreDropdown) genreDropdown.addEventListener('click', () => { setActiveNavLink('genreDropdown'); });
 
   const sortSelect = document.getElementById('sortSelect');
@@ -640,7 +641,7 @@ document.addEventListener('DOMContentLoaded', async function () {
       } else if (window.lastGenre) {
         renderMoviesByGenre(window.lastGenre);
       } else {
-        renderMovies();
+        renderMovies(currentTypeFilter);
       }
     });
   }
