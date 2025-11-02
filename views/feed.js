@@ -133,7 +133,7 @@ async function loadUserLikesFromServer() {
   const profileId = localStorage.getItem('selectedProfileId');
   if (!profileId) return;
   try {
-    const response = await fetch(`/api/content/profile-like?profileId=${profileId}`);
+    const response = await fetch(`/api/content/user-likes?profileId=${profileId}`);
     if (response.ok) {
       const data = await response.json();
       userLikes = {};
