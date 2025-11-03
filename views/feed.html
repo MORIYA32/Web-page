@@ -14,18 +14,20 @@
     <div class="container-fluid">
       <div class="d-flex align-items-center">
         <img src="https://upload.wikimedia.org/wikipedia/commons/7/7a/Logonetflix.png" alt="Netflix Logo" class="logo">
-        <div class="dropdown d-lg-none ms-3">
-          <button class="btn browse-btn dropdown-toggle" type="button" id="browseDropdown" data-bs-toggle="dropdown" aria-expanded="false">Browse</button>
-          <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="browseDropdown">
-            <li class="nav-item"><a class="nav-link active" href="#">Home</a></li>
-            <li class="nav-item"><a class="nav-link" href="#">TV Shows</a></li>
-            <li class="nav-item"><a class="nav-link" href="#">Movies</a></li>
-            <li class="nav-item">
-              <a class="nav-link dropdown-toggle" href="#" id="genresDropdownMobile" data-bs-toggle="dropdown">Genres</a>
-              <ul class="dropdown-menu dropdown-menu-dark" id="genresMenuMobile"></ul>
-            </li>
-          </ul>
-        </div>
+      <div class="dropdown d-lg-none ms-3" data-bs-auto-close="outside">
+  <button class="btn browse-btn dropdown-toggle" type="button" id="browseDropdown" data-bs-toggle="dropdown" aria-expanded="false">Browse</button>
+  <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="browseDropdown">
+<li class="nav-item"><a class="dropdown-item active" href="http://localhost:3000/feed.html">Home</a></li>
+<li class="nav-item"><a class="dropdown-item" href="http://localhost:3000/feed.html?view=shows">TV Shows</a></li>
+<li class="nav-item"><a class="dropdown-item" href="http://localhost:3000/feed.html?view=movies">Movies</a></li>
+
+    <li class="nav-item">
+      <a href="#" class="dropdown-item" id="genresDropdownMobile">Genres ▾</a>
+      <ul class="dropdown-menu dropdown-menu-dark" id="genresMenuMobile" aria-labelledby="genresDropdownMobile"></ul>
+    </li>
+  </ul>
+</div>
+
       </div>
       <div class="collapse navbar-collapse d-none d-lg-block" id="navbarNav">
         <ul class="navbar-nav me-auto">
