@@ -11,26 +11,21 @@ let currentTypeFilter = '';
 
 function listGenres(medias) {
   const genreSet = new Set();
-
   medias.forEach((movie) => {
     const genres = Array.isArray(movie.genre) ? movie.genre : [movie.genre];
     genres.forEach((g) => genreSet.add(g.trim()));
   });
-
   return Array.from(genreSet).sort();
 }
-
 
 async function loadWatchedFromServer() {
   const profileId = localStorage.getItem('selectedProfileId');
   if (!profileId) return;
-
   try {
     const res = await fetch(`/api/watched/list?profileId=${encodeURIComponent(profileId)}`, {
       method: 'GET',
       headers: { 'Content-Type': 'application/json' },
     });
-
     if (res.ok) {
       watchedData = await res.json();;
     } else {
@@ -40,7 +35,6 @@ async function loadWatchedFromServer() {
     console.error('Error loading watched list:', err);
   }
 }
-
 
 function sortArrayByMode(arr, mode) {
   const copy = [...arr];
@@ -76,6 +70,7 @@ async function refreshIfChanged(){
   const after = idsHash(moviesData);
   if (before !== after){
     populateGenresDropdown();
+    populateGenresMobile();
     if (window.lastGenre) renderMoviesByGenre(window.lastGenre);
     else renderMovies();
   }
@@ -87,7 +82,6 @@ function startAdminAutoRefresh(){
   if (!isAdmin || adminRefreshTimer) return;
   adminRefreshTimer = setInterval(refreshIfChanged, 15000);
 }
-
 
 function populateGenresDropdown() {
   const genreMenu = document.getElementById('genreFilterMenu');
@@ -110,11 +104,16 @@ function populateGenresDropdown() {
   });
 }
 
-// function saveLikesToStorage() {
-//   const likesData = {};
-//   moviesData.forEach(movie => { likesData[movie._id] = movie.likes; });
-//   localStorage.setItem('netflixLikes', JSON.stringify(likesData));
-// }
+function populateGenresMobile() {
+  const menu = document.getElementById('genresMenuMobile');
+  if (!menu) return;
+  menu.innerHTML = '';
+  mediaGenres.forEach(genre => {
+    const li = document.createElement('li');
+    li.innerHTML = `<a class="dropdown-item" href="genre.html?genre=${encodeURIComponent(genre)}">${genre}</a>`;
+    menu.appendChild(li);
+  });
+}
 
 function loadLikesFromStorage() {
   const stored = localStorage.getItem('netflixLikes');
@@ -125,17 +124,13 @@ function loadLikesFromStorage() {
   });
 }
 
-// function saveUserLikesToStorage() {
-//   localStorage.setItem('netflixUserLikes', JSON.stringify(userLikes));
-// }
-
 async function loadUserLikesFromServer() {
   const profileId = localStorage.getItem('selectedProfileId');
   if (!profileId) return;
   try {
     const response = await fetch(`/api/content/profile-like?profileId=${profileId}`);
     if (response.ok) {
-      const data = await response.json();
+      const data = await res.json();
       userLikes = {};
       (data.likedIds || []).forEach(id => { userLikes[id] = true; });
     }
@@ -147,18 +142,13 @@ async function loadUserLikesFromServer() {
 function isFullyWatched(item) {
   const watchedItems = watchedData.filter(w => String(w.contentId) === String(item._id));
   if (!watchedItems.length) return false;
-
   if ((item.type || '').toLowerCase() === 'movie') return true;
-
   const watchedCount = watchedItems.filter(w => w.completed).length;
-
   const totalEpisodes = (item.seasons || []).reduce(
     (sum, s) => sum + (s.episodes?.length || 0), 0
   );
-
   return totalEpisodes > 0 && watchedCount >= totalEpisodes;
 }
-
 
 function renderMovies(filterType = null) {
   const categoriesContainer = document.getElementById('categoriesContainer');
@@ -196,22 +186,18 @@ function renderMovies(filterType = null) {
           const genres = Array.isArray(movie.genre)
             ? movie.genre
             : [movie.genre];
-
           const lowerUserGenres = userGenres.map((genre) =>
             genre.toLowerCase()
           );
-
           return genres.some((genre) =>
             lowerUserGenres.includes(genre.toLowerCase())
           );
         }
-
         return false;
       },
       skipFallback: true
     }
   ];
-
   mediaGenres.forEach((genre) => {
     const category = {
         title: `Newest ${genre}`,
@@ -333,16 +319,12 @@ function createMovieCard(movie) {
     if (!e.target.closest('.like-btn') && !e.target.closest('.card-actions')) {
       const movieId = movie.id || movie._id;
       if (!movieId) return;
-
-      // Detect where we are
       const fromPage = window.location.pathname.includes('genre.html')
         ? `genre.html${fromGenre ? '?genre=' + encodeURIComponent(fromGenre) : ''}`
         : 'feed.html';
-
       window.location.href = `details.html?id=${movieId}&from=${encodeURIComponent(fromPage)}`;
     }
   });
-
   const likeBtn = movieCard.querySelector('.like-btn');
   likeBtn.addEventListener('click', (e) => {
     e.stopPropagation();
@@ -417,8 +399,6 @@ async function toggleLike(movieId) {
     console.log("MOVIE BEFORE UPDATE:", movie.likes, userLikes[movieId]);
     movie.likes = data.likes;
     userLikes[movieId] = data.userHasLiked;
-    //saveLikesToStorage();
-    //saveUserLikesToStorage();
     updateLikeButton(movieId, movie.likes, userLikes[movieId]);
     console.log("MOVIE AFTER UPDATE:", movie.likes, userLikes[movieId]);
   } catch (err) {
@@ -427,10 +407,8 @@ async function toggleLike(movieId) {
 }
 
 function updateLikeButton(movieId, likeCount, userHasLiked) {
-
   document.querySelectorAll(`[data-movie-id="${movieId}"]`).forEach(button => {
     const heartIcon = button.querySelector('.heart-icon');
-
     if (userHasLiked) {
       button.classList.add('liked');
       heartIcon?.classList.add('fas');
@@ -440,10 +418,8 @@ function updateLikeButton(movieId, likeCount, userHasLiked) {
       heartIcon?.classList.add('far');
       heartIcon?.classList.remove('fas');
     }
-
     button.innerHTML = `<i class="heart-icon ${userHasLiked ? 'fas' : 'far'} fa-heart"></i> ${likeCount} ${likeCount === 1 ? 'like' : 'likes'}`;
   });
-
   document.querySelectorAll(`[data-like-id="${movieId}"]`).forEach(btn => {
     if (userHasLiked) {
       btn.classList.add('active');
@@ -454,7 +430,6 @@ function updateLikeButton(movieId, likeCount, userHasLiked) {
     }
   });
 }
-
 
 function toggleSearch() {
   const searchInput = document.getElementById('searchInput');
@@ -594,10 +569,27 @@ document.addEventListener('DOMContentLoaded', async function () {
   await loadUserLikesFromServer();
   await loadWatchedFromServer();
   populateGenresDropdown();
-  renderMovies();
+  populateGenresMobile();
 
-    startAdminAutoRefresh();
+  const view = (new URLSearchParams(location.search).get('view') || '').toLowerCase();
+  if (view === 'movies') {
+    setActiveNavLink('moviesLink');
+    window.lastGenre = undefined;
+    currentTypeFilter = 'movie';
+    renderMovies('movie');
+  } else if (view === 'shows') {
+    setActiveNavLink('tvShowsLink');
+    window.lastGenre = undefined;
+    currentTypeFilter = 'show';
+    renderMovies('show');
+  } else {
+    setActiveNavLink('homeLink');
+    window.lastGenre = undefined;
+    currentTypeFilter = '';
+    renderMovies();
+  }
 
+  startAdminAutoRefresh();
   const searchIcon = document.getElementById('searchIcon');
   const searchInput = document.getElementById('searchInput');
   if (searchIcon) searchIcon.addEventListener('click', (e) => { e.preventDefault(); toggleSearch(); });
@@ -613,17 +605,28 @@ document.addEventListener('DOMContentLoaded', async function () {
       }, 200);
     });
   }
-
   const moviesLink = document.getElementById('moviesLink');
   const tvShowsLink = document.getElementById('tvShowsLink');
   const homeLink = document.getElementById('homeLink');
   const genreDropdown = document.getElementById('genreDropdown');
-
   if (moviesLink) moviesLink.addEventListener('click', (e) => { e.preventDefault(); setActiveNavLink('moviesLink'); window.lastGenre = undefined; currentTypeFilter = 'movie'; renderMovies('movie'); });
   if (tvShowsLink) tvShowsLink.addEventListener('click', (e) => { e.preventDefault(); setActiveNavLink('tvShowsLink'); window.lastGenre = undefined; currentTypeFilter = 'show'; renderMovies('show'); });
   if (homeLink) homeLink.addEventListener('click', (e) => { e.preventDefault(); setActiveNavLink('homeLink'); window.lastGenre = undefined; currentTypeFilter = ''; renderMovies(); });
   if (genreDropdown) genreDropdown.addEventListener('click', () => { setActiveNavLink('genreDropdown'); });
-
+  const genresDropdownMobile = document.getElementById('genresDropdownMobile');
+  if (genresDropdownMobile) {
+    genresDropdownMobile.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      const menu = document.getElementById('genresMenuMobile');
+      if (!menu) return;
+      menu.classList.toggle('show');
+    });
+    document.addEventListener('click', () => {
+      const menu = document.getElementById('genresMenuMobile');
+      if (menu) menu.classList.remove('show');
+    });
+  }
   const sortSelect = document.getElementById('sortSelect');
   if (sortSelect) {
     currentSortMode = sortSelect.value || '';
@@ -640,7 +643,6 @@ document.addEventListener('DOMContentLoaded', async function () {
       }
     });
   }
-
   const filterSelect = document.getElementById('filterSelect');
   if (filterSelect) {
     currentFilterMode = filterSelect.value || '';
@@ -657,10 +659,8 @@ document.addEventListener('DOMContentLoaded', async function () {
       }
     });
   }
-
   const signOutBtn = document.getElementById('signOutBtn');
   if (signOutBtn) signOutBtn.addEventListener('click', (e) => { e.preventDefault(); signOut(); });
-
   const modalClose = document.getElementById('moreLikeClose');
   if (modalClose) modalClose.addEventListener('click', () => closeMoreLikeThis());
   document.getElementById('moreLikeModal')?.addEventListener('click', (e) => {
@@ -668,13 +668,11 @@ document.addEventListener('DOMContentLoaded', async function () {
   });
 });
 
-// Global Play Button Handler (works for trailer section too)
 document.addEventListener('click', (e) => {
   const btn = e.target.closest('.action-btn.play, .btn.play-btn');
   if (btn) {
     e.preventDefault();
     e.stopPropagation();
-
     const movieId = btn.dataset.id;
     if (movieId) {
       window.location.href = `details.html?id=${movieId}`;
@@ -684,8 +682,6 @@ document.addEventListener('click', (e) => {
   }
 });
 
-
-//more info modal
 const moreInfoBtn = document.querySelector('.trailer-buttons .info-btn');
 const moreInfoModal = document.getElementById('moreInfoModal');
 const moreInfoClose = document.getElementById('moreInfoClose');
@@ -703,4 +699,3 @@ moreInfoModal.addEventListener('click', (e) => {
     moreInfoModal.style.display = 'none';
   }
 });
-
