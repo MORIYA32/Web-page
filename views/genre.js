@@ -127,19 +127,19 @@ function loadUserLikesFromStorage(userId) {
 }
 
 // Load user likes from server
-async function loadUserLikesFromServer(userId) {
-    try {
-        const response = await fetch(`/api/content/user-likes?userId=${userId}`);
-        if (response.ok) {
-            const likedIds = await response.json();
-            userLikes = new Set(likedIds);
-            saveUserLikesToStorage(userId, likedIds);
-        }
-    } catch (error) {
-        console.error('Error loading user likes:', error);
-        const storedLikes = loadUserLikesFromStorage(userId);
-        userLikes = new Set(storedLikes);
-    }
+async function loadUserLikesFromServer() {
+  const profileId = localStorage.getItem('selectedProfileId');
+  if (!profileId) return;
+
+  try {
+      const response = await fetch(`/api/content/user-likes?profileId=${profileId}`);
+      if (response.ok) {
+          const data = await response.json();
+          userLikes = new Set(data.likedIds);
+      }
+  } catch (error) {
+      console.error('Error loading user likes:', error);
+  }
 }
 
 // GroupBy utility function
@@ -291,7 +291,7 @@ function createMovieCard(movie) {
   const movieCard = document.createElement('div');
   movieCard.className = 'movie-card';
 
-  const userHasLiked = userLikes[movie._id] || false;
+  const userHasLiked = userLikes.has(movie._id);
   const genreDisplay = Array.isArray(movie.genre) ? movie.genre.join(', ') : movie.genre;
   const firstGenre = Array.isArray(movie.genre) ? (movie.genre[0] || '') : movie.genre || '';
 
@@ -353,8 +353,8 @@ function createMovieCard(movie) {
 
 // Toggle like functionality
 async function toggleLike(movieId) {
-    const userId = localStorage.getItem('userId');
-    if (!userId) {
+    const profileId = localStorage.getItem('selectedProfileId');
+    if (!profileId) {
         alert('Please log in to like content');
         return;
     }
@@ -366,7 +366,7 @@ async function toggleLike(movieId) {
         const response = await fetch(`/api/content/${movieId}/like`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ userId })
+            body: JSON.stringify({ selectedProfileId: profileId })
         });
 
         if (!response.ok) throw new Error('Failed to update like');
@@ -381,7 +381,7 @@ async function toggleLike(movieId) {
         }
 
         saveLikesToStorage(movieId, data.likes);
-        saveUserLikesToStorage(userId, Array.from(userLikes));
+        saveUserLikesToStorage(profileId, Array.from(userLikes));
         console.log('Calling updateLikeButton with:', movieId, data.likes, data.userHasLiked);
         updateLikeButton(movieId, data.likes, data.userHasLiked);
 
@@ -533,8 +533,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     updateProfileDropdown();
 
-    const userId = localStorage.getItem('userId');
-    await loadUserLikesFromServer(userId);
+    await loadUserLikesFromServer();
     await loadWatchedFromServer();
     await fetchContent();
     await populateGenresDropdown();
