@@ -398,3 +398,35 @@ video::-moz-media-controls { display: none !important; }
   font-size: 0.85rem;
   margin-left: auto;
 }
+
+.movie-progress {
+  margin-top: 2px;
+  padding-left: 4px;
+  text-align: left;
+  max-width: fit-content;
+}
+
+.progress-indicator {
+  color: #f5c518;
+  font-size: 0.9rem;
+  margin-top: 4px;
+  margin-left: 2px;
+}
+
+.buttons-wrapper {
+  display: flex;
+  flex-direction: column; /* stack buttons + text vertically */
+  align-items: flex-start; /* align to left */
+  gap: 4px; /* small space between buttons and text */
+}
+
+.buttons-wrapper button {
+  margin-right: 8px; /* space between play & like buttons */
+}
+
+.progress-indicator {
+  color: #f5c518;
+  font-size: 0.9rem;
+  margin-left: 2px;
+  line-height: 1.2;
+}

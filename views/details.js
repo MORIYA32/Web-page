@@ -158,6 +158,42 @@ async function updateContentDetails() {
   });
   const desc = (currentContent.description || '').trim();
   document.getElementById('contentDescription').textContent = desc || 'No description available.';
+  if (currentContent.type === 'movie') {
+    let wrapper = document.getElementById('buttonsWrapper');
+    if (!wrapper) {
+      wrapper = document.createElement('div');
+      wrapper.id = 'buttonsWrapper';
+      wrapper.className = 'buttons-wrapper';
+
+      const buttonsRow = document.createElement('div');
+      buttonsRow.className = 'buttons-row';
+
+      const playButton = document.getElementById('playButton');
+      const likeButton = document.getElementById('likeButton');
+
+      if (playButton && likeButton) {
+        const parent = playButton.parentElement;
+        buttonsRow.appendChild(playButton);
+        buttonsRow.appendChild(likeButton);
+        wrapper.appendChild(buttonsRow);
+        parent.appendChild(wrapper);
+      }
+    }
+
+    let progressText = document.getElementById('movieProgressText');
+    if (!progressText) {
+      progressText = document.createElement('div');
+      progressText.id = 'movieProgressText';
+      progressText.className = 'progress-indicator';
+      wrapper.appendChild(progressText);
+    }
+
+    const profileId = localStorage.getItem('selectedProfileId');
+    getMovieProgress(profileId, currentContent.id).then(time => {
+      progressText.textContent = time > 0 ? `Continue at ${fmtTime(time)}` : '';
+    });
+  }
+
   const likeButton = document.getElementById('likeButton');
   const userHasLiked = userLikes[currentContent._id] || userLikes[currentContent.id];
   if (userHasLiked) {
@@ -201,6 +237,19 @@ async function getEpisodeProgress(profileId, contentId, season, episode) {
   if (res.ok) {
     const data = await res.json();
     return data?.currentTime || 0;
+  }
+  return 0;
+}
+
+async function getMovieProgress(profileId, contentId) {
+  try {
+    const res = await fetch(`/api/progress?profileId=${profileId}&contentId=${contentId}&season=1&episode=1`);
+    if (res.ok) {
+      const data = await res.json();
+      return data?.currentTime || 0;
+    }
+  } catch (err) {
+    console.error("Error fetching movie progress:", err);
   }
   return 0;
 }
