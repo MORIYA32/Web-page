@@ -190,29 +190,18 @@ function renderMovies(filterType = null) {
       sort: (ms) => ms.sort((a,b)=>(b.likes||0)-(a.likes||0)),
       skipFallback: true
     },
-    { title: 'Top Picks for You',
-      filter: (movie) => {
-        if (userGenres.length > 0) {
-          const genres = Array.isArray(movie.genre)
-            ? movie.genre
-            : [movie.genre];
-
-          const lowerUserGenres = userGenres.map((genre) =>
-            genre.toLowerCase()
-          );
-
-          return genres.some((genre) =>
-            lowerUserGenres.includes(genre.toLowerCase())
-          );
-        }
-
-        return false;
-      },
-      skipFallback: true
-    }
   ];
   const noFilter = !currentFilterMode || currentFilterMode === 'none';
   if (noFilter) {
+    categories.push({
+      title: 'Top Picks for You',
+      filter: (movie) => {
+        const genres = Array.isArray(movie.genre) ? movie.genre : [movie.genre];
+        const lowerUserGenres = userGenres.map(g => g.toLowerCase());
+        return genres.some(g => lowerUserGenres.includes(g.toLowerCase()));
+      },
+      skipFallback: true
+    });
     mediaGenres.forEach((genre) => {
       const category = {
           title: `Newest ${genre}`,
