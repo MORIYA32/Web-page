@@ -548,6 +548,10 @@ async function initializeDetailsPage() {
     window.location.href = fromPage;
   });
   document.getElementById('playButton').addEventListener('click', () => {
+    if (currentContent.type === 'movie') {
+        window.location.href = `player.html?id=${currentContent.id}`;
+    }
+  
     const v = document.getElementById('trailerPlayer');
     const url =
       currentContent.type === 'series'
