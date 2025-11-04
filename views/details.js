@@ -91,18 +91,6 @@ function fmtTime(t) {
   return h > 0 ? `${h}:${m}:${s}` : `${m}:${s}`;
 }
 
-async function saveWatchProgress({ contentId, time, season = null, episode = null, context = 'details' }) {
-  try {
-    await fetch('/api/content/progress', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ contentId, season, episode, time, context })
-    });
-  } catch (err) {
-    console.error('Failed to save progress', err);
-  }
-}
-
 async function fetchWikipediaActorInfo(actorName) {
   try {
     const response = await fetch(`https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(actorName)}`);
@@ -208,6 +196,44 @@ async function fetchAndDisplayRatings() {
   }
 }
 
+async function getEpisodeProgress(profileId, contentId, season, episode) {
+  const res = await fetch(`/api/progress?profileId=${profileId}&contentId=${contentId}&season=${season}&episode=${episode}`);
+  if (res.ok) {
+    const data = await res.json();
+    return data?.currentTime || 0;
+  }
+  return 0;
+}
+
+async function renderSeason(seasonNumber) {
+  const season = (currentContent.seasons || []).find(s => s.seasonNumber == seasonNumber);
+  episodesList.innerHTML = '';
+
+  for (const ep of (season?.episodes || [])) {
+    const progressTime = await getEpisodeProgress(
+      localStorage.getItem('selectedProfileId'),
+      currentContent.id,
+      seasonNumber,
+      ep.episodeNumber
+    );
+    
+    console.log('Episode', ep.episodeNumber, 'progressTime:', progressTime);
+
+    const el = document.createElement('div');
+    el.className = 'episode-card';
+    el.innerHTML = `<h4>
+        Episode ${ep.episodeNumber}
+        ${progressTime > 0 ? `<span class="progress-indicator">Continue at ${fmtTime(progressTime)}</span>` : ''}
+      </h4>
+      <p>${ep.episodeTitle || ''}</p>`;
+    el.addEventListener('click', () => {
+      window.location.href = `player.html?id=${currentContent.id}&season=${seasonNumber}&episode=${ep.episodeNumber}&reset=1`;
+    });
+    episodesList.appendChild(el);
+  }
+}
+
+
 function displayEpisodes() {
   if (currentContent.type !== 'series') return;
   const episodesSection = document.getElementById('episodesSection');
@@ -221,19 +247,7 @@ function displayEpisodes() {
     opt.textContent = `Season ${season.seasonNumber}`;
     seasonSelect.appendChild(opt);
   });
-  function renderSeason(seasonNumber) {
-    const season = (currentContent.seasons || []).find(s => s.seasonNumber == seasonNumber);
-    episodesList.innerHTML = '';
-    (season?.episodes || []).forEach(ep => {
-      const el = document.createElement('div');
-      el.className = 'episode-card';
-      el.innerHTML = `<h4>Episode ${ep.episodeNumber}</h4><p>${ep.episodeTitle || ''}</p>`;
-      el.addEventListener('click', () => {
-        window.location.href = `player.html?id=${currentContent.id}&season=${seasonNumber}&episode=${ep.episodeNumber}&reset=1`;
-      });
-      episodesList.appendChild(el);
-    });
-  }
+
   seasonSelect.addEventListener('change', e => renderSeason(e.target.value));
   renderSeason((currentContent.seasons || [])[0]?.seasonNumber);
 }
@@ -459,11 +473,6 @@ function wireDetailsControlBar() {
     if (iconPlayPause) {
       iconPlayPause.className = 'fas fa-play';
       btnPlayPause?.setAttribute('aria-label', 'Play');
-    }
-    const cid = currentContent?._id || currentContent?.id || contentId;
-    const t = Number.isFinite(v.currentTime) ? Math.floor(v.currentTime) : 0;
-    if (cid != null) {
-      saveWatchProgress({ contentId: cid, time: t, context: 'details-trailer' });
     }
   });
   if (btnBack10) btnBack10.onclick = () => (v.currentTime = Math.max(0, (v.currentTime || 0) - 10));
