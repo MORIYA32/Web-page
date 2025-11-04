@@ -11,12 +11,18 @@ Use git and npm to install the app
 git clone https://github.com/MORIYA32/Web-page.git
 ```
 ```bash
-cd Web-page
+  cd Web-page
 ```
 
 add the .env file to the project.
+
+## The .env file should include variables such as:
+MONGODB_URI=...
+JWT_SECRET=...
+PORT=3000
+
 ```bash
-cd npm install
+ npm install
 ```
 
 ## Running
@@ -24,6 +30,9 @@ cd npm install
 ```bash
 npm start
 ```
+## Open your browser and navigate to
+ http://localhost:3000
+
 
 ## Project Structure
 
