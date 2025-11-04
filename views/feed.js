@@ -130,7 +130,7 @@ async function loadUserLikesFromServer() {
   try {
     const response = await fetch(`/api/content/user-likes?profileId=${profileId}`);
     if (response.ok) {
-      const data = await res.json();
+      const data = await response.json();
       userLikes = {};
       (data.likedIds || []).forEach(id => { userLikes[id] = true; });
     }
