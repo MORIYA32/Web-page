@@ -1,278 +1,267 @@
-/* profiles page */
-body{
-    font-family: Netflix Sans, Helvetica Neue, Segoe UI, Roboto, Ubuntu, sans-serif;
-}
-.profiles-bg {
-    min-height: 100vh;
-    width: 100%;
-    background-color: #141414;
-
-    background-image: linear-gradient(to bottom,
-            #000000 0%,
-           
-            #141414 10%,
-          
-            #141414 100%,
-          
-            #000000 100%
-        );
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    flex-direction: column;
+body { 
+  font-family: Netflix Sans, Helvetica Neue, Segoe UI, Roboto, Ubuntu, sans-serif; 
 }
 
-.profiles-container {
-    display: flex;
-    justify-content: center;
-    flex-wrap: wrap;
-    gap: 1vh;
-    display: flex;
-    align-items: center;
+.profiles-bg { 
+  min-height: 100vh; 
+  width: 100%; 
+  background-color: #141414; 
+  background-image: linear-gradient(to bottom, #000000 0%, #141414 10%, #141414 100%, #000000 100%); 
+  display: flex; 
+  justify-content: center; 
+  align-items: center; 
+  flex-direction: column; 
 }
 
-.profiles-title {
-    margin: 0 0 2vh;
-    color: #fff;
-    font-size: 3.5vw;
-    font-weight: unset;
-    text-align: center;
+.profiles-container { 
+  display: flex; 
+  justify-content: center; 
+  flex-wrap: wrap; 
+  gap: 1vh; 
+  align-items: center; 
 }
 
-.profile-card {
-    text-align: center;
-    cursor: pointer;
+.profiles-title { 
+  margin: 0 0 2vh; 
+  color: #fff; 
+  font-size: 3.5vw; 
+  font-weight: unset; 
+  text-align: center; 
 }
 
-.profile-avatar {
-    min-width:84px;
-    width: 10vw;
-    height: auto;
-    display: block;
-    border-radius: 6px;
-    border: 3px solid transparent;
-    box-sizing: border-box;
-    cursor: pointer;
-    object-fit: cover;
-    transition: transform 0.3s ease;
+.profile-card { 
+  text-align: center; 
+  cursor: pointer; 
 }
 
-.profile-name {
-    display: block;
-    margin-top: 0.75vh;
-    color: #808080;
-    font-size: 1.3vw;
-    text-align: center;
-    width: auto;
+.profile-avatar { 
+  min-width: 84px; 
+  width: 10vw; 
+  height: auto; 
+  display: block; 
+  border-radius: 6px; 
+  border: 3px solid transparent; 
+  box-sizing: border-box; 
+  cursor: pointer; 
+  object-fit: cover; 
+  transition: transform 0.3s ease; 
 }
 
-.profile-card:hover .profile-avatar {
-    border: 3px solid #fff;
+.profile-name { 
+  display: block; 
+  margin-top: 0.75vh; 
+  color: #808080; 
+  font-size: 1.3vw; 
+  text-align: center; 
+  width: auto; 
 }
 
-.profile-card:hover .profile-name {
-    color: #fff;
+.profile-card:hover .profile-avatar { 
+  border: 3px solid #fff; 
 }
 
-.add-profile-swap {
-    position: relative;
-    height: 10vw;
-    aspect-ratio: 1 / 1;
-    min-height: 84px;
+.profile-card:hover .profile-name { 
+  color: #fff; 
 }
 
-.add-profile-swap img {
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    border-radius: 6px;
-    min-height: 84px;
+.add-profile-swap { 
+  position: relative; 
+  height: 10vw; 
+  aspect-ratio: 1 / 1; 
+  min-height: 84px; 
 }
 
-.img-hover {
-    opacity: 0;
-    transition: opacity 0.2s;
+.add-profile-swap img { 
+  position: absolute; 
+  inset: 0; 
+  width: 100%; 
+  height: 100%; 
+  object-fit: cover; 
+  border-radius: 6px; 
+  min-height: 84px; 
 }
 
-.add-profile-card:hover .img-hover {
-    opacity: 1;
+.img-hover { 
+  opacity: 0; 
+  transition: opacity 0.2s; 
 }
 
-.add-profile-card:hover .img-default {
-    opacity: 0;
+.add-profile-card:hover .img-hover { 
+  opacity: 1; 
 }
 
-.add-profile-card:hover .profile-avatar {
-  border: none !important;
+.add-profile-card:hover .img-default { 
+  opacity: 0; 
 }
 
-.profile-image-wrapper {
-    transition: transform 0.3s ease;
+.add-profile-card:hover .profile-avatar { 
+  border: none !important; 
 }
 
-.profile-image-wrapper {
-    width: 10vw;
-    min-width: 84px;
-    aspect-ratio: 1 / 1;
-    border-radius: 6px;
-    overflow: hidden;
+.profile-image-wrapper { 
+  transition: transform 0.3s ease; 
+  width: 10vw; 
+  min-width: 84px; 
+  aspect-ratio: 1 / 1; 
+  border-radius: 6px; 
+  overflow: hidden; 
+  position: relative; 
 }
 
-.profile-image-wrapper img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    display: block;
-    border-radius: 6px;
-    box-sizing: border-box;
-    transition: transform 320ms cubic-bezier(.2,.8,.2,1);
-    will-change: transform;
+.profile-image-wrapper img { 
+  width: 100%; 
+  height: 100%; 
+  object-fit: cover; 
+  display: block; 
+  border-radius: 6px; 
+  box-sizing: border-box; 
+  transition: transform 320ms cubic-bezier(.2,.8,.2,1); 
+  will-change: transform; 
 }
 
-.profile-image-wrapper:hover img,
-.profile-avatar:hover {
-    transform: scale(1.12);
-    cursor: pointer;
+.profile-image-wrapper:hover img, 
+.profile-avatar:hover { 
+  transform: scale(1.12); 
+  cursor: pointer; 
 }
 
-.profile-card:hover .profile-avatar {
-    border: 3px solid #fff;
+.manage-profiles-container { 
+  display: flex; 
+  justify-content: center; 
+  margin-top: 2rem; 
 }
 
-.manage-profiles-container {
-    display: flex;
-    justify-content: center;
-    margin-top: 2rem;
+.manage-profiles-btn { 
+  padding: 0.5rem 1.5rem; 
+  font-size: 1.3vw; 
+  min-font-size: 14px; 
+  color: #808080; 
+  background-color: transparent; 
+  border: 1px solid #808080; 
+  border-radius: 2px; 
+  cursor: pointer; 
+  transition: all 0.3s ease; 
+  font-weight: 400; 
+  letter-spacing: 0.5px; 
 }
 
-.manage-profiles-btn {
-    padding: 0.5rem 1.5rem;
-    font-size: 1.3vw;
-    min-font-size: 14px;
-    color: #808080;
-    background-color: transparent;
-    border: 1px solid #808080;
-    border-radius: 2px;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    font-weight: 400;
-    letter-spacing: 0.5px;
+.manage-profiles-btn:hover { 
+  color: #fff; 
+  border-color: #fff; 
 }
 
-.manage-profiles-btn:hover {
-    color: #fff;
-    border-color: #fff;
+.manage-profiles-btn.save-mode { 
+  background-color: #e50914; 
+  color: white; 
+  border-color: #e50914; 
 }
 
-.manage-profiles-btn.save-mode {
-    background-color: #e50914;
-    color: white;
-    border-color: #e50914;
+.manage-profiles-btn.save-mode:hover { 
+  background-color: #f40612; 
+  border-color: #f40612; 
 }
 
-.manage-profiles-btn.save-mode:hover {
-    background-color: #f40612;
-    border-color: #f40612;
+.profile-name-edit { 
+  display: flex; 
+  align-items: center; 
+  justify-content: center; 
+  gap: 0.5rem; 
+  margin-top: 0.75vh; 
 }
 
-.profile-name-edit {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.5rem;
-    margin-top: 0.75vh;
+.profile-name-input { 
+  color: #808080; 
+  font-size: 1.3vw; 
+  background-color: transparent; 
+  border: 1px solid transparent; 
+  border-radius: 3px; 
+  padding: 0.25rem 0.5rem; 
+  text-align: center; 
+  width: 10vw; 
+  max-width: 10vw; 
+  min-width: 84px; 
+  cursor: default; 
 }
 
-.profile-name-input {
-    color: #808080;
-    font-size: 1.3vw;
-    background-color: transparent;
-    border: 1px solid transparent;
-    border-radius: 3px;
-    padding: 0.25rem 0.5rem;
-    text-align: center;
-    width: 10vw;
-    max-width: 10vw;
-    min-width: 84px;
-    cursor: default;
+.profile-name-input.editable { 
+  background-color: #333; 
+  border-color: #555; 
+  cursor: text; 
 }
 
-.profile-name-input.editable {
-    background-color: #333;
-    border-color: #555;
-    cursor: text;
+.profile-name-input.editable:focus { 
+  outline: none; 
+  border-color: #fff; 
+  color: #fff; 
 }
 
-.profile-name-input.editable:focus {
-    outline: none;
-    border-color: #fff;
-    color: #fff;
+.edit-profile-btn { 
+  background: none; 
+  border: none; 
+  color: #808080; 
+  cursor: pointer; 
+  padding: 0.25rem; 
+  display: flex; 
+  align-items: center; 
+  transition: color 0.3s ease; 
 }
 
-.edit-profile-btn {
-    background: none;
-    border: none;
-    color: #808080;
-    cursor: pointer;
-    padding: 0.25rem;
-    display: flex;
-    align-items: center;
-    transition: color 0.3s ease;
+.edit-profile-btn:hover { 
+  color: #fff; 
 }
 
-.edit-profile-btn:hover {
-    color: #fff;
+.delete-profile-btn { 
+  position: absolute; 
+  top: -5px; 
+  left: -5px; 
+  width: 30px; 
+  height: 30px; 
+  background: none; 
+  border: none; 
+  color: #fff; 
+  font-size: 28px; 
+  font-weight: bold; 
+  cursor: pointer; 
+  display: flex; 
+  align-items: center; 
+  justify-content: center; 
+  transition: all 0.3s ease; 
+  line-height: 1; 
+  padding: 0; 
+  z-index: 10; 
+  text-shadow: 0 0 4px rgba(0, 0, 0, 0.8); 
 }
 
-.delete-profile-btn {
-    position: absolute;
-    top: -5px;
-    left: -5px;
-    width: 30px;
-    height: 30px;
-    background: none;
-    border: none;
-    color: #fff;
-    font-size: 28px;
-    font-weight: bold;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.3s ease;
-    line-height: 1;
-    padding: 0;
-    z-index: 10;
-    text-shadow: 0 0 4px rgba(0, 0, 0, 0.8);
+.delete-profile-btn:hover { 
+  color: #e50914; 
+  transform: scale(1.2); 
+  text-shadow: 0 0 8px rgba(229, 9, 20, 0.6); 
 }
 
-.delete-profile-btn:hover {
-    color: #e50914;
-    transform: scale(1.2);
-    text-shadow: 0 0 8px rgba(229, 9, 20, 0.6);
+@media (max-width: 1024px) { 
+  .profiles-title { font-size: 30px; } 
+  .profile-avatar { width: 14vw; min-width: 70px; } 
+  .profile-name { font-size: 14px; } 
+  .manage-profiles-btn { font-size: 14px; } 
+  .profile-name-input { font-size: 12px; width: 14vw; min-width: 70px; } 
 }
 
-.profile-image-wrapper {
-    position: relative;
+@media (max-width: 768px) { 
+  .profiles-title { font-size: 28px; } 
+  .profiles-container { gap: 1.5vh; } 
+  .profile-avatar { width: 18vw; min-width: 68px; } 
+  .profile-name { font-size: 13px; } 
+  .manage-profiles-btn { font-size: 13px; padding: 0.4rem 1rem; } 
+  .profile-name-input { font-size: 11px; width: 18vw; min-width: 68px; } 
 }
 
-@media (max-width: 840px){        
-        .profile-name, .add-profile-swap{
-            font-size: 11px;
-        }
-
-        .profiles-title{
-            font-size: 30px;
-        }
-        
-        .manage-profiles-btn {
-            font-size: 14px;
-        }
-        
-        .profile-name-input {
-            font-size: 11px;
-            min-width: 80px;
-        }
+@media (max-width: 480px) { 
+  .profiles-bg { flex-direction: column; padding: 20px 0; } 
+  .profiles-title { font-size: 22px; margin-bottom: 20px; } 
+  .profiles-container { gap: 12px; } 
+  .profile-avatar { width: 22vw; min-width: 60px; border-radius: 4px; } 
+  .profile-name { font-size: 11px; margin-top: 4px; } 
+  .manage-profiles-btn { font-size: 12px; padding: 0.3rem 0.8rem; } 
+  .profile-name-input { font-size: 10px; width: 22vw; min-width: 60px; } 
+  .delete-profile-btn { width: 22px; height: 22px; font-size: 20px; top: -4px; left: -4px; } 
 }

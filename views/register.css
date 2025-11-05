@@ -369,3 +369,152 @@ input.error {
     font-size: 11px;
   }
 }
+
+html, 
+body { 
+  min-height: 100dvh; 
+  overflow-x: hidden; 
+}
+
+@media (max-width: 374px) {
+  .logo { 
+    position: static;
+     display: block;
+      margin: 16px auto;
+       width: 72px;
+       }
+  .form-container {
+     width: 94%;
+      padding: 16px;
+       margin: 16px auto 24px;
+        min-height: auto; 
+      }
+  .form-container h1 {
+     font-size: 18px; 
+     text-align: center;
+     }
+  .form-container input {
+     height: 44px; 
+     font-size: 13px; 
+    }
+  .signup-btn { 
+    height: 44px;
+     font-size: 13px;
+     }
+  .options { 
+    font-size: 12px;
+     text-align: center;
+     }
+  .footer-container {
+     padding: 12px;
+     }
+  .footer-links { 
+    flex-direction: column;
+    gap: 12px; 
+  }
+  .select-lang {
+     width: 100%; 
+     font-size: 11px; }
+}
+
+@media (min-width: 375px) and (max-width: 480px) {
+  .logo { 
+    position: static; 
+    display: block;
+     margin: 20px auto; 
+     width: 80px; 
+    }
+  .form-container { 
+    width: 92%;
+     padding: 18px;
+      margin: 20px auto 28px; 
+    }
+  .form-container h1 { 
+    font-size: 20px; 
+    text-align: center;
+   }
+  .form-container input {
+     height: 46px; 
+     font-size: 14px;
+     }
+  .signup-btn { 
+    height: 46px;
+     font-size: 14px; }
+  .options { 
+    text-align: center;
+   }
+  .footer-links {
+     flex-direction: column;
+      gap: 14px;
+     }
+  body {
+     background-position: center top;
+     }
+}
+
+@media (min-width: 481px) and (max-width: 767px) {
+  .logo { 
+    left: 24px;
+     width: 90px; 
+     position: absolute; 
+     top: 20px; 
+    }
+  .form-container {
+     width: 80%; 
+     max-width: 420px;
+      padding: 22px;
+       margin: 80px auto 32px;
+       }
+  .footer-links {
+     gap: 24px; }
+}
+
+@media (min-width: 768px) and (max-width: 1024px) and (orientation: portrait) {
+  .logo { 
+    left: 32px;
+     width: 110px; 
+     top: 24px;
+      position: absolute;
+     }
+  .form-container {
+     width: 70%;
+      max-width: 460px; 
+      padding: 26px 32px;
+       margin: 96px auto 40px;
+       }
+  .footer-container { 
+    max-width: 820px;
+   }
+  .footer-links { 
+    gap: 48px; 
+  }
+}
+
+@media (min-width: 1024px) and (max-width: 1194px) and (orientation: landscape) {
+  .logo { left: 48px;
+     width: 120px;
+      top: 28px; }
+  .form-container {
+     width: 56%; 
+     max-width: 520px;
+      padding: 28px 36px; 
+      margin: 96px auto 48px;
+     }
+  .footer-container { 
+    max-width: 960px; 
+  }
+  .footer-links { 
+    gap: 60px; 
+  }
+}
+
+.form-container input,
+.signup-btn { 
+  min-height: 44px; 
+}
+
+@media (max-width: 480px) {
+  .form-container { 
+    background-color: rgba(0,0,0,0.82);
+   }
+}

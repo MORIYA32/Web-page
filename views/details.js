@@ -21,10 +21,10 @@ function loadUserLikesFromStorage() {
 }
 
 async function loadUserLikesFromServer() {
-  const userId = localStorage.getItem('userId');
-  if (!userId) return;
+  const profileId = localStorage.getItem('selectedProfileId');
+  if (!profileId) return;
   try {
-    const res = await fetch(`/api/content/user-likes?userId=${userId}`);
+    const res = await fetch(`/api/content/user-likes?profileId=${profileId}`);
     if (res.ok) {
       const data = await res.json();
       userLikes = {};
@@ -171,7 +171,7 @@ async function updateContentDetails() {
   const desc = (currentContent.description || '').trim();
   document.getElementById('contentDescription').textContent = desc || 'No description available.';
   const likeButton = document.getElementById('likeButton');
-  const userHasLiked = userLikes[currentContent._id] === true;
+  const userHasLiked = userLikes[currentContent._id] || userLikes[currentContent.id];
   if (userHasLiked) {
     likeButton.classList.add('liked');
     likeButton.innerHTML = '<i class="fas fa-heart"></i> Liked';
@@ -239,18 +239,19 @@ function displayEpisodes() {
 }
 
 async function toggleLike() {
-  const userId = localStorage.getItem('userId');
-  if (!userId) return;
+  const profileId = localStorage.getItem('selectedProfileId');
+  if (!profileId) return;
   const likeButton = document.getElementById('likeButton');
   try {
     const res = await fetch(`/api/content/${currentContent._id}/like`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ userId })
+      body: JSON.stringify({ selectedProfileId: profileId })
     });
     if (!res.ok) throw new Error('Failed to update like');
     const data = await res.json();
-    userLikes[currentContent._id] = data.userHasLiked;
+    const key = currentContent._id || currentContent.id;
+    userLikes[key] = data.userHasLiked;
     saveUserLikesToStorage();
     if (userLikes[currentContent._id]) {
       likeButton.classList.add('liked');
@@ -529,6 +530,7 @@ async function initializeDetailsPage() {
   }
   await loadUserLikesFromServer();
   currentContent = await fetchContentDetails(contentId);
+  updateContentDetails();
   if (!currentContent) {
     alert('Content not found');
     window.location.href = './feed.html';
@@ -539,13 +541,17 @@ async function initializeDetailsPage() {
     currentContent.trailerUrl ||
     firstEpisodeUrlIfAny(currentContent);
   if (previewUrl) loadTrailer(previewUrl);
-  updateContentDetails();
+  
   fetchAndDisplayRatings();
   displayEpisodes();
   document.getElementById('backButton').addEventListener('click', () => {
     window.location.href = fromPage;
   });
   document.getElementById('playButton').addEventListener('click', () => {
+    if (currentContent.type === 'movie') {
+        window.location.href = `player.html?id=${currentContent.id}`;
+    }
+  
     const v = document.getElementById('trailerPlayer');
     const url =
       currentContent.type === 'series'
