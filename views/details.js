@@ -210,6 +210,26 @@ async function updateContentDetails() {
     getMovieProgress(profileId, currentContent.id).then(time => {
       progressText.textContent = time > 0 ? `Continue at ${fmtTime(time)}` : '';
     });
+
+  try {
+    const res = await fetch(`/api/watched/list?profileId=${profileId}`);
+    if (res.ok) {
+      const data = await res.json();
+      const watched = data.find(
+        w =>
+          String(w.contentId) === String(currentContent._id) &&
+          w.type === 'movie' &&
+          w.completed
+      );
+      if (watched) {
+        playButton.classList.add('watched');
+      } else {
+        playButton.classList.remove('watched');
+      }
+    }
+  } catch (err) {
+    console.error('Error checking movie watched status:', err);
+  }
   }
 
   const likeButton = document.getElementById('likeButton');
