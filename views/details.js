@@ -107,6 +107,24 @@ async function fetchWikipediaActorInfo(actorName) {
   return { url: null, image: null };
 }
 
+async function fetchWatchedEpisodes(profileId, contentId) {
+  try {
+    const res = await fetch(`/api/watched/list?profileId=${profileId}`);
+    if (!res.ok) return [];
+    const data = await res.json();
+
+    return data.filter(
+      w =>
+        w.contentId === contentId &&
+        w.type === 'episode' &&
+        w.completed
+    );
+  } catch (err) {
+    console.error("Error fetching watched list:", err);
+    return [];
+  }
+}
+
 function loadTrailer(trailerUrl) {
   const v = document.getElementById('trailerPlayer');
   const url = normalizeVideoPath(trailerUrl);
@@ -256,20 +274,28 @@ async function getMovieProgress(profileId, contentId) {
 
 async function renderSeason(seasonNumber) {
   const season = (currentContent.seasons || []).find(s => s.seasonNumber == seasonNumber);
+  const episodesList = document.getElementById('episodesList');
   episodesList.innerHTML = '';
 
+  const profileId = localStorage.getItem('selectedProfileId');
+  const watchedList = await fetchWatchedEpisodes(profileId, currentContent._id);
+  
   for (const ep of (season?.episodes || [])) {
     const progressTime = await getEpisodeProgress(
-      localStorage.getItem('selectedProfileId'),
+      profileId,
       currentContent.id,
       seasonNumber,
       ep.episodeNumber
     );
-    
-    console.log('Episode', ep.episodeNumber, 'progressTime:', progressTime);
+
+    const isWatched = watchedList.some(
+      w => w.seasonNumber === seasonNumber && w.episodeNumber === ep.episodeNumber
+    );
 
     const el = document.createElement('div');
     el.className = 'episode-card';
+    if (isWatched) el.classList.add('watched');
+
     el.innerHTML = `<h4>
         Episode ${ep.episodeNumber}
         ${progressTime > 0 ? `<span class="progress-indicator">Continue at ${fmtTime(progressTime)}</span>` : ''}

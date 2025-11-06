@@ -430,3 +430,8 @@ video::-moz-media-controls { display: none !important; }
   margin-left: 2px;
   line-height: 1.2;
 }
+
+.episode-card.watched {
+  box-shadow: 0 3px 0 0 #e50914;
+  border-bottom: none;
+}
