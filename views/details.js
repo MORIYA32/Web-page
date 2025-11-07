@@ -91,18 +91,6 @@ function fmtTime(t) {
   return h > 0 ? `${h}:${m}:${s}` : `${m}:${s}`;
 }
 
-async function saveWatchProgress({ contentId, time, season = null, episode = null, context = 'details' }) {
-  try {
-    await fetch('/api/content/progress', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ contentId, season, episode, time, context })
-    });
-  } catch (err) {
-    console.error('Failed to save progress', err);
-  }
-}
-
 async function fetchWikipediaActorInfo(actorName) {
   try {
     const response = await fetch(`https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(actorName)}`);
@@ -460,11 +448,6 @@ function wireDetailsControlBar() {
       iconPlayPause.className = 'fas fa-play';
       btnPlayPause?.setAttribute('aria-label', 'Play');
     }
-    const cid = currentContent?._id || currentContent?.id || contentId;
-    const t = Number.isFinite(v.currentTime) ? Math.floor(v.currentTime) : 0;
-    if (cid != null) {
-      saveWatchProgress({ contentId: cid, time: t, context: 'details-trailer' });
-    }
   });
   if (btnBack10) btnBack10.onclick = () => (v.currentTime = Math.max(0, (v.currentTime || 0) - 10));
   if (btnForward10) btnForward10.onclick = () => {
@@ -547,25 +530,42 @@ async function initializeDetailsPage() {
   document.getElementById('backButton').addEventListener('click', () => {
     window.location.href = fromPage;
   });
-  document.getElementById('playButton').addEventListener('click', () => {
+  document.getElementById('playButton').addEventListener('click', async () => {
     if (currentContent.type === 'movie') {
-        window.location.href = `player.html?id=${currentContent.id}`;
+      window.location.href = `player.html?id=${currentContent.id}`;
+      return;
     }
-  
-    const v = document.getElementById('trailerPlayer');
-    const url =
-      currentContent.type === 'series'
-        ? firstEpisodeUrlIfAny(currentContent) || currentContent.trailerUrl
-        : currentContent.videoUrl || currentContent.trailerUrl;
-    if (!url) return;
-    const normalized = normalizeVideoPath(url);
-    const currentSrc = v.currentSrc || v.src || '';
-    if (!currentSrc.endsWith(normalized)) {
-      v.src = normalized;
-      v.load();
+
+    const profileId = localStorage.getItem('selectedProfileId');
+    let targetSeason = 1, targetEpisode = 1;
+    try {
+      const res = await fetch(`/api/watched/list?profileId=${profileId}`);
+      const watchedList = await res.json();
+      const watchedMap = new Set(
+        watchedList
+          .filter(w => w.contentId === currentContent._id && w.type === 'episode' && w.completed)
+          .map(w => `${w.seasonNumber}-${w.episodeNumber}`)
+      );
+
+      const sortedSeasons = [...(currentContent.seasons || [])].sort((a,b)=>a.seasonNumber-b.seasonNumber);
+      let found = false;
+      for (const s of sortedSeasons) {
+        const eps = [...(s.episodes || [])].sort((a,b)=>a.episodeNumber-b.episodeNumber);
+        for (const ep of eps) {
+          if (!watchedMap.has(`${s.seasonNumber}-${ep.episodeNumber}`)) {
+            targetSeason = s.seasonNumber;
+            targetEpisode = ep.episodeNumber;
+            found = true;
+            break;
+          }
+        }
+        if (found) break;
+      }
+    } catch (e) {
+      console.error('Error fetching watched episodes:', e);
     }
-    v.play().catch(() => v.focus());
-    v.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    
+    window.location.href = `player.html?id=${currentContent.id}&season=${targetSeason}&episode=${targetEpisode}&reset=1`;
   });
   document.getElementById('likeButton').addEventListener('click', toggleLike);
   document.getElementById('closeEpisodes')?.addEventListener('click', closeEpisodesDrawerDetails);
