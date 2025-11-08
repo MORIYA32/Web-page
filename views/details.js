@@ -651,25 +651,42 @@ async function initializeDetailsPage() {
   document.getElementById('backButton').addEventListener('click', () => {
     window.location.href = fromPage;
   });
-  document.getElementById('playButton').addEventListener('click', () => {
+  document.getElementById('playButton').addEventListener('click', async () => {
     if (currentContent.type === 'movie') {
-        window.location.href = `player.html?id=${currentContent.id}`;
+      window.location.href = `player.html?id=${currentContent.id}`;
+      return;
     }
-  
-    const v = document.getElementById('trailerPlayer');
-    const url =
-      currentContent.type === 'series'
-        ? firstEpisodeUrlIfAny(currentContent) || currentContent.trailerUrl
-        : currentContent.videoUrl || currentContent.trailerUrl;
-    if (!url) return;
-    const normalized = normalizeVideoPath(url);
-    const currentSrc = v.currentSrc || v.src || '';
-    if (!currentSrc.endsWith(normalized)) {
-      v.src = normalized;
-      v.load();
+
+    const profileId = localStorage.getItem('selectedProfileId');
+    let targetSeason = 1, targetEpisode = 1;
+    try {
+      const res = await fetch(`/api/watched/list?profileId=${profileId}`);
+      const watchedList = await res.json();
+      const watchedMap = new Set(
+        watchedList
+          .filter(w => w.contentId === currentContent._id && w.type === 'episode' && w.completed)
+          .map(w => `${w.seasonNumber}-${w.episodeNumber}`)
+      );
+
+      const sortedSeasons = [...(currentContent.seasons || [])].sort((a,b)=>a.seasonNumber-b.seasonNumber);
+      let found = false;
+      for (const s of sortedSeasons) {
+        const eps = [...(s.episodes || [])].sort((a,b)=>a.episodeNumber-b.episodeNumber);
+        for (const ep of eps) {
+          if (!watchedMap.has(`${s.seasonNumber}-${ep.episodeNumber}`)) {
+            targetSeason = s.seasonNumber;
+            targetEpisode = ep.episodeNumber;
+            found = true;
+            break;
+          }
+        }
+        if (found) break;
+      }
+    } catch (e) {
+      console.error('Error fetching watched episodes:', e);
     }
-    v.play().catch(() => v.focus());
-    v.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    
+    window.location.href = `player.html?id=${currentContent.id}&season=${targetSeason}&episode=${targetEpisode}&reset=1`;
   });
   document.getElementById('likeButton').addEventListener('click', toggleLike);
   document.getElementById('closeEpisodes')?.addEventListener('click', closeEpisodesDrawerDetails);
