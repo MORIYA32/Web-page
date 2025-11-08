@@ -91,18 +91,6 @@ function fmtTime(t) {
   return h > 0 ? `${h}:${m}:${s}` : `${m}:${s}`;
 }
 
-async function saveWatchProgress({ contentId, time, season = null, episode = null, context = 'details' }) {
-  try {
-    await fetch('/api/content/progress', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ contentId, season, episode, time, context })
-    });
-  } catch (err) {
-    console.error('Failed to save progress', err);
-  }
-}
-
 async function fetchWikipediaActorInfo(actorName) {
   try {
     const response = await fetch(`https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(actorName)}`);
@@ -117,6 +105,24 @@ async function fetchWikipediaActorInfo(actorName) {
     console.error(`Error fetching Wikipedia for ${actorName}:`, e);
   }
   return { url: null, image: null };
+}
+
+async function fetchWatchedEpisodes(profileId, contentId) {
+  try {
+    const res = await fetch(`/api/watched/list?profileId=${profileId}`);
+    if (!res.ok) return [];
+    const data = await res.json();
+
+    return data.filter(
+      w =>
+        w.contentId === contentId &&
+        w.type === 'episode' &&
+        w.completed
+    );
+  } catch (err) {
+    console.error("Error fetching watched list:", err);
+    return [];
+  }
 }
 
 function loadTrailer(trailerUrl) {
@@ -170,6 +176,62 @@ async function updateContentDetails() {
   });
   const desc = (currentContent.description || '').trim();
   document.getElementById('contentDescription').textContent = desc || 'No description available.';
+  if (currentContent.type === 'movie') {
+    let wrapper = document.getElementById('buttonsWrapper');
+    if (!wrapper) {
+      wrapper = document.createElement('div');
+      wrapper.id = 'buttonsWrapper';
+      wrapper.className = 'buttons-wrapper';
+
+      const buttonsRow = document.createElement('div');
+      buttonsRow.className = 'buttons-row';
+
+      const playButton = document.getElementById('playButton');
+      const likeButton = document.getElementById('likeButton');
+
+      if (playButton && likeButton) {
+        const parent = playButton.parentElement;
+        buttonsRow.appendChild(playButton);
+        buttonsRow.appendChild(likeButton);
+        wrapper.appendChild(buttonsRow);
+        parent.appendChild(wrapper);
+      }
+    }
+
+    let progressText = document.getElementById('movieProgressText');
+    if (!progressText) {
+      progressText = document.createElement('div');
+      progressText.id = 'movieProgressText';
+      progressText.className = 'progress-indicator';
+      wrapper.appendChild(progressText);
+    }
+
+    const profileId = localStorage.getItem('selectedProfileId');
+    getMovieProgress(profileId, currentContent.id).then(time => {
+      progressText.textContent = time > 0 ? `Continue at ${fmtTime(time)}` : '';
+    });
+
+  try {
+    const res = await fetch(`/api/watched/list?profileId=${profileId}`);
+    if (res.ok) {
+      const data = await res.json();
+      const watched = data.find(
+        w =>
+          String(w.contentId) === String(currentContent._id) &&
+          w.type === 'movie' &&
+          w.completed
+      );
+      if (watched) {
+        playButton.classList.add('watched');
+      } else {
+        playButton.classList.remove('watched');
+      }
+    }
+  } catch (err) {
+    console.error('Error checking movie watched status:', err);
+  }
+  }
+
   const likeButton = document.getElementById('likeButton');
   const userHasLiked = userLikes[currentContent._id] || userLikes[currentContent.id];
   if (userHasLiked) {
@@ -208,6 +270,65 @@ async function fetchAndDisplayRatings() {
   }
 }
 
+async function getEpisodeProgress(profileId, contentId, season, episode) {
+  const res = await fetch(`/api/progress?profileId=${profileId}&contentId=${contentId}&season=${season}&episode=${episode}`);
+  if (res.ok) {
+    const data = await res.json();
+    return data?.currentTime || 0;
+  }
+  return 0;
+}
+
+async function getMovieProgress(profileId, contentId) {
+  try {
+    const res = await fetch(`/api/progress?profileId=${profileId}&contentId=${contentId}&season=1&episode=1`);
+    if (res.ok) {
+      const data = await res.json();
+      return data?.currentTime || 0;
+    }
+  } catch (err) {
+    console.error("Error fetching movie progress:", err);
+  }
+  return 0;
+}
+
+async function renderSeason(seasonNumber) {
+  const season = (currentContent.seasons || []).find(s => s.seasonNumber == seasonNumber);
+  const episodesList = document.getElementById('episodesList');
+  episodesList.innerHTML = '';
+
+  const profileId = localStorage.getItem('selectedProfileId');
+  const watchedList = await fetchWatchedEpisodes(profileId, currentContent._id);
+  
+  for (const ep of (season?.episodes || [])) {
+    const progressTime = await getEpisodeProgress(
+      profileId,
+      currentContent.id,
+      seasonNumber,
+      ep.episodeNumber
+    );
+
+    const isWatched = watchedList.some(
+      w => w.seasonNumber === seasonNumber && w.episodeNumber === ep.episodeNumber
+    );
+
+    const el = document.createElement('div');
+    el.className = 'episode-card';
+    if (isWatched) el.classList.add('watched');
+
+    el.innerHTML = `<h4>
+        Episode ${ep.episodeNumber}
+        ${progressTime > 0 ? `<span class="progress-indicator">Continue at ${fmtTime(progressTime)}</span>` : ''}
+      </h4>
+      <p>${ep.episodeTitle || ''}</p>`;
+    el.addEventListener('click', () => {
+      window.location.href = `player.html?id=${currentContent.id}&season=${seasonNumber}&episode=${ep.episodeNumber}&reset=1`;
+    });
+    episodesList.appendChild(el);
+  }
+}
+
+
 function displayEpisodes() {
   if (currentContent.type !== 'series') return;
   const episodesSection = document.getElementById('episodesSection');
@@ -221,19 +342,7 @@ function displayEpisodes() {
     opt.textContent = `Season ${season.seasonNumber}`;
     seasonSelect.appendChild(opt);
   });
-  function renderSeason(seasonNumber) {
-    const season = (currentContent.seasons || []).find(s => s.seasonNumber == seasonNumber);
-    episodesList.innerHTML = '';
-    (season?.episodes || []).forEach(ep => {
-      const el = document.createElement('div');
-      el.className = 'episode-card';
-      el.innerHTML = `<h4>Episode ${ep.episodeNumber}</h4><p>${ep.episodeTitle || ''}</p>`;
-      el.addEventListener('click', () => {
-        window.location.href = `player.html?id=${currentContent.id}&season=${seasonNumber}&episode=${ep.episodeNumber}&reset=1`;
-      });
-      episodesList.appendChild(el);
-    });
-  }
+
   seasonSelect.addEventListener('change', e => renderSeason(e.target.value));
   renderSeason((currentContent.seasons || [])[0]?.seasonNumber);
 }
@@ -459,11 +568,6 @@ function wireDetailsControlBar() {
     if (iconPlayPause) {
       iconPlayPause.className = 'fas fa-play';
       btnPlayPause?.setAttribute('aria-label', 'Play');
-    }
-    const cid = currentContent?._id || currentContent?.id || contentId;
-    const t = Number.isFinite(v.currentTime) ? Math.floor(v.currentTime) : 0;
-    if (cid != null) {
-      saveWatchProgress({ contentId: cid, time: t, context: 'details-trailer' });
     }
   });
   if (btnBack10) btnBack10.onclick = () => (v.currentTime = Math.max(0, (v.currentTime || 0) - 10));
