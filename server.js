@@ -2,6 +2,7 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
+const {info, warn, error} = require('./utils/logger');
 var responseTime = require('response-time')
 
 const connectDB = require('./config/database');
@@ -21,6 +22,7 @@ const contentRoutes = require('./routes/content');
 const progressRoutes = require('./routes/progress');
 const watchedRoutes = require('./routes/watched');
 const adminSeriesRouter = require('./routes/adminSeries'); // <— הוספתי את זה
+const { url } = require('inspector');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -32,7 +34,7 @@ connectDB();
 async function ensureAdminUser() {
   const { ADMIN_EMAIL, ADMIN_PASSWORD } = process.env;
   if (!ADMIN_EMAIL || !ADMIN_PASSWORD) {
-    console.warn('[Admin Seed] Missing ADMIN_EMAIL/ADMIN_PASSWORD in .env');
+    warn('Missing ADMIN_EMAIL/ADMIN_PASSWORD in .env');
     return;
   }
 
@@ -45,16 +47,21 @@ async function ensureAdminUser() {
         password: ADMIN_PASSWORD, // For learning/demo only (plain text)
         role: 'admin'
       });
-      console.log(`[Admin Seed] Admin user created: ${ADMIN_EMAIL}`);
+      info('Admin user created', { email: ADMIN_EMAIL });
     } else {
       let changed = false;
       if (admin.role !== 'admin') { admin.role = 'admin'; changed = true; }
       if (ADMIN_PASSWORD && admin.password !== ADMIN_PASSWORD) { admin.password = ADMIN_PASSWORD; changed = true; }
-      if (changed) { await admin.save(); console.log('[Admin Seed] Existing admin user updated'); }
-      else { console.log('[Admin Seed] Admin user already exists and is up to date'); }
+      if (changed) {
+        await admin.save();
+        info('Existing Admin user updated', { email: ADMIN_EMAIL });
+      }
+      else {
+        info('Admin user already exists and is up to date', { email: ADMIN_EMAIL });
+      }
     }
   } catch (err) {
-    console.error('[Admin Seed] Error creating/updating admin:', err.message);
+    error('Error creating/updating admin', { error: err.message });
   }
 }
 
@@ -120,7 +127,7 @@ app.get('/admin/add', authenticate, requireAdmin, (req, res) => {
 
 // Error handling middleware
 app.use((err, req, res, next) => {
-  console.error('Error:', err.message);
+  error('Server error', { error: err.message });
   res.status(500).json({ error: 'Internal server error' });
 });
 
@@ -130,6 +137,5 @@ app.use('*', (req, res) => {
 });
 
 app.listen(PORT, () => {
-  console.log(`Server running on http://localhost:${PORT}`);
-  console.log(`Serving static files from views`);
+  info(`Server started`, { port: PORT, url: `http://localhost:${PORT}` });
 });

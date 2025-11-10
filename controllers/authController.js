@@ -1,5 +1,6 @@
 const User = require('../models/User');
 const jwt = require('jsonwebtoken'); // for JWT signing
+const {info, warn, error} = require('../utils/logger');
 
 class AuthController {
     async register(req, res) {
@@ -48,7 +49,7 @@ class AuthController {
                 password // In production, hash this!
             });
 
-            console.log(`New user registered: ${newUser.username} (${newUser.email})`);
+            info('New user registered', { userId: newUser._id, email: newUser.email, username: newUser.username });
 
             res.status(201).json({
                 message: 'Registration successful',
@@ -60,7 +61,7 @@ class AuthController {
             });
 
         } catch (error) {
-            console.error('Registration error:', error);
+            error('Registration error', { error: error.message });
             res.status(500).json({ error: 'Registration failed' });
         }
     }
@@ -81,7 +82,7 @@ class AuthController {
                 return res.status(401).json({ error: 'Invalid email or password' });
             }
 
-            console.log(`User logged in: ${user.username}`);
+            info('User logged in', { userId: user._id, email: user.email, username: user.username });
 
             //  Sign JWT and set as httpOnly cookie (7 days)
             const token = jwt.sign(
@@ -165,7 +166,7 @@ class AuthController {
             await Profile.deleteMany({ userId });
             await User.findByIdAndDelete(userId);
 
-            console.log(`User deleted: ${user.username}`);
+            info('User deleted', { userId: user._id, email: user.email, username: user.username });
 
             res.json({ message: 'User account deleted successfully' });
 

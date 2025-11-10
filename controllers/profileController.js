@@ -1,4 +1,5 @@
 const Profile = require("../models/Profile");
+const { info } = require("../utils/logger");
 
 const MAX_PROFILES_PER_USER = Number(process.env.MAX_PROFILES_PER_USER || 5);
 
@@ -36,7 +37,7 @@ class ProfileController {
         avatar,
       });
 
-      console.log(`New profile created: ${newProfile.name} for user ${req.user.id}`);
+      info(`Profile created`, { profileId: newProfile._id, userId: req.user.id, name: newProfile.name });
 
       res.status(201).json({
         message: "Profile created successfully",
@@ -75,7 +76,7 @@ class ProfileController {
       profile.name = name.trim();
       await profile.save();
 
-      console.log(`Profile updated: ${profile.name}`);
+      info("Profile updated", { profileId: profile._id, userId: req.user.id, name: profile.name });
       res.json({
         message: "Profile updated successfully",
         profile,
@@ -98,7 +99,7 @@ class ProfileController {
         return res.status(404).json({ error: "Profile not found" });
       }
 
-      console.log(`Profile deleted: ${profile.name}`);
+      info("Profile deleted", { profileId: profile._id, userId: req.user.id, name: profile.name });
       res.json({ message: "Profile deleted successfully" });
     } catch (error) {
       console.error("Delete profile error:", error);

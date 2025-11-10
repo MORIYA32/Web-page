@@ -54,12 +54,9 @@ class ContentController {
             }
             
             await content.save();
-            
-            console.log(`Content ${!hasLiked ? 'liked' : 'unliked'}: ${content.title} (${content.likes} likes)`);
-            
-            console.log("BACKEND → likedBy array:", content.likedBy);
-            console.log("BACKEND → likes number:", content.likes);
-            console.log("BACKEND → userHasLiked:", !hasLiked);
+
+            info(`Content like updated`, { contentId: content._id, title: content.title, profileId: selectedProfileId, totalLikes: content.likes, userHasLiked: hasLiked, likedBy: content.likedBy });
+
             res.json({ 
                 message: 'Like updated successfully',
                 likes: content.likes,
