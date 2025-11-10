@@ -1,8 +1,8 @@
-const {logToDB} = require('./dbLogger')
+const { logToDB } = require("./dbLogger");
 
 function log(level, message, meta = {}) {
-    console.log(`[${level.toUpperCase()}] ${message}`, meta);
-    logToDB(level, message, meta);
+  console.log(`[${level.toUpperCase()}] ${message}`, meta);
+  logToDB(level, message, meta);
 }
 
 module.exports = {

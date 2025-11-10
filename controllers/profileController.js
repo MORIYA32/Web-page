@@ -37,7 +37,11 @@ class ProfileController {
         avatar,
       });
 
-      info(`Profile created`, { profileId: newProfile._id, userId: req.user.id, name: newProfile.name });
+      info(`Profile created`, {
+        profileId: newProfile._id,
+        userId: req.user.id,
+        name: newProfile.name,
+      });
 
       res.status(201).json({
         message: "Profile created successfully",
@@ -76,7 +80,11 @@ class ProfileController {
       profile.name = name.trim();
       await profile.save();
 
-      info("Profile updated", { profileId: profile._id, userId: req.user.id, name: profile.name });
+      info("Profile updated", {
+        profileId: profile._id,
+        userId: req.user.id,
+        name: profile.name,
+      });
       res.json({
         message: "Profile updated successfully",
         profile,
@@ -99,7 +107,11 @@ class ProfileController {
         return res.status(404).json({ error: "Profile not found" });
       }
 
-      info("Profile deleted", { profileId: profile._id, userId: req.user.id, name: profile.name });
+      info("Profile deleted", {
+        profileId: profile._id,
+        userId: req.user.id,
+        name: profile.name,
+      });
       res.json({ message: "Profile deleted successfully" });
     } catch (error) {
       console.error("Delete profile error:", error);
@@ -109,8 +121,8 @@ class ProfileController {
 }
 
 async function doesProfileIdBelongToUser(userId, profileId) {
-    const profile = await Profile.findOne({ _id: profileId, userId });
-    return !!profile;
+  const profile = await Profile.findOne({ _id: profileId, userId });
+  return !!profile;
 }
 
 module.exports = {
