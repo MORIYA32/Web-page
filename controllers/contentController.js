@@ -2,6 +2,7 @@ const Content = require("../models/Content");
 
 const path = require("path");
 const fs = require("fs");
+const { info, warn, error } = require("../utils/logger");
 const fsp = fs.promises;
 
 function sanitizeFilename(str) {
@@ -15,8 +16,8 @@ class ContentController {
     try {
       const content = await Content.find();
       res.json(content);
-    } catch (error) {
-      console.error("Get content error:", error);
+    } catch (err) {
+      error("Get content error:", err.message);
       res.status(500).json({ error: "Failed to fetch content" });
     }
   }
@@ -69,8 +70,8 @@ class ContentController {
         likes: content.likes,
         userHasLiked: !hasLiked,
       });
-    } catch (error) {
-      console.error("Error updating like:", error);
+    } catch (err) {
+      error("Error updating like:", err.message);
       res.status(500).json({ error: "Failed to update like" });
     }
   }
@@ -90,8 +91,8 @@ class ContentController {
       const likedIds = likedContent.map((content) => content._id.toString());
 
       res.json({ likedIds });
-    } catch (error) {
-      console.error("Error fetching user likes:", error);
+    } catch (err) {
+      error("Error fetching user likes:", err.message);
       res.status(500).json({ error: "Server error" });
     }
   }
@@ -150,8 +151,8 @@ class ContentController {
       }
 
       return res.json({ ratings });
-    } catch (error) {
-      console.error("Get ratings error:", error);
+    } catch (err) {
+      error("Get ratings error:", err.message);
       return res.status(500).json({ error: "Failed to fetch ratings" });
     }
   }
@@ -246,9 +247,9 @@ class ContentController {
       });
 
       return res.status(201).json({ content: doc });
-    } catch (error) {
-      console.error("createContent error:", error);
-      if (error && error.code === "LIMIT_FILE_SIZE") {
+    } catch (err) {
+      error("createContent error:", err.message);
+      if (err && err.code === "LIMIT_FILE_SIZE") {
         return res
           .status(413)
           .json({ error: "File too large (max 20MB per file)" });

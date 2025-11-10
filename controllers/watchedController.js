@@ -1,7 +1,7 @@
 const { Watched } = require('../models/Watched');
 const mongoose = require('mongoose');
 const { doesProfileIdBelongToUser } = require("./profileController");
-
+const { info, warn, error } = require("../utils/logger");
 
 class WatchedController {
   async markAsWatchedRestApi(req, res) {
@@ -64,8 +64,8 @@ class WatchedController {
     try {
       const watched = await Watched.find({ userId: req.user.id, profileId });
       res.json(watched);
-    } catch (error) {
-      console.error("Error fetching watched documents:", error);
+    } catch (err) {
+      error("Error fetching watched documents:", err.message);
       res.status(500).json({ error: "Internal server error" });
     }
   }

@@ -1,5 +1,6 @@
 const Progress = require('../models/Progress');
 const { doesProfileIdBelongToUser } = require('../controllers/profileController');
+const { info, warn, error } = require("../utils/logger");
 
 class ProgressController {
     async updateProgress(req, res) {
@@ -66,7 +67,7 @@ class ProgressController {
 
             res.json(activityByDay);
         } catch (err) {
-            console.error(err);
+            error("Failed getting profile progress", {errorMessage: err.message});
             res.status(500).json({ error: 'Server error' });
         }
     }

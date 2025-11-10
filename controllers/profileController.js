@@ -1,5 +1,5 @@
 const Profile = require("../models/Profile");
-const { info } = require("../utils/logger");
+const { info, warn, error } = require("../utils/logger");
 
 const MAX_PROFILES_PER_USER = Number(process.env.MAX_PROFILES_PER_USER || 5);
 
@@ -8,8 +8,8 @@ class ProfileController {
     try {
       const profiles = await Profile.find({ userId: req.user.id });
       res.json(profiles);
-    } catch (error) {
-      console.error("Get profiles error:", error);
+    } catch (err) {
+      error("Get profiles error:", err.message);
       res.status(500).json({ error: "Failed to fetch profiles" });
     }
   }
@@ -47,15 +47,15 @@ class ProfileController {
         message: "Profile created successfully",
         profile: newProfile,
       });
-    } catch (error) {
-      if (error?.name === "ProfileLimitError") {
+    } catch (err) {
+      if (err?.name === "ProfileLimitError") {
         return res.status(400).json({
           error: "Max profile per user",
-          message: error.message,
+          message: err.message,
           limit: MAX_PROFILES_PER_USER,
         });
       }
-      console.error("Create profile error:", error);
+      error("Create profile error:", err.message);
       res.status(500).json({ error: "Failed to create profile" });
     }
   }
@@ -89,8 +89,8 @@ class ProfileController {
         message: "Profile updated successfully",
         profile,
       });
-    } catch (error) {
-      console.error("Update profile error:", error);
+    } catch (err) {
+      error("Update profile error:", err.message);
       res.status(500).json({ error: "Failed to update profile" });
     }
   }
@@ -113,8 +113,8 @@ class ProfileController {
         name: profile.name,
       });
       res.json({ message: "Profile deleted successfully" });
-    } catch (error) {
-      console.error("Delete profile error:", error);
+    } catch (err) {
+      error("Delete profile error:", err.message);
       res.status(500).json({ error: "Failed to delete profile" });
     }
   }
