@@ -2,6 +2,7 @@ require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
 const path = require("path");
+const bcrypt = require("bcrypt");
 const { info, warn, error } = require("./utils/logger");
 var responseTime = require("response-time");
 
@@ -38,24 +39,31 @@ async function ensureAdminUser() {
     return;
   }
 
+  let changed = false;
+
   try {
     let admin = await User.findOne({ email: ADMIN_EMAIL });
     if (!admin) {
+      const salt = await bcrypt.genSalt(10);
+      const hashedPassword = await bcrypt.hash(ADMIN_PASSWORD, salt);
+
       await User.create({
         email: ADMIN_EMAIL,
         username: "Admin",
-        password: ADMIN_PASSWORD, // For learning/demo only (plain text)
+        password: hashedPassword,
+        passwordEncrypted: true,
         role: "admin",
       });
       info("Admin user created", { email: ADMIN_EMAIL });
     } else {
-      let changed = false;
       if (admin.role !== "admin") {
         admin.role = "admin";
         changed = true;
       }
-      if (ADMIN_PASSWORD && admin.password !== ADMIN_PASSWORD) {
-        admin.password = ADMIN_PASSWORD;
+      if (ADMIN_PASSWORD && !(await bcrypt.compare(ADMIN_PASSWORD, admin.password))) {
+        const salt = await bcrypt.genSalt(10);
+        admin.password = await bcrypt.hash(ADMIN_PASSWORD, salt);
+        admin.passwordEncrypted = true;
         changed = true;
       }
       if (changed) {
