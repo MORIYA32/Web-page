@@ -1,5 +1,6 @@
 const Content = require('../models/Content');
 const path = require('path');
+const { info, warn, error } = require("../utils/logger");
 const fs = require('fs');
 const fsp = fs.promises;
 
@@ -131,7 +132,7 @@ class AdminSeriesController {
 
       return res.status(201).json({ content: doc });
     } catch (err) {
-      console.error('uploadSeries error:', err);
+      error('uploadSeries error:', err.message);
       return res.status(500).json({ error: 'Failed to create series' });
     }
   }
