@@ -60,7 +60,10 @@ async function ensureAdminUser() {
         admin.role = "admin";
         changed = true;
       }
-      if (ADMIN_PASSWORD && !(await bcrypt.compare(ADMIN_PASSWORD, admin.password))) {
+      if (
+        ADMIN_PASSWORD &&
+        !(await bcrypt.compare(ADMIN_PASSWORD, admin.password))
+      ) {
         const salt = await bcrypt.genSalt(10);
         admin.password = await bcrypt.hash(ADMIN_PASSWORD, salt);
         admin.passwordEncrypted = true;
