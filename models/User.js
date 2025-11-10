@@ -19,7 +19,10 @@ const userSchema = new mongoose.Schema(
       type: String,
       required: true
     },
-// Role field for admin identification
+    passwordEncrypted: {
+      type: Boolean,
+      default: false
+    },
     role: {
       type: String,
       enum: ['user', 'admin'],

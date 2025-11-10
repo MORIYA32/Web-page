@@ -1,6 +1,7 @@
 const User = require('../models/User');
 const jwt = require('jsonwebtoken'); // for JWT signing
 const {info, warn, error} = require('../utils/logger');
+const bcrypt = require('bcrypt');
 
 class AuthController {
     async register(req, res) {
@@ -42,11 +43,15 @@ class AuthController {
                 }
             }
 
+            const salt = await bcrypt.genSalt(10);
+            const hashedPassword = await bcrypt.hash(password, salt);
+
             // Create new user
             const newUser = await User.create({
                 email: email.toLowerCase(),
                 username: username.trim(),
-                password // In production, hash this!
+                password: hashedPassword,
+                passwordEncrypted: true,
             });
 
             info('New user registered', { userId: newUser._id, email: newUser.email, username: newUser.username });
@@ -78,7 +83,18 @@ class AuthController {
             // Find user
             const user = await User.findOne({ email: email.toLowerCase() });
 
-            if (!user || user.password !== password) {
+            if (!user) {
+                return res.status(401).json({ error: 'Invalid email or password' });
+            }
+
+            let isMatch = false;
+            if (user.passwordEncrypted) {
+                isMatch = await bcrypt.compare(password, user.password);
+            } else {
+                isMatch = (password === user.password);
+            }
+
+            if (!isMatch) {
                 return res.status(401).json({ error: 'Invalid email or password' });
             }
 
@@ -155,9 +171,21 @@ class AuthController {
             if (!user) {
                 return res.status(404).json({ error: 'User not found' });
             }
+            console.log(username, password)
+            console.log(user.username, user.password)
 
-            // Verify credentials
-            if (user.username !== username || user.password !== password) {
+            if (user.username !== username) {
+                return res.status(401).json({ error: 'Invalid credentials' });
+            }
+
+            let isPasswordMatch = false;
+            if (user.passwordEncrypted) {
+                isPasswordMatch = await bcrypt.compare(password, user.password);
+            } else {
+                isPasswordMatch = (password === user.password);
+            }
+
+            if(!isPasswordMatch) {
                 return res.status(401).json({ error: 'Invalid credentials' });
             }
 
