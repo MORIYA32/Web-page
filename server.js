@@ -39,8 +39,6 @@ async function ensureAdminUser() {
     return;
   }
 
-  let changed = false;
-
   try {
     let admin = await User.findOne({ email: ADMIN_EMAIL });
     if (!admin) {
@@ -56,6 +54,7 @@ async function ensureAdminUser() {
       });
       info("Admin user created", { email: ADMIN_EMAIL });
     } else {
+      let changed = false;
       if (admin.role !== "admin") {
         admin.role = "admin";
         changed = true;
