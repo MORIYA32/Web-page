@@ -548,7 +548,7 @@ async function initializePlayer() {
   document.getElementById('episodesBackdrop')?.addEventListener('click', closeEpisodesDrawer);
 
   ensureNoNativeControls();
-  await loadEpisode(resetAll ? 0 : undefined);
+  await loadEpisode();
 }
 
 document.addEventListener('DOMContentLoaded', initializePlayer);
