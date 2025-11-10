@@ -189,8 +189,6 @@ class AuthController {
       if (!user) {
         return res.status(404).json({ error: "User not found" });
       }
-      console.log(username, password);
-      console.log(user.username, user.password);
 
       if (user.username !== username) {
         return res.status(401).json({ error: "Invalid credentials" });
