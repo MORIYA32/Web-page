@@ -65,8 +65,8 @@ class AuthController {
                 }
             });
 
-        } catch (error) {
-            error('Registration error', { error: error.message });
+        } catch (err) {
+            error('Registration error', { error: err.message });
             res.status(500).json({ error: 'Registration failed' });
         }
     }
@@ -128,8 +128,8 @@ class AuthController {
                 redirectUrl 
             });
 
-        } catch (error) {
-            console.error('Login error:', error);
+        } catch (err) {
+            error('Login error:', err.message);
             res.status(500).json({ error: 'Login failed' });
         }
     }
@@ -198,8 +198,8 @@ class AuthController {
 
             res.json({ message: 'User account deleted successfully' });
 
-        } catch (error) {
-            console.error('Delete user error:', error);
+        } catch (err) {
+            error('Delete user error:', err);
             res.status(500).json({ error: 'Failed to delete user account' });
         }
     }
