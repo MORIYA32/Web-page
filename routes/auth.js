@@ -1,20 +1,28 @@
 const express = require('express');
 const router = express.Router();
 const authController = require('../controllers/authController');
+const { authenticate } = require('../middleware/auth');
+const rateLimit = require('express-rate-limit');
 
-// POST /api/auth/register
-router.post('/register', authController.register.bind(authController));
+const loginLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many attempts, try again soon' }
+});
 
-// POST /api/auth/login
-router.post('/login', authController.login.bind(authController));
+const registerLimiter = rateLimit({
+  windowMs: 10 * 60 * 1000,
+  max: 5,
+  standardHeaders: true,
+  legacyHeaders: false
+});
 
-// GET /api/auth/whoami  // NEW: returns current user (from JWT cookie)
+router.post('/register', registerLimiter, authController.register.bind(authController));
+router.post('/login', loginLimiter, authController.login.bind(authController));
 router.get('/whoami', authController.whoami.bind(authController));
-
-// POST /api/auth/logout // NEW: clears auth cookie
 router.post('/logout', authController.logout.bind(authController));
-
-// DELETE /api/auth/user
-router.delete('/user', authController.deleteUser.bind(authController));
+router.delete('/user', authenticate, authController.deleteUser.bind(authController));
 
 module.exports = router;

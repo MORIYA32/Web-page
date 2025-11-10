@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const bcrypt = require('bcrypt');
 
 const userSchema = new mongoose.Schema(
   {
@@ -11,7 +12,7 @@ const userSchema = new mongoose.Schema(
     },
     username: {
       type: String,
-      required: true,   
+      required: true,
       unique: true,
       trim: true
     },
@@ -19,7 +20,6 @@ const userSchema = new mongoose.Schema(
       type: String,
       required: true
     },
-// Role field for admin identification
     role: {
       type: String,
       enum: ['user', 'admin'],
@@ -30,5 +30,26 @@ const userSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-const User = mongoose.model('User', userSchema);
-module.exports = User;
+userSchema.pre('save', async function (next) {
+  if (!this.isModified('password')) return next();
+  this.password = await bcrypt.hash(String(this.password), 10);
+  next();
+});
+
+userSchema.pre('findOneAndUpdate', async function (next) {
+  const update = this.getUpdate() || {};
+  if (update.password) {
+    update.password = await bcrypt.hash(String(update.password), 10);
+    this.setUpdate(update);
+  } else if (update.$set && update.$set.password) {
+    update.$set.password = await bcrypt.hash(String(update.$set.password), 10);
+    this.setUpdate(update);
+  }
+  next();
+});
+
+userSchema.methods.verifyPassword = function (plain) {
+  return bcrypt.compare(String(plain), this.password);
+};
+
+module.exports = mongoose.model('User', userSchema);

@@ -1,3 +1,5 @@
+if (window.__FEED_SCRIPT_LOADED__) { throw new Error('feed.js loaded twice'); }
+window.__FEED_SCRIPT_LOADED__ = true;
 let moviesData = [];
 let userLikes = {};
 let isSearchActive = false;
@@ -5,9 +7,10 @@ let filteredMovies = [];
 let currentSortMode = '';
 let currentFilterMode = '';
 let adminRefreshTimer = null;
-let watchedData = { };
+let watchedData = {};
 let mediaGenres = [];
 let currentTypeFilter = '';
+let __inflight = { content: null, likes: null, watched: null };
 
 function listGenres(medias) {
   const genreSet = new Set();
@@ -21,19 +24,20 @@ function listGenres(medias) {
 async function loadWatchedFromServer() {
   const profileId = localStorage.getItem('selectedProfileId');
   if (!profileId) return;
-  try {
+  if (__inflight.watched) return __inflight.watched;
+  __inflight.watched = (async () => {
     const res = await fetch(`/api/watched/list?profileId=${encodeURIComponent(profileId)}`, {
       method: 'GET',
       headers: { 'Content-Type': 'application/json' },
     });
     if (res.ok) {
-      watchedData = await res.json();;
+      watchedData = await res.json();
     } else {
       console.warn('Failed to load watched list');
     }
-  } catch (err) {
-    console.error('Error loading watched list:', err);
-  }
+  })();
+  try { return await __inflight.watched; }
+  finally { __inflight.watched = null; }
 }
 
 function sortArrayByMode(arr, mode) {
@@ -47,28 +51,26 @@ function sortArrayByMode(arr, mode) {
 }
 
 async function fetchContent() {
-  try {
+  if (__inflight.content) return __inflight.content;
+  __inflight.content = (async () => {
     const response = await fetch("/api/content");
-    if (!response.ok) {
-      throw new Error("Failed to fetch content");
-    }
+    if (!response.ok) throw new Error("Failed to fetch content");
     const content = await response.json();
     moviesData = content;
     mediaGenres = listGenres(moviesData);
     return content;
-  } catch (error) {
-    console.error("Error fetching content:", error);
-    return [];
-  }
+  })();
+  try { return await __inflight.content; }
+  finally { __inflight.content = null; }
 }
 
-function idsHash(arr){ return arr.map(x => x._id || x.id).filter(Boolean).sort().join('|'); }
+function idsHash(arr) { return arr.map(x => x._id || x.id).filter(Boolean).sort().join('|'); }
 
-async function refreshIfChanged(){
+async function refreshIfChanged() {
   const before = idsHash(moviesData);
   await fetchContent();
   const after = idsHash(moviesData);
-  if (before !== after){
+  if (before !== after) {
     populateGenresDropdown();
     populateGenresMobile();
     if (window.lastGenre) renderMoviesByGenre(window.lastGenre);
@@ -76,10 +78,13 @@ async function refreshIfChanged(){
   }
 }
 
-function startAdminAutoRefresh(){
+function startAdminAutoRefresh() {
+  if (window.__ADMIN_REFRESH_ON__) return;
+  window.__ADMIN_REFRESH_ON__ = true;
+  if (adminRefreshTimer) clearInterval(adminRefreshTimer);
   const email = (localStorage.getItem('userEmail') || '').toLowerCase();
   const isAdmin = localStorage.getItem('isAdmin') === 'true' || email === 'admin@admin.com';
-  if (!isAdmin || adminRefreshTimer) return;
+  if (!isAdmin) return;
   adminRefreshTimer = setInterval(refreshIfChanged, 15000);
 }
 
@@ -87,7 +92,6 @@ function populateGenresDropdown() {
   const genreMenu = document.getElementById('genreFilterMenu');
   if (!genreMenu) return;
   genreMenu.innerHTML = '';
-  genreMenu.classList.add('three-columns');
   genreMenu.classList.add('three-columns');
   mediaGenres.forEach(genre => {
     const li = document.createElement('li');
@@ -127,16 +131,17 @@ function loadLikesFromStorage() {
 async function loadUserLikesFromServer() {
   const profileId = localStorage.getItem('selectedProfileId');
   if (!profileId) return;
-  try {
+  if (__inflight.likes) return __inflight.likes;
+  __inflight.likes = (async () => {
     const response = await fetch(`/api/content/user-likes?profileId=${profileId}`);
     if (response.ok) {
       const data = await response.json();
       userLikes = {};
       (data.likedIds || []).forEach(id => { userLikes[id] = true; });
     }
-  } catch (err) {
-    console.error('Error loading user likes:', err);
-  }
+  })();
+  try { return await __inflight.likes; }
+  finally { __inflight.likes = null; }
 }
 
 function isFullyWatched(item) {
@@ -159,25 +164,26 @@ function renderMovies(filterType = null) {
   else if (filterType === 'show') filteredData = filteredData.filter(m => (m.type || '').toLowerCase() === 'series');
   if (currentFilterMode === 'watched') {
     filteredData = filteredData.filter(m => {
-        return isFullyWatched(m);
+      return isFullyWatched(m);
     });
   } else if (currentFilterMode === 'didnt_watch') {
     filteredData = filteredData.filter(m => {
-        return !isFullyWatched(m);
+      return !isFullyWatched(m);
     });
   }
   const userLikedContent = filteredData.filter(movie => userLikes[movie._id]);
   const userGenres = listGenres(userLikedContent);
   const categories = [
     {
-      title: filterType === 'movie' ? 'Movies' : filterType === 'show' ? 'TV Shows' : 'Popular Shows on Netflix', 
+      title: filterType === 'movie' ? 'Movies' : filterType === 'show' ? 'TV Shows' : 'Popular Shows on Netflix',
       filter: (i) => (i.type || '').toLowerCase() === 'series',
-      sort: (ms) => ms.sort((a,b)=>(b.likes||0)-(a.likes||0)),
+      sort: (ms) => ms.sort((a, b) => (b.likes || 0) - (a.likes || 0)),
       skipFallback: true
     },
-    { title: filterType === 'movie' ? 'Movies' : filterType === 'show' ? 'TV Shows' : 'Popular Movies on Netflix', 
+    {
+      title: filterType === 'movie' ? 'Movies' : filterType === 'show' ? 'TV Shows' : 'Popular Movies on Netflix',
       filter: (i) => (i.type || '').toLowerCase() === 'movie',
-      sort: (ms) => ms.sort((a,b)=>(b.likes||0)-(a.likes||0)),
+      sort: (ms) => ms.sort((a, b) => (b.likes || 0) - (a.likes || 0)),
       skipFallback: true
     },
   ];
@@ -194,18 +200,18 @@ function renderMovies(filterType = null) {
     });
     mediaGenres.forEach((genre) => {
       const category = {
-          title: `Newest ${genre}`,
-          skipFallback: true,
-          filter: (mediaItem) => {
-              return mediaItem.genre.includes(genre);
-          },
-          displayLimit: 10,
-          sort: (medias) => medias.sort((a, b) => {
-              return -a.updatedAt.localeCompare(b.updatedAt);
-          })
-      }
-      categories.push(category)
-    })
+        title: `Newest ${genre}`,
+        skipFallback: true,
+        filter: (mediaItem) => {
+          return mediaItem.genre.includes(genre);
+        },
+        displayLimit: 10,
+        sort: (medias) => medias.sort((a, b) => {
+          return -a.updatedAt.localeCompare(b.updatedAt);
+        })
+      };
+      categories.push(category);
+    });
   }
   const mode = (document.getElementById('sortSelect')?.value || currentSortMode || '').trim();
   categories.forEach((category, categoryIndex) => {
@@ -236,10 +242,11 @@ function renderMovies(filterType = null) {
     `;
     categoriesContainer.appendChild(categoryRow);
     const track = categoryRow.querySelector('.carousel-track');
-    infiniteMovies.forEach((movie) => {
-      const movieCard = createMovieCard(movie);
-      track.appendChild(movieCard);
-    });
+    const frag = document.createDocumentFragment();
+    for (const movie of infiniteMovies) {
+      frag.appendChild(createMovieCard(movie));
+    }
+    track.appendChild(frag);
     setupCarousel(categoryIndex, categoryMovies.length);
   });
 }
@@ -278,10 +285,11 @@ function renderMoviesByGenre(selectedGenre) {
   categoriesContainer.appendChild(categoryRow);
   const track = categoryRow.querySelector('.carousel-track');
   const infiniteMovies = sorted.length >= 4 ? [...sorted, ...sorted, ...sorted] : sorted;
-  infiniteMovies.forEach(movie => {
-    const card = createMovieCard(movie);
-    track.appendChild(card);
-  });
+  const frag = document.createDocumentFragment();
+  for (const movie of infiniteMovies) {
+    frag.appendChild(createMovieCard(movie));
+  }
+  track.appendChild(frag);
   setupCarousel('genre', sorted.length);
 }
 
@@ -293,7 +301,7 @@ function createMovieCard(movie) {
   const firstGenre = Array.isArray(movie.genre) ? (movie.genre[0] || '') : movie.genre || '';
   movieCard.innerHTML = `
     <div class="movie-poster">
-      <img src="${movie.thumbnail || movie.poster}" alt="${movie.title} poster">
+      <img src="${movie.thumbnail || movie.poster}" alt="${movie.title} poster" loading="lazy" decoding="async">
       <div class="card-actions">
         <button class="action-btn play" data-id="${movie.id || movie._id}"><i class="fas fa-play"></i></button>
         <button class="action-btn like ${userHasLiked ? 'active' : ''}" data-like-id="${movie._id}"><i class="${userHasLiked ? 'fas' : 'far'} fa-thumbs-up"></i></button>
@@ -390,12 +398,9 @@ async function toggleLike(movieId) {
     });
     if (!response.ok) throw new Error('Failed to update like');
     const data = await response.json();
-    console.log("FRONTEND RESPONSE:", data);
-    console.log("MOVIE BEFORE UPDATE:", movie.likes, userLikes[movieId]);
     movie.likes = data.likes;
     userLikes[movieId] = data.userHasLiked;
     updateLikeButton(movieId, movie.likes, userLikes[movieId]);
-    console.log("MOVIE AFTER UPDATE:", movie.likes, userLikes[movieId]);
   } catch (err) {
     console.error('Error updating like:', err);
   }
@@ -557,15 +562,17 @@ function closeMoreLikeThis() {
 }
 
 document.addEventListener('DOMContentLoaded', async function () {
+  if (window.__FEED_INITED__) return;
+  window.__FEED_INITED__ = true;
   if (!checkAuthentication()) return;
   updateWelcomeMessage();
   updateProfileDropdown();
-  await fetchContent();
-  await loadUserLikesFromServer();
-  await loadWatchedFromServer();
+  const p0 = fetchContent();
+  const p1 = loadUserLikesFromServer();
+  const p2 = loadWatchedFromServer();
+  await Promise.all([p0, p1, p2]);
   populateGenresDropdown();
   populateGenresMobile();
-
   const view = (new URLSearchParams(location.search).get('view') || '').toLowerCase();
   if (view === 'movies') {
     setActiveNavLink('moviesLink');
@@ -583,7 +590,6 @@ document.addEventListener('DOMContentLoaded', async function () {
     currentTypeFilter = '';
     renderMovies();
   }
-
   startAdminAutoRefresh();
   const searchIcon = document.getElementById('searchIcon');
   const searchInput = document.getElementById('searchInput');
@@ -690,7 +696,7 @@ moreInfoClose.addEventListener('click', () => {
 });
 
 moreInfoModal.addEventListener('click', (e) => {
-  if(e.target === moreInfoModal) {
+  if (e.target === moreInfoModal) {
     moreInfoModal.style.display = 'none';
   }
 });

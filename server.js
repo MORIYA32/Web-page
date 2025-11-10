@@ -2,17 +2,13 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
-var responseTime = require('response-time')
+var responseTime = require('response-time');
 
 const connectDB = require('./config/database');
+const bcrypt = require('bcrypt');
 
-//  required for admin seeding
 const User = require('./models/User');
-
-//  read JWT cookie
 const cookieParser = require('cookie-parser');
-
-//  auth middlewares (must exist in ./middleware/auth.js)
 const { authenticate, requireAdmin } = require('./middleware/auth');
 
 const authRoutes = require('./routes/auth');
@@ -20,116 +16,123 @@ const profileRoutes = require('./routes/profiles');
 const contentRoutes = require('./routes/content');
 const progressRoutes = require('./routes/progress');
 const watchedRoutes = require('./routes/watched');
-const adminSeriesRouter = require('./routes/adminSeries'); // <— הוספתי את זה
+const adminSeriesRouter = require('./routes/adminSeries');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Connect to MongoDB
-connectDB();
-
-// Function to ensure an admin user exists (seeding)
 async function ensureAdminUser() {
   const { ADMIN_EMAIL, ADMIN_PASSWORD } = process.env;
-  if (!ADMIN_EMAIL || !ADMIN_PASSWORD) {
-    console.warn('[Admin Seed] Missing ADMIN_EMAIL/ADMIN_PASSWORD in .env');
-    return;
-  }
+  if (!ADMIN_EMAIL || !ADMIN_PASSWORD) return;
 
   try {
-    let admin = await User.findOne({ email: ADMIN_EMAIL });
+    const email = ADMIN_EMAIL.toLowerCase();
+    const plain = String(ADMIN_PASSWORD);
+    let admin = await User.findOne({ email }).select('+password');
+
     if (!admin) {
       await User.create({
-        email: ADMIN_EMAIL,
-        username: 'Admin',
-        password: ADMIN_PASSWORD, // For learning/demo only (plain text)
+        email,
+        username: 'admin',
+        password: plain,
         role: 'admin'
       });
-      console.log(`[Admin Seed] Admin user created: ${ADMIN_EMAIL}`);
+      console.log(`[Admin Seed] Admin user created: ${email}`);
+      return;
+    }
+
+    let changed = false;
+
+    if (admin.role !== 'admin') {
+      admin.role = 'admin';
+      changed = true;
+    }
+
+    const pwd = String(admin.password || '');
+    const looksHashed = pwd.startsWith('$2a$') || pwd.startsWith('$2b$') || pwd.startsWith('$2y$');
+
+    if (looksHashed) {
+      const ok = await bcrypt.compare(plain, pwd);
+      if (!ok) { admin.password = plain; changed = true; }
     } else {
-      let changed = false;
-      if (admin.role !== 'admin') { admin.role = 'admin'; changed = true; }
-      if (ADMIN_PASSWORD && admin.password !== ADMIN_PASSWORD) { admin.password = ADMIN_PASSWORD; changed = true; }
-      if (changed) { await admin.save(); console.log('[Admin Seed] Existing admin user updated'); }
-      else { console.log('[Admin Seed] Admin user already exists and is up to date'); }
+      if (pwd !== plain) { admin.password = plain; changed = true; }
+    }
+
+    if (changed) {
+      await admin.save();
+      console.log('[Admin Seed] Admin user updated');
+    } else {
+      console.log('[Admin Seed] Admin user already exists and is up to date');
     }
   } catch (err) {
     console.error('[Admin Seed] Error creating/updating admin:', err.message);
   }
 }
 
-// One-time admin seeding
-ensureAdminUser();
+async function startServer() {
+  try {
+    await connectDB();
+app.set('trust proxy', 1);
+    app.use(cors());
+    app.use(express.json());
+    app.use(cookieParser());
 
-// Middleware
-app.use(cors());
-app.use(express.json());
+    app.use(express.static('views'));
+    app.use('/videos', authenticate, express.static(path.join(__dirname, 'videos')));
 
-// NEW: parse cookies so we can read the JWT (auth cookie)
-app.use(cookieParser());
+    app.use('/api/auth', authRoutes);
+    app.use('/api/profiles', authenticate, profileRoutes);
+    app.use('/api/content', contentRoutes);
+    app.use('/api/progress', authenticate, progressRoutes);
+    app.use('/api/watched', authenticate, watchedRoutes);
+    app.use('/api/admin', authenticate, requireAdmin, adminSeriesRouter);
 
-// time metrics
-// app.use(responseTime(function (req, res, time) {
-//   var stat = (req.method + req.url).toLowerCase()
-//     .replace(/[:.]/g, '')
-//     .replace(/\//g, '_')
-//   console.log(stat, time)
-// }))
+    app.get('/', (req, res) => {
+      res.sendFile(path.join(__dirname, 'views', 'login.html'));
+    });
 
-app.use(express.static('views'));
-app.use('/videos', authenticate, express.static(path.join(__dirname, 'videos')));
+    app.get('/login', (req, res) => {
+      res.sendFile(path.join(__dirname, 'views', 'login.html'));
+    });
 
-app.use('/api/auth', authRoutes);
-app.use('/api/profiles', authenticate, profileRoutes);
-app.use('/api/content', contentRoutes);
-app.use('/api/progress', authenticate, progressRoutes);
-app.use('/api/watched', authenticate, watchedRoutes);
+    app.get('/register', (req, res) => {
+      res.sendFile(path.join(__dirname, 'views', 'register.html'));
+    });
 
+    app.get('/profiles', (req, res) => {
+      res.sendFile(path.join(__dirname, 'views', 'profiles.html'));
+    });
 
-app.use('/api/admin', authenticate, requireAdmin, adminSeriesRouter);
+    app.get('/feed', (req, res) => {
+      res.sendFile(path.join(__dirname, 'views', 'feed.html'));
+    });
 
-// Serve static HTML files
-app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'views', 'login.html'));
-});
+    app.get('/settings', (req, res) => {
+      res.sendFile(path.join(__dirname, 'views', 'settingsPage.html'));
+    });
 
-app.get('/login', (req, res) => {
-  res.sendFile(path.join(__dirname, 'views', 'login.html'));
-});
+    app.get('/admin/add', authenticate, requireAdmin, (req, res) => {
+      res.sendFile(path.join(__dirname, 'views', 'admin-add.html'));
+    });
 
-app.get('/register', (req, res) => {
-  res.sendFile(path.join(__dirname, 'views', 'register.html'));
-});
+    app.use((err, req, res, next) => {
+      console.error('Error:', err.message);
+      res.status(500).json({ error: 'Internal server error' });
+    });
 
-app.get('/profiles', (req, res) => {
-  res.sendFile(path.join(__dirname, 'views', 'profiles.html'));
-});
+    app.use('*', (req, res) => {
+      res.status(404).json({ error: 'Route not found' });
+    });
 
-app.get('/feed', (req, res) => {
-  res.sendFile(path.join(__dirname, 'views', 'feed.html'));
-});
+    app.listen(PORT, () => {
+      console.log(`Server running on 🚀 http://localhost:${PORT}`);
+      console.log(`Serving static files from views`);
+      Promise.resolve().then(() => ensureAdminUser());
+    });
+  } catch (err) {
+    console.error('Failed to start server:', err);
+    process.exit(1);
+  }
+}
 
-app.get('/settings', (req, res) => {
-  res.sendFile(path.join(__dirname, 'views', 'settingsPage.html'));
-});
-
-// NEW: protected admin page – only for authenticated admins
-app.get('/admin/add', authenticate, requireAdmin, (req, res) => {
-  res.sendFile(path.join(__dirname, 'views', 'admin-add.html'));
-});
-
-// Error handling middleware
-app.use((err, req, res, next) => {
-  console.error('Error:', err.message);
-  res.status(500).json({ error: 'Internal server error' });
-});
-
-// 404 handler
-app.use('*', (req, res) => {
-  res.status(404).json({ error: 'Route not found' });
-});
-
-app.listen(PORT, () => {
-  console.log(`Server running on http://localhost:${PORT}`);
-  console.log(`Serving static files from views`);
-});
+startServer();
